@@ -1,0 +1,73 @@
+<mxfile host="Electron" modified="2025-01-08T20:45:32.398Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="N7mqXfFJ3kIM84aaBqI0" version="21.2.8" type="device">
+  <diagram name="Seite-1" id="uDRo8drKF1JdW04llBPA">
+    <mxGraphModel dx="941" dy="704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="SczCrBB4hjZauwR8BPmq-5" value="get Historical Data" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="SczCrBB4hjZauwR8BPmq-1" target="SczCrBB4hjZauwR8BPmq-2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="260" />
+              <mxPoint x="380" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-1" value="Alpaca API&lt;br&gt;Financial Data and Trades" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;" vertex="1" parent="1">
+          <mxGeometry x="340" y="130" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-6" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="SczCrBB4hjZauwR8BPmq-2" target="SczCrBB4hjZauwR8BPmq-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="380" y="430" />
+              <mxPoint x="380" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-13" value="send Trading results" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="SczCrBB4hjZauwR8BPmq-6">
+          <mxGeometry x="-0.1809" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-2" value="Trading Bot on Pimp Server&lt;br&gt;(storage of results)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="340" y="300" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-3" value="Webclient&lt;br&gt;(Selecting strategies and display some data)" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="340" y="470" width="200" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-4" value="" style="shape=actor;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="420" y="560" width="40" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-7" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;startArrow=classic;startFill=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="190" as="sourcePoint" />
+            <mxPoint x="500" y="300" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="500" y="260" />
+              <mxPoint x="500" y="260" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-8" value="create Orders" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="SczCrBB4hjZauwR8BPmq-7">
+          <mxGeometry x="0.1876" y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-10" value="" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;endFill=0;startArrow=classic;startFill=1;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="500" y="360" as="sourcePoint" />
+            <mxPoint x="500" y="470" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="500" y="430" />
+              <mxPoint x="500" y="430" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="SczCrBB4hjZauwR8BPmq-12" value="send Parameter for&lt;br&gt;Trading/Data Requests" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="SczCrBB4hjZauwR8BPmq-10">
+          <mxGeometry x="0.1397" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

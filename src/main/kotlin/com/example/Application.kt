@@ -7,8 +7,8 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureSerialization()
+    configureSerialization() // For Json/XML and so on
     configureDatabases()
     configureMonitoring()
-    configureRouting()
+    configureRouting()      // For HTTP requests
 }
