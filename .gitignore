@@ -4,7 +4,7 @@
 build
 .idea
 .gradle
-
+out
 
 # Log file
 *.log
