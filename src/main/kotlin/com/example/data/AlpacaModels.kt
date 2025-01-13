@@ -72,11 +72,11 @@ data class AssetPosition(
 
 @Serializable
 data class OrderRequest(
-    @SerialName("side") val side: String,
-    @SerialName("type") val type: String,
-    @SerialName("time_in_force") val timeInForce: String,
-    @SerialName("qty") val qty: String,
-    @SerialName("symbol") val symbol: String,
+    @SerialName("side") var side: String,
+    @SerialName("type") var orderType: String,
+    @SerialName("time_in_force") var timeInForce: String,
+    @SerialName("qty") var quantity: String,
+    @SerialName("symbol") var symbol: String,
     @SerialName("limit_price") val limitPrice: String? = null,
     @SerialName("stop_price") val stopPrice: String? = null,
     @SerialName("trail_price") val trailPrice: String? = null,
@@ -87,16 +87,6 @@ data class OrderRequest(
     @SerialName("take_profit") val takeProfit: TakeProfit? = null,
     @SerialName("stop_loss") val stopLoss: StopLoss? = null,
     @SerialName("position_intent") val positionIntent: String? = null
-)
-
-@Serializable
-data class TakeProfit(
-    @SerialName("limit_price") val limitPrice: String
-)
-
-@Serializable
-data class StopLoss(
-    @SerialName("stop_price") val stopPrice: String
 )
 
 @Serializable
@@ -137,6 +127,16 @@ data class OrderResponse(
     val subtag: String? = null,
     val source: String? = null,
     @SerialName("expires_at") val expiresAt: String? = null
+)
+
+@Serializable
+data class TakeProfit(
+    @SerialName("limit_price") val limitPrice: String
+)
+
+@Serializable
+data class StopLoss(
+    @SerialName("stop_price") val stopPrice: String
 )
 
 @Serializable

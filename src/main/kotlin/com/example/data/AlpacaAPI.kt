@@ -71,7 +71,7 @@ class AlpacaAPI {
         }.build()
     }
 
-    suspend fun getAccountDetails(): String {
+    suspend fun getAccountDetails() : Account? {
         try {
             val httpResponse = client.get(paperBaseUrl) {
                 url {
@@ -81,14 +81,14 @@ class AlpacaAPI {
                     append("accept", "application/json")
                 }
             }
-            return httpResponse.body<Account>().toString()
+            return httpResponse.body<Account>()
         } catch (e: Exception) {
             println(e.message)
-            return ""
+            return null
         }
     }
 
-    suspend fun getOpenPositions(): String {
+    suspend fun getOpenPositions(): AssetPosition? {
         try {
             val httpResponse = client.get(paperBaseUrl) {
                 url {
@@ -98,28 +98,28 @@ class AlpacaAPI {
                     append("accept", "application/json")
                 }
             }
-            return httpResponse.body<AssetPosition>().toString()
+            return httpResponse.body<AssetPosition>()
         } catch (e: Exception) {
             println(e.message)
-            return ""
+            return null
         }
     }
 
     suspend fun createOrder(
         symbol: String,
-        quantity: Double,
+        quantity: String,
         side: String,
         timeInForce: String,
         orderType: String,
         limitOrStopValue: Double,
         stopLoss: Double
-    ):
-            String {
+    ): OrderResponse? {
+
         val orderRequest = OrderRequest(
             side = side,
-            type = orderType,
+            orderType = orderType,
             timeInForce = timeInForce,
-            qty = quantity.toString(),
+            quantity = quantity,
             symbol = symbol,
             limitPrice = null,
             stopPrice = null,
@@ -145,10 +145,10 @@ class AlpacaAPI {
                 setBody(jsonOrderRequest)
             }
 
-            return httpResponse.body<OrderResponse>().toString()
+            return httpResponse.body<OrderResponse>()
         } catch (e: Exception) {
             println(e.message)
-            return ""
+            return null
         }
     }
 
@@ -157,7 +157,7 @@ class AlpacaAPI {
         timeframe: String,
         startDateTime: String?,
         endDateTime: String?
-    ): StockAggregationResponse {
+    ): StockAggregationResponse? {
         val stockDataPoint = StockAggregationRequest(
             symbols = symbols,
             timeframe = timeframe,
@@ -171,7 +171,6 @@ class AlpacaAPI {
             pageToken = null, // Pagination token for continuing a request
             sort = "asc" // Sort order (default: "asc")
         )
-
         try {
             val httpResponse = client.get(paperBaseMarketUrl) {
                 url {
@@ -197,16 +196,10 @@ class AlpacaAPI {
             return httpResponse.body<StockAggregationResponse>()
         } catch (e: IllegalArgumentException){
             println(e.message)
-            return StockAggregationResponse(
-                bars = emptyMap(),
-                nextPageToken = null
-            )
+            return null
         } catch(e: Exception) {
             println(e.message)
-            return StockAggregationResponse(
-                bars = emptyMap(),
-                nextPageToken = null
-            )
+            return null
         }
     }
 }
