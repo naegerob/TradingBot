@@ -1,6 +1,8 @@
 package com.example.tradinglogic
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.example.finance.datamodel.*
 
 class TradingLogic {
@@ -34,14 +36,18 @@ class TradingLogic {
             accountDetails
         }
     }
+
     fun setOrderParameter(orderRequest: OrderRequest) {
         mOrderRequest = orderRequest
     }
-    fun setOrderParameter(symbols: String,
-                          quantity: String,
-                          side: String,
-                          timeInForce: String,
-                          orderType: String) {
+
+    fun setOrderParameter(
+        symbols: String,
+        quantity: String,
+        side: String,
+        timeInForce: String,
+        orderType: String
+    ) {
         mOrderRequest.symbol = symbols
         mOrderRequest.quantity = quantity.toString()
         mOrderRequest.side = side
@@ -49,12 +55,13 @@ class TradingLogic {
         mOrderRequest.orderType = orderType
     }
 
-    fun createOrder() : OrderResponse {
-        return runBlocking {
-            val orderResponse = alpacaAPIClient.createOrder(mOrderRequest.symbol,
-                mOrderRequest.quantity, mOrderRequest.side, mOrderRequest.timeInForce, mOrderRequest.orderType, 0.0, 0.0)
-            requireNotNull(orderResponse)
-            orderResponse
+    suspend fun createOrder(): OrderResponse {
+        return withContext(Dispatchers.IO) {
+            val orderResponse = alpacaAPIClient.createOrder(
+                mOrderRequest.symbol, mOrderRequest.quantity, mOrderRequest.side,
+                mOrderRequest.timeInForce, mOrderRequest.orderType, 0.0, 0.0
+            )
+            requireNotNull(orderResponse) // Ensure orderResponse is not null
         }
     }
 
