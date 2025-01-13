@@ -1,7 +1,6 @@
-package com.example.tradinglogic
+package com.example.tradingLogic
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.example.finance.datamodel.*
 
@@ -13,7 +12,7 @@ class TradingLogic {
 
     private var mOrderRequest = OrderRequest(
         side = "",
-        orderType = "",
+        type = "",
         timeInForce = "",
         quantity = "",
         symbol = "",
@@ -29,41 +28,31 @@ class TradingLogic {
         positionIntent = null
     )
 
-    fun fetchAccountDetails(): Account {
-        return runBlocking {
+    fun setOrderParameter(orderRequest: OrderRequest) :Boolean {
+        if(!areValidOrderParameter())
+            return false
+        mOrderRequest = orderRequest
+        return true
+    }
+
+    private fun areValidOrderParameter() : Boolean {
+        return mOrderRequest.type in types &&
+                mOrderRequest.side in sides &&
+                mOrderRequest.timeInForce in timeInForces
+
+    }
+
+    suspend fun fetchAccountDetails(): Account {
+        return withContext(Dispatchers.IO) {
             val accountDetails = alpacaAPIClient.getAccountDetails()
             requireNotNull(accountDetails)
-            accountDetails
         }
-    }
-
-    fun setOrderParameter(orderRequest: OrderRequest) {
-        mOrderRequest = orderRequest
-    }
-
-    fun setOrderParameter(
-        symbols: String,
-        quantity: String,
-        side: String,
-        timeInForce: String,
-        orderType: String
-    ) {
-        mOrderRequest.symbol = symbols
-        mOrderRequest.quantity = quantity.toString()
-        mOrderRequest.side = side
-        mOrderRequest.timeInForce = timeInForce
-        mOrderRequest.orderType = orderType
     }
 
     suspend fun createOrder(): OrderResponse {
         return withContext(Dispatchers.IO) {
-            val orderResponse = alpacaAPIClient.createOrder(
-                mOrderRequest.symbol, mOrderRequest.quantity, mOrderRequest.side,
-                mOrderRequest.timeInForce, mOrderRequest.orderType, 0.0, 0.0
-            )
-            requireNotNull(orderResponse) // Ensure orderResponse is not null
+            val orderResponse = alpacaAPIClient.createOrder(mOrderRequest)
+            requireNotNull(orderResponse)
         }
     }
-
-
 }

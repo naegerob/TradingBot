@@ -106,32 +106,9 @@ class AlpacaAPI {
     }
 
     suspend fun createOrder(
-        symbol: String,
-        quantity: String,
-        side: String,
-        timeInForce: String,
-        orderType: String,
-        limitOrStopValue: Double,
-        stopLoss: Double
+        orderRequest: OrderRequest
     ): OrderResponse? {
 
-        val orderRequest = OrderRequest(
-            side = side,
-            orderType = orderType,
-            timeInForce = timeInForce,
-            quantity = quantity,
-            symbol = symbol,
-            limitPrice = null,
-            stopPrice = null,
-            trailPrice = null,
-            trailPercent = null,
-            extendedHours = false,
-            clientOrderId = null,
-            orderClass = "",
-            takeProfit = null,
-            stopLoss = null,
-            positionIntent = null
-        )
         try {
             val httpResponse = client.post(paperBaseUrl) {
                 url {
@@ -144,7 +121,6 @@ class AlpacaAPI {
                 val jsonOrderRequest = Json.encodeToString(orderRequest)
                 setBody(jsonOrderRequest)
             }
-
             return httpResponse.body<OrderResponse>()
         } catch (e: Exception) {
             println(e.message)

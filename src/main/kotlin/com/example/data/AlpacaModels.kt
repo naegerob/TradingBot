@@ -73,7 +73,7 @@ data class AssetPosition(
 @Serializable
 data class OrderRequest(
     @SerialName("side") var side: String,
-    @SerialName("type") var orderType: String,
+    @SerialName("type") var type: String,
     @SerialName("time_in_force") var timeInForce: String,
     @SerialName("qty") var quantity: String,
     @SerialName("symbol") var symbol: String,
@@ -128,6 +128,15 @@ data class OrderResponse(
     val source: String? = null,
     @SerialName("expires_at") val expiresAt: String? = null
 )
+
+@Serializable
+data class ErrorOrderResponse(
+    @SerialName("buying_power") val buyingPower: String,
+    @SerialName("code") val code: Int,
+    @SerialName("cost_basis") val costBasis: String,
+    @SerialName("message") val message: String
+)
+
 
 @Serializable
 data class TakeProfit(
@@ -193,7 +202,7 @@ data class StockBar(
     @SerialName("vw") val vwap: Double       // Volume-weighted average price
 )
 
-val orderTypes = listOf(
+val types = listOf(
     "market", "limit", "stop", "stop_limit", "trailing_stop"
 )
 
@@ -201,9 +210,11 @@ val sides = listOf(
     "buy", "sell"
 )
 
-val timeInForce = listOf(
+val timeInForces = listOf(
     "day", "gtc", "opg", "cls", "ioc", "fok"
 )
 
-
+val extended_hours = listOf(
+    true, false
+)
 
