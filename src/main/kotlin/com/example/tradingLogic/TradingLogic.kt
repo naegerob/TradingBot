@@ -7,10 +7,9 @@ import org.example.finance.datamodel.*
 class TradingLogic {
 
     private val mAlpacaClient = AlpacaAPI()
-    private var mSymbol = ""
 
     private var mHistoricalBars = mutableListOf<StockBar>()
-    private var mHistoricalRequest = StockAggregationRequest(symbols = mSymbol)
+    private var mHistoricalRequest = StockAggregationRequest()
     private var mOrderRequest = OrderRequest()
 
     /************************************************************
