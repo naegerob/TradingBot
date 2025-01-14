@@ -1,7 +1,6 @@
-package com.example.tradinglogic
+package com.example.tradingLogic
 
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.example.finance.datamodel.*
 
@@ -21,27 +20,22 @@ class TradingLogic {
         return withContext(Dispatchers.IO) {
             val accountDetails = mAlpacaClient.getAccountDetails()
             requireNotNull(accountDetails)
+            accountDetails
         }
     }
 
-    fun setOrderParameter(orderRequest: OrderRequest) {
+    fun setOrderParameter(orderRequest: OrderRequest) :Boolean {
+        if(!areValidOrderParameter())
+            return false
         mOrderRequest = orderRequest
-        mSymbol = orderRequest.symbol
+        return true
     }
 
-    fun setOrderParameter(
-        symbol: String,
-        quantity: String,
-        side: String,
-        timeInForce: String,
-        orderType: String
-    ) {
-        mOrderRequest.symbol = symbol
-        mSymbol = symbol
-        mOrderRequest.quantity = quantity
-        mOrderRequest.side = side
-        mOrderRequest.timeInForce = timeInForce
-        mOrderRequest.orderType = orderType
+    private fun areValidOrderParameter() : Boolean {
+        return mOrderRequest.type in types &&
+                mOrderRequest.side in sides &&
+                mOrderRequest.timeInForce in timeInForces
+
     }
 
     suspend fun createOrder(): OrderResponse? {

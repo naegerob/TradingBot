@@ -1,12 +1,11 @@
 package com.example
 
-import com.example.tradinglogic.TradingLogic
+import com.example.tradingLogic.TradingLogic
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.example.finance.datamodel.OrderRequest
-import org.example.finance.datamodel.timeInForce
 
 fun Application.configureRouting(trader: TradingLogic) {
 
@@ -22,8 +21,9 @@ fun Application.configureRouting(trader: TradingLogic) {
 
         route("/Order") {
             get("/Create") {
-                trader.createOrder()
-                call.respond("orderRequest")
+                val orderResponse = trader.createOrder()
+                requireNotNull(orderResponse)
+                call.respond(orderResponse)
             }
             post("/SetAllParameter") {
                 val orderRequest = call.receive<OrderRequest>()

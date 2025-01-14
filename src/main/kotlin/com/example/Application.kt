@@ -1,6 +1,6 @@
 package com.example
 
-import com.example.tradinglogic.TradingLogic
+import com.example.tradingLogic.TradingLogic
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
