@@ -7,61 +7,64 @@ import org.example.finance.datamodel.*
 
 class TradingLogic {
 
-    private val alpacaAPIClient = AlpacaAPI()
+    private val mAlpacaClient = AlpacaAPI()
+    private var mSymbol = ""
 
-    private var historicalBars = mutableListOf<StockBar>()
+    private var mHistoricalBars = mutableListOf<StockBar>()
+    private var mHistoricalRequest = StockAggregationRequest(symbols = mSymbol)
+    private var mOrderRequest = OrderRequest()
 
-    private var mOrderRequest = OrderRequest(
-        side = "",
-        orderType = "",
-        timeInForce = "",
-        quantity = "",
-        symbol = "",
-        limitPrice = null,
-        stopPrice = null,
-        trailPrice = null,
-        trailPercent = null,
-        extendedHours = false,
-        clientOrderId = null,
-        orderClass = "",
-        takeProfit = null,
-        stopLoss = null,
-        positionIntent = null
-    )
-
-    fun fetchAccountDetails(): Account {
-        return runBlocking {
-            val accountDetails = alpacaAPIClient.getAccountDetails()
+    /************************************************************
+        Methods
+     ************************************************************/
+    suspend fun fetchAccountDetails(): Account {
+        return withContext(Dispatchers.IO) {
+            val accountDetails = mAlpacaClient.getAccountDetails()
             requireNotNull(accountDetails)
-            accountDetails
         }
     }
 
     fun setOrderParameter(orderRequest: OrderRequest) {
         mOrderRequest = orderRequest
+        mSymbol = orderRequest.symbol
     }
 
     fun setOrderParameter(
-        symbols: String,
+        symbol: String,
         quantity: String,
         side: String,
         timeInForce: String,
         orderType: String
     ) {
-        mOrderRequest.symbol = symbols
-        mOrderRequest.quantity = quantity.toString()
+        mOrderRequest.symbol = symbol
+        mSymbol = symbol
+        mOrderRequest.quantity = quantity
         mOrderRequest.side = side
         mOrderRequest.timeInForce = timeInForce
         mOrderRequest.orderType = orderType
     }
 
-    suspend fun createOrder(): OrderResponse {
+    suspend fun createOrder(): OrderResponse? {
         return withContext(Dispatchers.IO) {
-            val orderResponse = alpacaAPIClient.createOrder(
-                mOrderRequest.symbol, mOrderRequest.quantity, mOrderRequest.side,
-                mOrderRequest.timeInForce, mOrderRequest.orderType, 0.0, 0.0
-            )
-            requireNotNull(orderResponse) // Ensure orderResponse is not null
+            val orderResponse = mAlpacaClient.createOrder(mOrderRequest)
+            try {
+                requireNotNull(orderResponse) // Ensure orderResponse is not null
+            } catch(e: IllegalArgumentException) {
+                println(e.message)
+                return@withContext null
+            }
+        }
+    }
+
+    suspend fun getHistoricalBars() {
+        withContext(Dispatchers.IO) {
+            val historicalBars = mAlpacaClient.getHistoricalData(mHistoricalRequest)
+            try {
+                requireNotNull(historicalBars) // Ensure orderResponse is not null
+            } catch(e: IllegalArgumentException) {
+                println(e.message)
+                return@withContext null
+            }
         }
     }
 

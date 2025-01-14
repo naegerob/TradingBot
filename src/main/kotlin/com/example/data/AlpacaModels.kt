@@ -72,17 +72,17 @@ data class AssetPosition(
 
 @Serializable
 data class OrderRequest(
-    @SerialName("side") var side: String,
-    @SerialName("type") var orderType: String,
-    @SerialName("time_in_force") var timeInForce: String,
-    @SerialName("qty") var quantity: String,
-    @SerialName("symbol") var symbol: String,
+    @SerialName("side") var side: String = "buy",
+    @SerialName("type") var orderType: String = "market",
+    @SerialName("time_in_force") var timeInForce: String = "day",
+    @SerialName("qty") var quantity: String = "1",
+    @SerialName("symbol") var symbol: String = "AAPL",
     @SerialName("limit_price") val limitPrice: String? = null,
     @SerialName("stop_price") val stopPrice: String? = null,
     @SerialName("trail_price") val trailPrice: String? = null,
     @SerialName("trail_percent") val trailPercent: String? = null,
     @SerialName("extended_hours") val extendedHours: Boolean = false,
-    @SerialName("client_order_id") val clientOrderId: String?,
+    @SerialName("client_order_id") val clientOrderId: String? = null,
     @SerialName("order_class") val orderClass: String? = "",
     @SerialName("take_profit") val takeProfit: TakeProfit? = null,
     @SerialName("stop_loss") val stopLoss: StopLoss? = null,
@@ -142,35 +142,25 @@ data class StopLoss(
 @Serializable
 data class StockAggregationRequest(
     @SerialName("symbols")
-    val symbols: String, // Comma-separated list of stock symbols (e.g., "TSLA,AMZN")
-
+    val symbols: String = "AAPL", // Comma-separated list of stock symbols (e.g., "TSLA,AMZN")
     @SerialName("timeframe")
-    val timeframe: String, // Timeframe for aggregation (e.g., "5Min", "1D", "3M")
-
+    val timeframe: String = "5Min", // Timeframe for aggregation (e.g., "5Min", "1D", "3M")
     @SerialName("start")
     val startDateTime: String? = null, // Inclusive start date-time (RFC-3339 or "YYYY-MM-DD")
-
     @SerialName("end")
     val endDateTime: String? = null, // Inclusive end date-time (RFC-3339 or "YYYY-MM-DD")
-
     @SerialName("limit")
     val limit: Int = 1000, // Maximum number of data points to return (default: 1000)
-
     @SerialName("adjustment")
     val adjustment: String = "raw", // Corporate action adjustment (default: "raw")
-
     @SerialName("asof")
     val asOfDate: String? = null, // As-of date to identify the underlying entity (format: "YYYY-MM-DD")
-
     @SerialName("feed")
     val feed: String = "sip", // Data feed source (default: "sip")
-
     @SerialName("currency")
     val currency: String = "USD", // Currency of prices (default: "USD")
-
     @SerialName("page_token")
     val pageToken: String? = null, // Pagination token for continuing a request
-
     @SerialName("sort")
     val sort: String = "asc" // Sort order (default: "asc")
 )
@@ -203,6 +193,10 @@ val sides = listOf(
 
 val timeInForce = listOf(
     "day", "gtc", "opg", "cls", "ioc", "fok"
+)
+
+val sorts = listOf(
+    "", "asc", "desc"
 )
 
 

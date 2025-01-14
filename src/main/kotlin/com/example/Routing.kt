@@ -11,9 +11,7 @@ import org.example.finance.datamodel.timeInForce
 fun Application.configureRouting(trader: TradingLogic) {
 
     routing {
-        /************************************************************
-        GET-Requests (data are sent to client)
-         *************************************************************/
+
         get("/json/kotlinx-serialization") {
             call.respond(mapOf("hello" to "world"))
         }
@@ -21,9 +19,7 @@ fun Application.configureRouting(trader: TradingLogic) {
             val accountDetails = trader.fetchAccountDetails()
             call.respond(accountDetails)
         }
-        /************************************************************
-        POST-Requests (data are sent from client)
-         ************************************************************/
+
         route("/Order") {
             get("/Create") {
                 trader.createOrder()

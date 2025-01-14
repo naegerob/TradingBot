@@ -105,33 +105,7 @@ class AlpacaAPI {
         }
     }
 
-    suspend fun createOrder(
-        symbol: String,
-        quantity: String,
-        side: String,
-        timeInForce: String,
-        orderType: String,
-        limitOrStopValue: Double,
-        stopLoss: Double
-    ): OrderResponse? {
-
-        val orderRequest = OrderRequest(
-            side = side,
-            orderType = orderType,
-            timeInForce = timeInForce,
-            quantity = quantity,
-            symbol = symbol,
-            limitPrice = null,
-            stopPrice = null,
-            trailPrice = null,
-            trailPercent = null,
-            extendedHours = false,
-            clientOrderId = null,
-            orderClass = "",
-            takeProfit = null,
-            stopLoss = null,
-            positionIntent = null
-        )
+    suspend fun createOrder(orderRequest: OrderRequest): OrderResponse? {
         try {
             val httpResponse = client.post(paperBaseUrl) {
                 url {
@@ -152,41 +126,24 @@ class AlpacaAPI {
         }
     }
 
-    suspend fun getHistoricalData(
-        symbols: String,
-        timeframe: String,
-        startDateTime: String?,
-        endDateTime: String?
-    ): StockAggregationResponse? {
-        val stockDataPoint = StockAggregationRequest(
-            symbols = symbols,
-            timeframe = timeframe,
-            startDateTime = startDateTime,
-            endDateTime = endDateTime,
-            limit = 1000, // Maximum number of data points to return (default: 1000)
-            adjustment = "raw", // Corporate action adjustment (default: "raw")
-            asOfDate = null, // As-of date to identify the underlying entity (format: "YYYY-MM-DD")
-            feed = "sip", // Data feed source (default: "sip")
-            currency = "USD", // Currency of prices (default: "USD")
-            pageToken = null, // Pagination token for continuing a request
-            sort = "asc" // Sort order (default: "asc")
-        )
+    suspend fun getHistoricalData(historialRequest: StockAggregationRequest)
+    : StockAggregationResponse? {
         try {
             val httpResponse = client.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
 
-                    parameters.append("symbols", stockDataPoint.symbols)
-                    parameters.append("timeframe", stockDataPoint.timeframe)
-                    stockDataPoint.startDateTime?.let { parameters.append("start", it) }
-                    stockDataPoint.endDateTime?.let { parameters.append("end", it) }
-                    parameters.append("limit", stockDataPoint.limit.toString())
-                    parameters.append("adjustment", stockDataPoint.adjustment)
-                    stockDataPoint.asOfDate?.let { parameters.append("asof", it) }
-                    parameters.append("feed", stockDataPoint.feed)
-                    parameters.append("currency", stockDataPoint.currency)
-                    stockDataPoint.pageToken?.let { parameters.append("page_token", it) }
-                    parameters.append("sort", stockDataPoint.sort)
+                    parameters.append("symbols", historialRequest.symbols)
+                    parameters.append("timeframe", historialRequest.timeframe)
+                    historialRequest.startDateTime?.let { parameters.append("start", it) }
+                    historialRequest.endDateTime?.let { parameters.append("end", it) }
+                    parameters.append("limit", historialRequest.limit.toString())
+                    parameters.append("adjustment", historialRequest.adjustment)
+                    historialRequest.asOfDate?.let { parameters.append("asof", it) }
+                    parameters.append("feed", historialRequest.feed)
+                    parameters.append("currency", historialRequest.currency)
+                    historialRequest.pageToken?.let { parameters.append("page_token", it) }
+                    parameters.append("sort", historialRequest.sort)
                 }
                 headers {
                     append("accept", "application/json")
