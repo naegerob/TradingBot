@@ -211,5 +211,12 @@ val sorts = listOf(
     "", "asc", "desc"
 )
 
+val timeframes = listOf(
+    "Min", "T", "Hours", "H", "Day", "D", "Week", "W", "Month", "M",
+)
+
+val feeds = listOf(
+    "", "iex", "otc", "sip"
+)
 
 

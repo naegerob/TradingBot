@@ -30,6 +30,22 @@ class TradingLogic {
         return true
     }
 
+    fun setAggregationParameter(stockAggregationRequest: StockAggregationRequest) :Boolean {
+        if(!areValidStockRequestParameter()) {
+            return false
+        }
+        mHistoricalRequest = stockAggregationRequest
+        return true
+    }
+
+    private fun areValidStockRequestParameter(): Boolean {
+        val isTimeframeValid = timeframes.any { mHistoricalRequest.timeframe.contains(it) }
+        val isFeedValid = feeds.any { mHistoricalRequest.feed.contains(it) }
+        val isSortValid = sorts.any { mHistoricalRequest.sort.contains(it) }
+        val hasNumberInTimeFrame = mHistoricalRequest.timeframe.contains(Regex("\\d"))
+        return isTimeframeValid && isFeedValid && isSortValid && hasNumberInTimeFrame
+    }
+
     private fun areValidOrderParameter() : Boolean {
         return mOrderRequest.type in types &&
                 mOrderRequest.side in sides &&
@@ -49,8 +65,8 @@ class TradingLogic {
         }
     }
 
-    suspend fun getHistoricalBars() {
-        withContext(Dispatchers.IO) {
+    suspend fun getHistoricalBars() : StockAggregationResponse? {
+        return withContext(Dispatchers.IO) {
             val historicalBars = mAlpacaClient.getHistoricalData(mHistoricalRequest)
             try {
                 requireNotNull(historicalBars) // Ensure orderResponse is not null
@@ -60,6 +76,5 @@ class TradingLogic {
             }
         }
     }
-
 
 }
