@@ -12,10 +12,7 @@ fun Application.configureRouting(trader: TradingLogic) {
 
     routing {
 
-        get("/json/kotlinx-serialization") {
-            call.respond(mapOf("hello" to "world"))
-        }
-        get("/accountDetails") {
+        get("/AccountDetails") {
             val accountDetails = trader.fetchAccountDetails()
             call.respond(accountDetails)
         }
