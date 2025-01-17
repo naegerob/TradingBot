@@ -53,7 +53,7 @@ class TradingLogic {
 
     }
 
-    suspend fun createOrder(): OrderResponse? {
+    suspend fun createOrder(): ApiResponse? {
         return withContext(Dispatchers.IO) {
             val orderResponse = mAlpacaClient.createOrder(mOrderRequest)
             try {

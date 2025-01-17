@@ -4,6 +4,9 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
 @Serializable
+open class ApiResponse
+
+@Serializable
 data class Account(
     @SerialName("id") val id: String,
     @SerialName("admin_configurations") val adminConfigurations: Map<String, String> = emptyMap(),
@@ -127,16 +130,13 @@ data class OrderResponse(
     val subtag: String? = null,
     val source: String? = null,
     @SerialName("expires_at") val expiresAt: String? = null
-)
+): ApiResponse()
 
 @Serializable
-data class ErrorOrderResponse(
-    @SerialName("buying_power") val buyingPower: String,
+data class ErrorResponse(
     @SerialName("code") val code: Int,
-    @SerialName("cost_basis") val costBasis: String,
     @SerialName("message") val message: String
-)
-
+): ApiResponse()
 
 @Serializable
 data class TakeProfit(

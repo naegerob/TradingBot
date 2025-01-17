@@ -13,12 +13,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
-import io.ktor.http.URLBuilder
-import io.ktor.http.URLProtocol
-import io.ktor.http.Url
-import io.ktor.http.appendPathSegments
-import io.ktor.http.encodedPath
-import io.ktor.http.headers
+import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 
 class AlpacaAPI {
@@ -70,7 +65,7 @@ class AlpacaAPI {
         }.build()
     }
 
-    suspend fun getAccountDetails() : Account? {
+    suspend fun getAccountDetails(): Account? {
         try {
             val httpResponse = client.get(paperBaseUrl) {
                 url {
@@ -104,7 +99,7 @@ class AlpacaAPI {
         }
     }
 
-    suspend fun createOrder(orderRequest: OrderRequest): OrderResponse? {
+    suspend fun createOrder(orderRequest: OrderRequest): ApiResponse? {
         try {
             val httpResponse = client.post(paperBaseUrl) {
                 url {
@@ -118,32 +113,35 @@ class AlpacaAPI {
                 println(orderRequest)
                 setBody(orderRequest)
             }
-
-            return httpResponse.body<OrderResponse>()
+            return when (httpResponse.status) {
+                HttpStatusCode.OK -> httpResponse.body<OrderResponse>()
+                HttpStatusCode.UnprocessableEntity -> httpResponse.body<ErrorResponse>()
+                else -> null
+            }
         } catch (e: Exception) {
             println(e.message)
             return null
         }
     }
 
-    suspend fun getHistoricalData(historialRequest: StockAggregationRequest)
-    : StockAggregationResponse? {
+    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
+            : StockAggregationResponse? {
         try {
             val httpResponse = client.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
 
-                    parameters.append("symbols", historialRequest.symbols)
-                    parameters.append("timeframe", historialRequest.timeframe)
-                    historialRequest.startDateTime?.let { parameters.append("start", it) }
-                    historialRequest.endDateTime?.let { parameters.append("end", it) }
-                    parameters.append("limit", historialRequest.limit.toString())
-                    parameters.append("adjustment", historialRequest.adjustment)
-                    historialRequest.asOfDate?.let { parameters.append("asof", it) }
-                    parameters.append("feed", historialRequest.feed)
-                    parameters.append("currency", historialRequest.currency)
-                    historialRequest.pageToken?.let { parameters.append("page_token", it) }
-                    parameters.append("sort", historialRequest.sort)
+                    parameters.append("symbols", historicalRequest.symbols)
+                    parameters.append("timeframe", historicalRequest.timeframe)
+                    historicalRequest.startDateTime?.let { parameters.append("start", it) }
+                    historicalRequest.endDateTime?.let { parameters.append("end", it) }
+                    parameters.append("limit", historicalRequest.limit.toString())
+                    parameters.append("adjustment", historicalRequest.adjustment)
+                    historicalRequest.asOfDate?.let { parameters.append("asof", it) }
+                    parameters.append("feed", historicalRequest.feed)
+                    parameters.append("currency", historicalRequest.currency)
+                    historicalRequest.pageToken?.let { parameters.append("page_token", it) }
+                    parameters.append("sort", historicalRequest.sort)
                 }
                 headers {
                     append("accept", "application/json")
@@ -151,10 +149,10 @@ class AlpacaAPI {
             }
 
             return httpResponse.body<StockAggregationResponse>()
-        } catch (e: IllegalArgumentException){
+        } catch (e: IllegalArgumentException) {
             println(e.message)
             return null
-        } catch(e: Exception) {
+        } catch (e: Exception) {
             println(e.message)
             return null
         }

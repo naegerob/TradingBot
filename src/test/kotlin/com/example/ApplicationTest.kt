@@ -11,7 +11,9 @@ import io.ktor.http.ContentType.Application.Json
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import org.example.finance.datamodel.Account
+import org.example.finance.datamodel.ErrorResponse
 import org.example.finance.datamodel.OrderRequest
+import org.example.finance.datamodel.OrderResponse
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -22,7 +24,7 @@ class ApplicationTest {
     private val orderRequest = OrderRequest(
         side = "buy",
         type = "market",
-        timeInForce = "day", // Good 'til canceled
+        timeInForce = "day",
         quantity = "2",
         symbol = "TSLA",
         limitPrice = null,
@@ -53,6 +55,7 @@ class ApplicationTest {
             }
         }
     }
+
     @Test
     fun testSetAllParameter() = testApplication {
         application {
@@ -61,31 +64,48 @@ class ApplicationTest {
         val client = getClient()
 
         val httpResponse = client.post("/Order/SetAllParameter") {
-            contentType(Json)
             setBody(orderRequest)
         }
-        println("orderRequest")
-        println(orderRequest)
         assertEquals(HttpStatusCode.OK, httpResponse.status)
-
-        println("httpResponse")
-        println(httpResponse.toString())
         assertEquals(orderRequest, httpResponse.body())
     }
+
     @Test
     fun testCreateOrder() = testApplication {
         application {
             module()
         }
         val client = getClient()
+        val httpResponse = client.get("/Order/Create")
 
-        val httpResponse = client.get("/Order/Create") {
-            contentType(Json)
-        }
-
-        println("httpResponse")
-        println(httpResponse.toString())
+        val accountDetails = httpResponse.body<OrderResponse>()
         assertEquals(HttpStatusCode.OK, httpResponse.status)
+        assertEquals(orderRequest.quantity, accountDetails.qty)
+    }
+
+    @Test
+    fun testCreateBadOrder() = testApplication {
+        application {
+            module()
+        }
+        orderRequest.symbol = "AAPL"
+        orderRequest.side = "buy"
+        orderRequest.type = "limit"
+        orderRequest.timeInForce = "gtc"
+
+        val client = getClient()
+        val httpResponseSetParameter = client.post("/Order/SetAllParameter") {
+            setBody(orderRequest)
+        }
+        println("orderRequest")
+        println(orderRequest)
+        assertEquals(HttpStatusCode.OK, httpResponseSetParameter.status)
+        assertEquals(orderRequest, httpResponseSetParameter.body())
+
+        val httpResponseCreate = client.get("/Order/Create")
+        val accountDetails = httpResponseCreate.body<ErrorResponse>()
+        assertEquals(HttpStatusCode.OK, httpResponseCreate.status)
+        assertEquals(true, accountDetails.message.contains("limit"))
 
     }
 
@@ -104,7 +124,6 @@ class ApplicationTest {
         assertEquals(accountId, accountDetails.accountNumber)
         assertEquals(state, accountDetails.status)
     }
-
 
 
 }
