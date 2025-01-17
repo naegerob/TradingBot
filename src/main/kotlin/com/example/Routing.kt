@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.tradingLogic.TradingLogic
+import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -20,8 +21,12 @@ fun Application.configureRouting(trader: TradingLogic) {
         route("/Order") {
             post("/SetAllParameter") {
                 val orderRequest = call.receive<OrderRequest>()
-                trader.setOrderParameter(orderRequest)
-                call.respond(orderRequest)
+
+                val isSuccessfulSet = trader.setOrderParameter(orderRequest)
+                if(isSuccessfulSet) {
+                    call.respond(orderRequest)
+                }
+                call.respond(HttpStatusCode.BadRequest)
             }
             get("/Create") {
                 val orderResponse = trader.createOrder()

@@ -20,8 +20,6 @@ import io.ktor.http.appendPathSegments
 import io.ktor.http.encodedPath
 import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 class AlpacaAPI {
     private val client = HttpClient(CIO) {
@@ -38,7 +36,8 @@ class AlpacaAPI {
         install(DefaultRequest) {
             header("APCA-API-KEY-ID", PAPERAPIKEY)
             header("APCA-API-SECRET-KEY", PAPERSECRET)
-
+            header("content-type", "application/json")
+            header("accept", "application/json")
         }
     }
     private val paperBaseUrl = createPaperBaseUrl()
@@ -115,9 +114,9 @@ class AlpacaAPI {
                     append("accept", "application/json")
                     append("content-type", "application/json")
                 }
+                println("orderRequest")
                 println(orderRequest)
-                val jsonOrderRequest = Json.encodeToString(orderRequest)
-                setBody(jsonOrderRequest)
+                setBody(orderRequest)
             }
 
             return httpResponse.body<OrderResponse>()

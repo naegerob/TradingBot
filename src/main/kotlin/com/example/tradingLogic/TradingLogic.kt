@@ -13,7 +13,7 @@ class TradingLogic {
     private var mOrderRequest = OrderRequest()
 
     /************************************************************
-        Methods
+    Methods
      ************************************************************/
     suspend fun fetchAccountDetails(): Account {
         return withContext(Dispatchers.IO) {
@@ -23,15 +23,15 @@ class TradingLogic {
         }
     }
 
-    fun setOrderParameter(orderRequest: OrderRequest) :Boolean {
-        if(!areValidOrderParameter())
+    fun setOrderParameter(orderRequest: OrderRequest): Boolean {
+        if (!areValidOrderParameter())
             return false
         mOrderRequest = orderRequest
         return true
     }
 
-    fun setAggregationParameter(stockAggregationRequest: StockAggregationRequest) :Boolean {
-        if(!areValidStockRequestParameter()) {
+    fun setAggregationParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
+        if (!areValidStockRequestParameter()) {
             return false
         }
         mHistoricalRequest = stockAggregationRequest
@@ -46,7 +46,7 @@ class TradingLogic {
         return isTimeframeValid && isFeedValid && isSortValid && hasNumberInTimeFrame
     }
 
-    private fun areValidOrderParameter() : Boolean {
+    private fun areValidOrderParameter(): Boolean {
         return mOrderRequest.type in types &&
                 mOrderRequest.side in sides &&
                 mOrderRequest.timeInForce in timeInForces
@@ -58,19 +58,19 @@ class TradingLogic {
             val orderResponse = mAlpacaClient.createOrder(mOrderRequest)
             try {
                 requireNotNull(orderResponse) // Ensure orderResponse is not null
-            } catch(e: IllegalArgumentException) {
+            } catch (e: IllegalArgumentException) {
                 println(e.message)
                 return@withContext null
             }
         }
     }
 
-    suspend fun getHistoricalBars() : StockAggregationResponse? {
+    suspend fun getHistoricalBars(): StockAggregationResponse? {
         return withContext(Dispatchers.IO) {
             val historicalBars = mAlpacaClient.getHistoricalData(mHistoricalRequest)
             try {
                 requireNotNull(historicalBars) // Ensure orderResponse is not null
-            } catch(e: IllegalArgumentException) {
+            } catch (e: IllegalArgumentException) {
                 println(e.message)
                 return@withContext null
             }

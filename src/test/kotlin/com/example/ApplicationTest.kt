@@ -25,16 +25,16 @@ class ApplicationTest {
         timeInForce = "day", // Good 'til canceled
         quantity = "2",
         symbol = "TSLA",
-        limitPrice = "",
-        stopPrice = "",
-        trailPrice = "",
-        trailPercent = "",
+        limitPrice = null,
+        stopPrice = null,
+        trailPrice = null,
+        trailPercent = null,
         extendedHours = false,
-        clientOrderId = "",
-        orderClass = "",
+        clientOrderId = null,
+        orderClass = null,
         takeProfit = null,
         stopLoss = null,
-        positionIntent = ""
+        positionIntent = null
     )
 
     private fun getClient(): HttpClient {
@@ -43,7 +43,8 @@ class ApplicationTest {
                 json()
             }
             defaultRequest {
-                header("Content-Type", "application/json")
+                header("content-type", "application/json")
+                header("accept", "application/json")
                 url {
                     protocol = URLProtocol.HTTP
                     host = "127.0.0.1"
@@ -63,7 +64,12 @@ class ApplicationTest {
             contentType(Json)
             setBody(orderRequest)
         }
+        println("orderRequest")
+        println(orderRequest)
         assertEquals(HttpStatusCode.OK, httpResponse.status)
+
+        println("httpResponse")
+        println(httpResponse.toString())
         assertEquals(orderRequest, httpResponse.body())
     }
     @Test
@@ -73,7 +79,12 @@ class ApplicationTest {
         }
         val client = getClient()
 
-        val httpResponse = client.get("/Order/Create")
+        val httpResponse = client.get("/Order/Create") {
+            contentType(Json)
+        }
+
+        println("httpResponse")
+        println(httpResponse.toString())
         assertEquals(HttpStatusCode.OK, httpResponse.status)
 
     }
