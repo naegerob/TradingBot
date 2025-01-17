@@ -115,6 +115,7 @@ class AlpacaAPI {
                     append("accept", "application/json")
                     append("content-type", "application/json")
                 }
+                println(orderRequest)
                 val jsonOrderRequest = Json.encodeToString(orderRequest)
                 setBody(jsonOrderRequest)
             }

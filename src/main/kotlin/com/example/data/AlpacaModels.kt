@@ -77,16 +77,16 @@ data class OrderRequest(
     @SerialName("time_in_force") var timeInForce: String = "day",
     @SerialName("qty") var quantity: String = "1",
     @SerialName("symbol") var symbol: String = "AAPL",
-    @SerialName("limit_price") val limitPrice: String? = null,
-    @SerialName("stop_price") val stopPrice: String? = null,
-    @SerialName("trail_price") val trailPrice: String? = null,
-    @SerialName("trail_percent") val trailPercent: String? = null,
+    @SerialName("limit_price") val limitPrice: String = "",
+    @SerialName("stop_price") val stopPrice: String = "",
+    @SerialName("trail_price") val trailPrice: String = "",
+    @SerialName("trail_percent") val trailPercent: String = "",
     @SerialName("extended_hours") val extendedHours: Boolean = false,
-    @SerialName("client_order_id") val clientOrderId: String? = null,
-    @SerialName("order_class") val orderClass: String? = "",
+    @SerialName("client_order_id") val clientOrderId: String = "",
+    @SerialName("order_class") val orderClass: String = "",
     @SerialName("take_profit") val takeProfit: TakeProfit? = null,
     @SerialName("stop_loss") val stopLoss: StopLoss? = null,
-    @SerialName("position_intent") val positionIntent: String? = null
+    @SerialName("position_intent") val positionIntent: String = ""
 )
 
 @Serializable

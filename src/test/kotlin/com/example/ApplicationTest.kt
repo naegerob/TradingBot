@@ -12,6 +12,8 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import org.example.finance.datamodel.Account
 import org.example.finance.datamodel.OrderRequest
+import org.junit.jupiter.api.BeforeEach
+import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -25,7 +27,7 @@ class ApplicationTest {
         symbol = "TSLA",
         limitPrice = "",
         stopPrice = "",
-        trailPrice = null,
+        trailPrice = "",
         trailPercent = "",
         extendedHours = false,
         clientOrderId = "",
@@ -34,15 +36,14 @@ class ApplicationTest {
         stopLoss = null,
         positionIntent = ""
     )
-    private lateinit var client: HttpClient
 
-    @BeforeTest
-    fun setup() {
-        client = HttpClient(CIO) {
+    private fun getClient(): HttpClient {
+        return HttpClient(CIO) {
             install(ContentNegotiation) {
                 json()
             }
             defaultRequest {
+                header("Content-Type", "application/json")
                 url {
                     protocol = URLProtocol.HTTP
                     host = "127.0.0.1"
@@ -51,12 +52,12 @@ class ApplicationTest {
             }
         }
     }
-
     @Test
     fun testSetAllParameter() = testApplication {
         application {
             module()
         }
+        val client = getClient()
 
         val httpResponse = client.post("/Order/SetAllParameter") {
             contentType(Json)
@@ -70,7 +71,7 @@ class ApplicationTest {
         application {
             module()
         }
-
+        val client = getClient()
 
         val httpResponse = client.get("/Order/Create")
         assertEquals(HttpStatusCode.OK, httpResponse.status)
@@ -83,6 +84,7 @@ class ApplicationTest {
             module()
         }
 
+        val client = getClient()
         val accountId = "PA3JEJBVNXV0"
         val state = "ACTIVE"
         val httpResponse = client.get("/AccountDetails")
