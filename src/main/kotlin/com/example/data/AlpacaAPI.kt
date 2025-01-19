@@ -13,6 +13,7 @@ import io.ktor.client.request.get
 import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.encodeToString
@@ -24,7 +25,7 @@ class AlpacaAPI {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
-                isLenient = true
+                isLenient = false
                 ignoreUnknownKeys = true
             })
         }
@@ -106,28 +107,20 @@ class AlpacaAPI {
         }
     }
 
-    suspend fun createOrder(orderRequest: OrderRequest): ApiResponse? {
-        try {
-            val httpResponse = client.post(paperBaseUrl) {
-                url {
-                    appendPathSegments("orders")
-                }
-                headers {
-                    append("accept", "application/json")
-                    append("content-type", "application/json")
-                }
-                println(orderRequest)
-                setBody(orderRequest)
+    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
+
+        return client.post(paperBaseUrl) {
+            url {
+                appendPathSegments("orders")
             }
-            return when (httpResponse.status) {
-                HttpStatusCode.OK -> httpResponse.body<OrderResponse>()
-                HttpStatusCode.UnprocessableEntity -> httpResponse.body<ErrorResponse>()
-                else -> null
+            headers {
+                append("accept", "application/json")
+                append("content-type", "application/json")
             }
-        } catch (e: Exception) {
-            println(e.message)
-            return null
+            println(orderRequest)
+            setBody(orderRequest)
         }
+
     }
 
     suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)

@@ -1,6 +1,7 @@
 package com.example.tradingLogic
 
 import com.example.data.AlpacaAPI
+import io.ktor.client.statement.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.example.finance.datamodel.*
@@ -54,15 +55,9 @@ class TradingLogic {
 
     }
 
-    suspend fun createOrder(): ApiResponse? {
+    suspend fun createOrder(): HttpResponse {
         return withContext(Dispatchers.IO) {
-            val orderResponse = mAlpacaClient.createOrder(mOrderRequest)
-            try {
-                requireNotNull(orderResponse) // Ensure orderResponse is not null
-            } catch (e: IllegalArgumentException) {
-                println(e.message)
-                return@withContext null
-            }
+            mAlpacaClient.createOrder(mOrderRequest)
         }
     }
 

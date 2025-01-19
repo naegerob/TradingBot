@@ -30,7 +30,6 @@ fun Application.configureRouting(trader: TradingLogic) {
             }
             get("/Create") {
                 val orderResponse = trader.createOrder()
-                requireNotNull(orderResponse)
                 call.respond(orderResponse)
             }
         }
