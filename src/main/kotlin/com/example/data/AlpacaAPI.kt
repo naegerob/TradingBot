@@ -1,4 +1,4 @@
-package org.example.finance.datamodel
+package com.example.data
 
 import io.ktor.client.HttpClient
 import io.ktor.client.call.body
@@ -22,11 +22,16 @@ import io.ktor.http.headers
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.example.finance.datamodel.*
 
 class AlpacaAPI {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
-            json()
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = true
+            })
         }
         engine {
             requestTimeout = 0 // 0 to disable, or a millisecond value to fit your needs
