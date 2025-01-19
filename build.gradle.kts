@@ -30,7 +30,7 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
-
+    implementation(libs.ktor.server.default.headers)
     // Ktor client
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.cio)
