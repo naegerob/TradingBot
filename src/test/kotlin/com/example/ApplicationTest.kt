@@ -86,7 +86,6 @@ class ApplicationTest {
             HttpStatusCode.UnprocessableEntity -> {
                 val response = httpResponse.body<ErrorResponse>()
                 assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-                // TODO: Check content
                 
             }
             else -> null

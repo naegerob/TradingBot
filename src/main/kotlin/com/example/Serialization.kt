@@ -25,16 +25,16 @@ fun Application.configureSerialization() {
         header("accept", "application/json")
     }
 
-    install(StatusPages) {
-        exception<Throwable> { call, cause ->
-            if(cause is SerializationException) {
-                call.respondText(text = "Could not serialize: $cause" , status = HttpStatusCode.InternalServerError)
-            } else if(cause is ContentConvertException) {
-                call.respondText(text = "Could not convert: $cause" , status = HttpStatusCode.InternalServerError)
-            } else {
-                call.respondText(text = "Everything else which I had no idea about: $cause" , status = HttpStatusCode.InternalServerError)
-            }
-        }
-
-    }
+//    install(StatusPages) {
+//        exception<Throwable> { call, cause ->
+//            if(cause is SerializationException) {
+//                call.respondText(text = "Could not serialize: $cause" , status = HttpStatusCode.InternalServerError)
+//            } else if(cause is ContentConvertException) {
+//                call.respondText(text = "Could not convert: $cause" , status = HttpStatusCode.InternalServerError)
+//            } else {
+//                call.respondText(text = "Everything else which I had no idea about: $cause" , status = HttpStatusCode.InternalServerError)
+//            }
+//        }
+//
+//    }
 }
