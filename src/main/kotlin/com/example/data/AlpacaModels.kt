@@ -3,6 +3,7 @@ package org.example.finance.datamodel
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
 
+// TODO: separate to different files
 @Serializable
 open class ApiResponse
 
@@ -129,7 +130,7 @@ data class OrderResponse(
     val hwm: String? = null,
     val subtag: String? = null,
     val source: String? = null,
-    @SerialName("expires_at") val expiresAt: String? = null
+    @SerialName("expires_at") val expiresAt: String? = §null
 ): ApiResponse()
 
 @Serializable
