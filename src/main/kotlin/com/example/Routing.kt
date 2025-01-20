@@ -14,8 +14,13 @@ fun Application.configureRouting(trader: TradingLogic) {
     routing {
 
         get("/AccountDetails") {
-            val accountDetails = trader.fetchAccountDetails()
-            call.respond(accountDetails)
+            val orderResponse = trader.fetchAccountDetails()
+            println(orderResponse)
+            when(orderResponse.status) {
+                HttpStatusCode.OK -> call.respond(orderResponse)
+                HttpStatusCode.UnprocessableEntity -> call.respond(HttpStatusCode.UnprocessableEntity)
+                else -> call.respond(HttpStatusCode.InternalServerError)
+            }
         }
 
         route("/Order") {
@@ -30,7 +35,6 @@ fun Application.configureRouting(trader: TradingLogic) {
             }
             get("/Create") {
                 call.respond((HttpStatusCode.OK))
-                return@get
                 val orderResponse = trader.createOrder()
                 when(orderResponse.status) {
                     HttpStatusCode.OK -> call.respond(orderResponse)

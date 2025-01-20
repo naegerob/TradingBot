@@ -39,7 +39,8 @@ class ApplicationTest {
                 json(Json {
                     prettyPrint = true
                     isLenient = true
-                    ignoreUnknownKeys = true
+                    ignoreUnknownKeys = false
+                    encodeDefaults = true
                 })
             }
             defaultRequest {

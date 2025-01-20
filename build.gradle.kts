@@ -31,6 +31,8 @@ dependencies {
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.default.headers)
+    implementation(libs.ktor.server.status.pages)
+
     // Ktor client
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.cio)
