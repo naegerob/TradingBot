@@ -2,28 +2,21 @@ package com.example
 
 import com.example.tradingLogic.TradingLogic
 import io.ktor.client.call.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.example.finance.datamodel.Account
-import org.example.finance.datamodel.OrderRequest
-import org.example.finance.datamodel.OrderResponse
-import org.example.finance.datamodel.StockAggregationRequest
+import org.example.finance.datamodel.*
 
 fun Application.configureRouting(trader: TradingLogic) {
 
     routing {
 
         get("/AccountDetails") {
-            val orderResponse = trader.fetchAccountDetails() // Assuming this returns an HttpResponse
-            val accountDetails = orderResponse.body<Account>()
-            when(orderResponse.status) {
-                HttpStatusCode.OK -> call.respond(HttpStatusCode.OK, accountDetails)
-                HttpStatusCode.UnprocessableEntity -> call.respond(HttpStatusCode.UnprocessableEntity)
-                else -> call.respond(HttpStatusCode.InternalServerError)
-            }
+            val accountResponse = trader.fetchAccountDetails() // Assuming this returns an HttpResponse
+            respondToClient<Account>(accountResponse, call)
         }
 
         route("/Order") {
@@ -37,29 +30,39 @@ fun Application.configureRouting(trader: TradingLogic) {
                 call.respond(HttpStatusCode.BadRequest)
             }
             get("/Create") {
-                call.respond((HttpStatusCode.OK))
                 val orderResponse = trader.createOrder()
-                val orderDetails = orderResponse.body<OrderResponse>()
-                when(orderResponse.status) {
-                    HttpStatusCode.OK -> call.respond(HttpStatusCode.OK, orderDetails)
-                    HttpStatusCode.UnprocessableEntity -> call.respond(HttpStatusCode.UnprocessableEntity)
-                    else -> call.respond(HttpStatusCode.InternalServerError)
-                }
-
+                respondToClient<OrderResponse>(orderResponse, call)
             }
         }
         route("/HistoricalBars") {
             post("/SetAllParameter") {
                 val stockRequest = call.receive<StockAggregationRequest>()
                 trader.setAggregationParameter(stockRequest)
-                call.respond(stockRequest)
             }
 
             get("/Request") {
                 val historicalBarsResponse = trader.getHistoricalBars()
-                call.respond(historicalBarsResponse)
+                respondToClient<StockAggregationResponse>(historicalBarsResponse, call)
             }
         }
+
+
         
+    }
+}
+
+suspend fun <T>respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
+
+    when (httpResponse.status) {
+        HttpStatusCode.OK                   -> {
+            val details = httpResponse.body<Class<T>>()
+            println(details)
+            call.respond(HttpStatusCode.OK, details)
+        }
+        HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)
+        HttpStatusCode.NotFound             -> call.respond(HttpStatusCode.NotFound)
+        HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient.")
+        HttpStatusCode.UnprocessableEntity  -> call.respond(HttpStatusCode.UnprocessableEntity, "Input parameters are not recognized.")
+        else                                -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
     }
 }

@@ -20,7 +20,7 @@ class ApplicationTest {
         type = "market",
         timeInForce = "day",
         quantity = "2",
-        symbol = "GOOGL",
+        symbol = "AAPL",
         limitPrice = null,
         stopPrice = null,
         trailPrice = null,
@@ -76,19 +76,27 @@ class ApplicationTest {
         }
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
-
+        println("httpResponse")
+        println(httpResponse)
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<OrderResponse>()
                 assertEquals(HttpStatusCode.OK, httpResponse.status)
-                // TODO: check content
+                assertEquals(orderRequest.quantity, response.filledQty)
             }
             HttpStatusCode.UnprocessableEntity -> {
-                val response = httpResponse.body<ErrorResponse>()
                 assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-                
+                assertEquals("Input parameters are not recognized.", httpResponse.body())
             }
-            else -> null
+            HttpStatusCode.Forbidden -> {
+                assertEquals(HttpStatusCode.Forbidden, httpResponse.status)
+                assertEquals("Buying power or shares is not sufficient.", httpResponse.body())
+            }
+            HttpStatusCode.InternalServerError -> {
+                assertEquals(HttpStatusCode.InternalServerError, httpResponse.status)
+                assertEquals("Error is not handled.", httpResponse.body())
+            }
+            else -> assert(false) // TODO: for now: Let test fail
         }
     }
 
@@ -107,6 +115,4 @@ class ApplicationTest {
         assertEquals(accountId, accountDetails.accountNumber)
         assertEquals(state, accountDetails.status)
     }
-
-
 }

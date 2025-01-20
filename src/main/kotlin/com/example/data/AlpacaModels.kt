@@ -139,6 +139,16 @@ data class ErrorResponse(
 ): ApiResponse()
 
 @Serializable
+data class InsufficientBuyingPowerResponse(
+    @SerialName("buying_power") val buyingPower: String,
+    @SerialName("code") val code: Int,
+    @SerialName("cost_basis") val costBasis: String,
+    @SerialName("message") val message: String
+): ApiResponse()
+
+
+
+@Serializable
 data class TakeProfit(
     @SerialName("limit_price") val limitPrice: String
 )
