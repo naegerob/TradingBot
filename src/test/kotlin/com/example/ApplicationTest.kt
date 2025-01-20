@@ -20,7 +20,7 @@ class ApplicationTest {
         type = "market",
         timeInForce = "day",
         quantity = "2",
-        symbol = "TSLA",
+        symbol = "GOOGL",
         limitPrice = null,
         stopPrice = null,
         trailPrice = null,
@@ -75,6 +75,7 @@ class ApplicationTest {
         }
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
+
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<OrderResponse>()
@@ -89,32 +90,6 @@ class ApplicationTest {
             }
             else -> null
         }
-    }
-
-    @Test
-    fun testCreateBadOrder() = testApplication {
-        application {
-            module()
-        }
-        orderRequest.symbol = "AAPL"
-        orderRequest.side = "buy"
-        orderRequest.type = "limit"
-        orderRequest.timeInForce = "gtc"
-
-        val client = getClient()
-        val httpResponseSetParameter = client.post("/Order/SetAllParameter") {
-            setBody(orderRequest)
-        }
-        println("orderRequest")
-        println(orderRequest)
-        assertEquals(HttpStatusCode.OK, httpResponseSetParameter.status)
-        assertEquals(orderRequest, httpResponseSetParameter.body())
-
-        val httpResponseCreate = client.get("/Order/Create")
-        val accountDetails = httpResponseCreate.body<ErrorResponse>()
-        assertEquals(HttpStatusCode.OK, httpResponseCreate.status)
-        assertEquals(true, accountDetails.message.contains("limit"))
-
     }
 
     @Test

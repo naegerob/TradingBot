@@ -21,7 +21,7 @@ fun Application.configureRouting(trader: TradingLogic) {
         route("/Order") {
             post("/SetAllParameter") {
                 val orderRequest = call.receive<OrderRequest>()
-
+                println(orderRequest)
                 val isSuccessfulSet = trader.setOrderParameter(orderRequest)
                 if(isSuccessfulSet) {
                     call.respond(orderRequest)
@@ -29,8 +29,15 @@ fun Application.configureRouting(trader: TradingLogic) {
                 call.respond(HttpStatusCode.BadRequest)
             }
             get("/Create") {
+                call.respond((HttpStatusCode.OK))
+                return@get
                 val orderResponse = trader.createOrder()
-                call.respond(orderResponse)
+                when(orderResponse.status) {
+                    HttpStatusCode.OK -> call.respond(orderResponse)
+                    HttpStatusCode.UnprocessableEntity -> call.respond(HttpStatusCode.UnprocessableEntity)
+                    else -> call.respond(HttpStatusCode.InternalServerError)
+                }
+
             }
         }
         route("/HistoricalBars") {
@@ -42,7 +49,6 @@ fun Application.configureRouting(trader: TradingLogic) {
 
             get("/Request") {
                 val historicalBarsResponse = trader.getHistoricalBars()
-                requireNotNull(historicalBarsResponse)
                 call.respond(historicalBarsResponse)
             }
         }

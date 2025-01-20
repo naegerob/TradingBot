@@ -17,13 +17,6 @@ class TradingLogic {
     /************************************************************
     Methods
      ************************************************************/
-    suspend fun fetchAccountDetails(): Account {
-        return withContext(Dispatchers.IO) {
-            val accountDetails = mAlpacaClient.getAccountDetails()
-            requireNotNull(accountDetails)
-            accountDetails
-        }
-    }
 
     fun setOrderParameter(orderRequest: OrderRequest): Boolean {
         if (!areValidOrderParameter())
@@ -56,21 +49,15 @@ class TradingLogic {
     }
 
     suspend fun createOrder(): HttpResponse {
-        return withContext(Dispatchers.IO) {
-            mAlpacaClient.createOrder(mOrderRequest)
-        }
+        return mAlpacaClient.createOrder(mOrderRequest)
     }
 
-    suspend fun getHistoricalBars(): StockAggregationResponse? {
-        return withContext(Dispatchers.IO) {
-            val historicalBars = mAlpacaClient.getHistoricalData(mHistoricalRequest)
-            try {
-                requireNotNull(historicalBars) // Ensure orderResponse is not null
-            } catch (e: IllegalArgumentException) {
-                println(e.message)
-                return@withContext null
-            }
-        }
+    suspend fun getHistoricalBars(): HttpResponse {
+        return mAlpacaClient.getHistoricalData(mHistoricalRequest)
+    }
+
+    suspend fun fetchAccountDetails(): HttpResponse {
+        return mAlpacaClient.getAccountDetails()
     }
 
 }

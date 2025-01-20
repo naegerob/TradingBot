@@ -1,7 +1,6 @@
 package com.example.data
 
 import io.ktor.client.HttpClient
-import io.ktor.client.call.body
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
@@ -16,7 +15,8 @@ import io.ktor.client.request.setBody
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.json
-import kotlinx.serialization.encodeToString
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 import org.example.finance.datamodel.*
 
@@ -26,7 +26,7 @@ class AlpacaAPI {
             json(Json {
                 prettyPrint = true
                 isLenient = false
-                ignoreUnknownKeys = true
+                ignoreUnknownKeys = false
             })
         }
         engine {
@@ -73,9 +73,9 @@ class AlpacaAPI {
         }.build()
     }
 
-    suspend fun getAccountDetails(): Account? {
-        try {
-            val httpResponse = client.get(paperBaseUrl) {
+    suspend fun getAccountDetails(): HttpResponse {
+        return withContext(Dispatchers.IO) {
+            client.get(paperBaseUrl) {
                 url {
                     appendPathSegments("account")
                 }
@@ -83,16 +83,12 @@ class AlpacaAPI {
                     append("accept", "application/json")
                 }
             }
-            return httpResponse.body<Account>()
-        } catch (e: Exception) {
-            println(e.message)
-            return null
         }
     }
 
-    suspend fun getOpenPositions(): AssetPosition? {
-        try {
-            val httpResponse = client.get(paperBaseUrl) {
+    suspend fun getOpenPositions(): HttpResponse {
+        return withContext(Dispatchers.IO) {
+            client.get(paperBaseUrl) {
                 url {
                     appendPathSegments("positions")
                 }
@@ -100,33 +96,29 @@ class AlpacaAPI {
                     append("accept", "application/json")
                 }
             }
-            return httpResponse.body<AssetPosition>()
-        } catch (e: Exception) {
-            println(e.message)
-            return null
         }
     }
 
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
-
-        return client.post(paperBaseUrl) {
-            url {
-                appendPathSegments("orders")
+        return withContext(Dispatchers.IO) {
+            client.post(paperBaseUrl) {
+                url {
+                    appendPathSegments("orders")
+                }
+                headers {
+                    append("accept", "application/json")
+                    append("content-type", "application/json")
+                }
+                println(orderRequest)
+                setBody(orderRequest)
             }
-            headers {
-                append("accept", "application/json")
-                append("content-type", "application/json")
-            }
-            println(orderRequest)
-            setBody(orderRequest)
         }
-
     }
 
     suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
-            : StockAggregationResponse? {
-        try {
-            val httpResponse = client.get(paperBaseMarketUrl) {
+            : HttpResponse {
+        return withContext(Dispatchers.IO) {
+            client.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
 
@@ -146,14 +138,6 @@ class AlpacaAPI {
                     append("accept", "application/json")
                 }
             }
-
-            return httpResponse.body<StockAggregationResponse>()
-        } catch (e: IllegalArgumentException) {
-            println(e.message)
-            return null
-        } catch (e: Exception) {
-            println(e.message)
-            return null
         }
     }
 }
