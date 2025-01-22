@@ -13,11 +13,15 @@ class TradingLogic {
     private var mHistoricalBars = mutableListOf<StockBar>()
     private var mHistoricalRequest = StockAggregationRequest()
     private var mOrderRequest = OrderRequest()
+        get
+
 
     /************************************************************
     Methods
      ************************************************************/
-
+    fun getOrderRequest(): OrderRequest {
+        return mOrderRequest
+    }
     fun setOrderParameter(orderRequest: OrderRequest): Boolean {
         if (!areValidOrderParameter())
             return false

@@ -1,13 +1,13 @@
 package com.example
 
 import com.example.tradingLogic.TradingLogic
-import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.json.Json
 import org.example.finance.datamodel.*
 
 fun Application.configureRouting(trader: TradingLogic) {
@@ -16,7 +16,7 @@ fun Application.configureRouting(trader: TradingLogic) {
 
         get("/AccountDetails") {
             val accountResponse = trader.fetchAccountDetails() // Assuming this returns an HttpResponse
-            respondToClient<Account>(accountResponse, call)
+            respondToClient(accountResponse, call)
         }
 
         route("/Order") {
@@ -26,12 +26,17 @@ fun Application.configureRouting(trader: TradingLogic) {
                 val isSuccessfulSet = trader.setOrderParameter(orderRequest)
                 if(isSuccessfulSet) {
                     call.respond(orderRequest)
+                    return@post
                 }
                 call.respond(HttpStatusCode.BadRequest)
             }
             get("/Create") {
+                val request = trader.getOrderRequest()
+                println(Json.encodeToString(OrderRequest.serializer(), request))
+                println(request)
                 val orderResponse = trader.createOrder()
-                respondToClient<OrderResponse>(orderResponse, call)
+                println(orderResponse)
+                respondToClient(orderResponse, call)
             }
         }
         route("/HistoricalBars") {
@@ -42,7 +47,7 @@ fun Application.configureRouting(trader: TradingLogic) {
 
             get("/Request") {
                 val historicalBarsResponse = trader.getHistoricalBars()
-                respondToClient<StockAggregationResponse>(historicalBarsResponse, call)
+                respondToClient(historicalBarsResponse, call)
             }
         }
 
@@ -51,7 +56,7 @@ fun Application.configureRouting(trader: TradingLogic) {
     }
 }
 
-suspend fun <T>respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
+suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
         HttpStatusCode.OK                   -> {

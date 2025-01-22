@@ -6,6 +6,7 @@ import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
@@ -15,23 +16,27 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class ApplicationTest {
-    private val orderRequest = OrderRequest(
-        side = "buy",
-        type = "market",
-        timeInForce = "day",
-        quantity = "2",
-        symbol = "AAPL",
-        limitPrice = null,
-        stopPrice = null,
-        trailPrice = null,
-        trailPercent = null,
-        extendedHours = false,
-        clientOrderId = null,
-        orderClass = null,
-        takeProfit = null,
-        stopLoss = null,
-        positionIntent = null
-    )
+    private var orderRequest = defaultOrderRequest
+
+    companion object {
+        private val defaultOrderRequest = OrderRequest(
+            side = "buy",
+            type = "market",
+            timeInForce = "day",
+            quantity = "2",
+            symbol = "AAPL",
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            extendedHours = false,
+            clientOrderId = null,
+            orderClass = null,
+            takeProfit = null,
+            stopLoss = null,
+            positionIntent = null
+        )
+    }
 
     private fun getClient(): HttpClient {
         return HttpClient(CIO) {
@@ -60,13 +65,19 @@ class ApplicationTest {
         application {
             module()
         }
+        val httpResponse = setAllParameter()
+        assertEquals(HttpStatusCode.OK, httpResponse.status)
+        assertEquals(orderRequest, httpResponse.body())
+    }
+
+    private suspend fun setAllParameter(): HttpResponse {
         val client = getClient()
 
         val httpResponse = client.post("/Order/SetAllParameter") {
             setBody(orderRequest)
         }
-        assertEquals(HttpStatusCode.OK, httpResponse.status)
-        assertEquals(orderRequest, httpResponse.body())
+        client.close()
+        return httpResponse
     }
 
     @Test
@@ -74,27 +85,22 @@ class ApplicationTest {
         application {
             module()
         }
+        // Precondition
+        orderRequest = defaultOrderRequest
+        val preHttpResponse = setAllParameter()
+        assertEquals(HttpStatusCode.OK, preHttpResponse.status)
+
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
         println("httpResponse")
         println(httpResponse)
+        println("ORDERREUEST")
+        println(orderRequest)
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<OrderResponse>()
                 assertEquals(HttpStatusCode.OK, httpResponse.status)
                 assertEquals(orderRequest.quantity, response.filledQty)
-            }
-            HttpStatusCode.UnprocessableEntity -> {
-                assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-                assertEquals("Input parameters are not recognized.", httpResponse.body())
-            }
-            HttpStatusCode.Forbidden -> {
-                assertEquals(HttpStatusCode.Forbidden, httpResponse.status)
-                assertEquals("Buying power or shares is not sufficient.", httpResponse.body())
-            }
-            HttpStatusCode.InternalServerError -> {
-                assertEquals(HttpStatusCode.InternalServerError, httpResponse.status)
-                assertEquals("Error is not handled.", httpResponse.body())
             }
             else -> assert(false) // TODO: for now: Let test fail
         }
@@ -107,7 +113,7 @@ class ApplicationTest {
         }
 
         val client = getClient()
-        val accountId = "PA3JEJBVNXV0"
+        val accountId = "PA3ALX4NGLN0"
         val state = "ACTIVE"
         val httpResponse = client.get("/AccountDetails")
         assertEquals(HttpStatusCode.OK, httpResponse.status)

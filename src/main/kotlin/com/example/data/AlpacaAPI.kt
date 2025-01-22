@@ -51,8 +51,8 @@ class AlpacaAPI {
         private const val PAPERHOST = "paper-api.alpaca.markets"
         private const val PAPERMARKETHOST = "data.alpaca.markets"
         private const val BASEURLAPPENDIX = "v2"
-        private const val PAPERAPIKEY = "PK44IDD5ECKOR1IDIZ6Z"
-        private const val PAPERSECRET = "DILoINnEdZBtFacrp1zAD7HiXF2UH5bmEed6CAOy"
+        private const val PAPERAPIKEY = "PK5TLV8XYYKYCDRLO27S"
+        private const val PAPERSECRET = "8m0gXDS87YwZfhUiXrSMCWElFagoqwgGHUbfAbmy"
         private const val APIKEY = "AKFKVCZGHSW6OHQQS4K0"
         private const val SECRET = "Pu5t7eaRNqxdcmLgjwlm8ohsdW5Kz0leaSfw14EU"
     }
