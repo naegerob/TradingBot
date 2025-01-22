@@ -130,7 +130,7 @@ data class OrderResponse(
     val hwm: String? = null,
     val subtag: String? = null,
     val source: String? = null,
-    @SerialName("expires_at") val expiresAt: String? = §null
+    @SerialName("expires_at") val expiresAt: String? = null
 ): ApiResponse()
 
 @Serializable

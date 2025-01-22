@@ -55,7 +55,7 @@ suspend fun <T>respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
         HttpStatusCode.OK                   -> {
-            val details = httpResponse.body<Class<T>>()
+            val details = httpResponse.bodyAsText()
             println(details)
             call.respond(HttpStatusCode.OK, details)
         }
