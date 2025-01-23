@@ -32,9 +32,10 @@ fun Application.configureRouting(trader: TradingLogic) {
             }
             get("/Create") {
                 val request = trader.getOrderRequest()
-                println(Json.encodeToString(OrderRequest.serializer(), request))
+                println("request")
                 println(request)
                 val orderResponse = trader.createOrder()
+                println("orderResponse")
                 println(orderResponse)
                 respondToClient(orderResponse, call)
             }

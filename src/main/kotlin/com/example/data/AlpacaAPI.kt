@@ -26,7 +26,8 @@ class AlpacaAPI {
             json(Json {
                 prettyPrint = true
                 isLenient = false
-                ignoreUnknownKeys = false
+                ignoreUnknownKeys = true
+                encodeDefaults = true
             })
         }
         engine {
@@ -109,7 +110,6 @@ class AlpacaAPI {
                     append("accept", "application/json")
                     append("content-type", "application/json")
                 }
-                println(orderRequest)
                 setBody(orderRequest)
             }
         }

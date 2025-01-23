@@ -100,7 +100,7 @@ class ApplicationTest {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<OrderResponse>()
                 assertEquals(HttpStatusCode.OK, httpResponse.status)
-                assertEquals(orderRequest.quantity, response.filledQty)
+                assertEquals(orderRequest.quantity, response.qty)
             }
             else -> assert(false) // TODO: for now: Let test fail
         }
