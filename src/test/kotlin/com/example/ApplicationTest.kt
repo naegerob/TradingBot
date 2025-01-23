@@ -14,6 +14,7 @@ import kotlinx.serialization.json.Json
 import org.example.finance.datamodel.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class ApplicationTest {
     private var orderRequest = defaultOrderRequest
@@ -107,15 +108,41 @@ class ApplicationTest {
     }
 
     @Test
+    fun testBadOrder() = testApplication {
+        application {
+            module()
+        }
+        // Precondition
+        orderRequest = defaultOrderRequest
+        orderRequest.symbol = "ASDFASDF"
+        val preHttpResponse = setAllParameter()
+        assertEquals(HttpStatusCode.OK, preHttpResponse.status)
+
+        val client = getClient()
+        val httpResponse = client.get("/Order/Create")
+        val testString = "asset \"" + orderRequest.symbol + "\" not found"
+        when (httpResponse.status) {
+            HttpStatusCode.UnprocessableEntity -> {
+                val response = httpResponse.body<ErrorResponse>().toString()
+                assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
+                assertTrue(response.contains(testString));
+            }
+            else -> assert(false) // TODO: for now: Let test fail
+        }
+
+
+    }
+
+    @Test
     fun testAccountDetails() = testApplication {
         application {
             module()
         }
-
         val client = getClient()
         val accountId = "PA3ALX4NGLN0"
         val state = "ACTIVE"
         val httpResponse = client.get("/AccountDetails")
+
         assertEquals(HttpStatusCode.OK, httpResponse.status)
         val accountDetails = httpResponse.body<Account>()
         assertEquals(accountId, accountDetails.accountNumber)
