@@ -1,4 +1,4 @@
-package org.example.finance.datamodel
+package com.example.data
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerialName
@@ -135,8 +135,8 @@ data class OrderResponse(
 
 @Serializable
 data class ErrorResponse(
-    @SerialName("code") val code: Int,
-    @SerialName("message") val message: String
+    val code: Int,
+    val message: String
 ): ApiResponse()
 
 @Serializable

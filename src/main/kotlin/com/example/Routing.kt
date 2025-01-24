@@ -1,5 +1,7 @@
 package com.example
 
+import com.example.data.OrderRequest
+import com.example.data.StockAggregationRequest
 import com.example.tradingLogic.TradingLogic
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -7,8 +9,6 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.json.Json
-import org.example.finance.datamodel.*
 
 fun Application.configureRouting(trader: TradingLogic) {
 

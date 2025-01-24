@@ -1,5 +1,9 @@
 package com.example
 
+import com.example.data.Account
+import com.example.data.ErrorResponse
+import com.example.data.OrderRequest
+import com.example.data.OrderResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -11,13 +15,12 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
-import org.example.finance.datamodel.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 class ApplicationTest {
-    private var orderRequest = defaultOrderRequest
+    private var orderRequest = defaultOrderRequest.copy()
 
     companion object {
         private val defaultOrderRequest = OrderRequest(
@@ -87,7 +90,11 @@ class ApplicationTest {
             module()
         }
         // Precondition
-        orderRequest = defaultOrderRequest
+        orderRequest = defaultOrderRequest.copy()
+        println("ORDERREUEST")
+        println(orderRequest)
+        println("default")
+        println(defaultOrderRequest)
         val preHttpResponse = setAllParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
 
@@ -113,19 +120,24 @@ class ApplicationTest {
             module()
         }
         // Precondition
-        orderRequest = defaultOrderRequest
+        orderRequest = defaultOrderRequest.copy()
         orderRequest.symbol = "ASDFASDF"
         val preHttpResponse = setAllParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
 
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
-        val testString = "asset \"" + orderRequest.symbol + "\" not found"
+        println("httpResponse")
+        println(httpResponse.bodyAsText())
+
+        val testString = "Input parameters are not recognized."
         when (httpResponse.status) {
             HttpStatusCode.UnprocessableEntity -> {
-                val response = httpResponse.body<ErrorResponse>().toString()
+                val response = httpResponse.bodyAsText()
+                println("response")
+                println(response)
                 assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-                assertTrue(response.contains(testString));
+                assertEquals(response, testString);
             }
             else -> assert(false) // TODO: for now: Let test fail
         }

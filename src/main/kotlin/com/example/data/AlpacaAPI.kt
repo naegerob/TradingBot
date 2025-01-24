@@ -18,7 +18,6 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import org.example.finance.datamodel.*
 
 class AlpacaAPI {
     private val client = HttpClient(CIO) {
