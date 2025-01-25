@@ -13,7 +13,6 @@ import io.ktor.server.routing.*
 fun Application.configureRouting(trader: TradingLogic) {
 
     routing {
-
         get("/AccountDetails") {
             val accountResponse = trader.fetchAccountDetails() // Assuming this returns an HttpResponse
             respondToClient(accountResponse, call)
