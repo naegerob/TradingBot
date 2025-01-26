@@ -14,6 +14,7 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class ApplicationTest {
     private var orderRequest = defaultOrderRequest.copy()
@@ -39,9 +40,9 @@ class ApplicationTest {
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
             symbols = "AAPL",
-            timeframe = "5Min",
-            startDateTime = null,
-            endDateTime = null,
+            timeframe = "1Min",
+            startDateTime = "2024-01-03T00:00:00Z",
+            endDateTime = "2024-01-04T00:00:00Z",
             limit = 1000,
             adjustment = "raw",
             asOfDate = null,
@@ -187,7 +188,9 @@ class ApplicationTest {
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<StockAggregationResponse>()
+                println(response)
                 assertEquals(HttpStatusCode.OK, httpResponse.status)
+                assertNotEquals(response.bars, emptyMap())
             }
             else -> assert(false) // TODO: for now: Let test fail
         }

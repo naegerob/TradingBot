@@ -49,9 +49,6 @@ fun Application.configureRouting(trader: TradingLogic) {
                 respondToClient(historicalBarsResponse, call)
             }
         }
-
-
-        
     }
 }
 
