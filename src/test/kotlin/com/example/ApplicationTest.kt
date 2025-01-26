@@ -17,8 +17,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class ApplicationTest {
-    private var orderRequest = defaultOrderRequest.copy()
-    private var stockAggregationRequest = defaultStockAggregationRequest.copy()
+    private var mOrderRequest = defaultOrderRequest.copy()
+    private var mStockAggregationRequest = defaultStockAggregationRequest.copy()
 
     companion object {
         private val defaultOrderRequest = OrderRequest(
@@ -39,7 +39,7 @@ class ApplicationTest {
             positionIntent = null
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
-            symbols = "AAPL",
+            symbols = "AAPL,TSLA",
             timeframe = "1Min",
             startDateTime = "2024-01-03T00:00:00Z",
             endDateTime = "2024-01-04T00:00:00Z",
@@ -82,14 +82,14 @@ class ApplicationTest {
         }
         val httpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, httpResponse.status)
-        assertEquals(orderRequest, httpResponse.body())
+        assertEquals(mOrderRequest, httpResponse.body())
     }
 
     private suspend fun setAllOrderParameter(): HttpResponse {
         val client = getClient()
 
         val httpResponse = client.post("/Order/SetAllParameter") {
-            setBody(orderRequest)
+            setBody(mOrderRequest)
         }
         client.close()
         return httpResponse
@@ -98,7 +98,7 @@ class ApplicationTest {
     private suspend fun setAllHistBarsParameter(): HttpResponse {
         val client = getClient()
         val httpResponse = client.post("/HistoricalBars/SetAllParameter") {
-            setBody(stockAggregationRequest)
+            setBody(mStockAggregationRequest)
         }
         client.close()
         return httpResponse
@@ -110,7 +110,7 @@ class ApplicationTest {
             module()
         }
         // Precondition
-        orderRequest = defaultOrderRequest.copy()
+        mOrderRequest = defaultOrderRequest.copy()
         val preHttpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
 
@@ -120,7 +120,7 @@ class ApplicationTest {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<OrderResponse>()
                 assertEquals(HttpStatusCode.OK, httpResponse.status)
-                assertEquals(orderRequest.quantity, response.qty)
+                assertEquals(mOrderRequest.quantity, response.qty)
             }
             else -> assert(false) // TODO: for now: Let test fail
         }
@@ -132,11 +132,11 @@ class ApplicationTest {
             module()
         }
         // Precondition
-        orderRequest = defaultOrderRequest.copy()
-        orderRequest.symbol = "ASDFASDF"
+        mOrderRequest = defaultOrderRequest.copy()
+        mOrderRequest.symbol = "ASDFASDF"
         val preHttpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
-        assertEquals(orderRequest, preHttpResponse.body())
+        assertEquals(mOrderRequest, preHttpResponse.body())
 
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
@@ -176,15 +176,13 @@ class ApplicationTest {
             module()
         }
         // Preconditions
-        stockAggregationRequest = defaultStockAggregationRequest.copy()
+        mStockAggregationRequest = defaultStockAggregationRequest.copy()
         val preHttpResponse = setAllHistBarsParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
-        assertEquals(stockAggregationRequest, preHttpResponse.body())
+        assertEquals(mStockAggregationRequest, preHttpResponse.body())
 
         val client = getClient()
-
         val httpResponse = client.get("/HistoricalBars/Request")
-
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<StockAggregationResponse>()
@@ -194,7 +192,5 @@ class ApplicationTest {
             }
             else -> assert(false) // TODO: for now: Let test fail
         }
-
     }
-
 }

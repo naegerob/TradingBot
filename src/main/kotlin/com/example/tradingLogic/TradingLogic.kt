@@ -1,17 +1,33 @@
 package com.example.tradingLogic
 
 import com.example.data.*
+import io.ktor.client.call.*
 import io.ktor.client.statement.*
+import io.ktor.http.*
 
 class TradingLogic {
 
     private val mAlpacaClient = AlpacaAPI()
 
-    private var mHistoricalBars = mutableListOf<StockBar>()
     private var mHistoricalRequest = StockAggregationRequest()
     private var mOrderRequest = OrderRequest()
-        get
+    private var mHistoricalBars = listOf<StockBar>()
 
+    enum class Windows(val windowLength: Int) {
+        SHORT(20),
+        LONG(50),
+    }
+
+    private var mMovingAverage = emptyMap<Windows, MutableList<Int>>()
+
+    private var mResistance = null
+    private var mSupport = null
+
+    enum class Bands {
+        LOW, MIDDLE, HIGH
+    }
+
+    private var mBollingerBands = emptyMap<Bands, MutableList<Int>>()
 
     /************************************************************
     Methods
@@ -28,7 +44,10 @@ class TradingLogic {
         return mOrderRequest.type in types &&
                 mOrderRequest.side in sides &&
                 mOrderRequest.timeInForce in timeInForces
+    }
 
+    private fun getFirstSymbol(): String {
+        return mHistoricalRequest.symbols.substringBefore(",")
     }
 
     fun setOrderParameter(orderRequest: OrderRequest): Boolean {
@@ -46,17 +65,33 @@ class TradingLogic {
         return true
     }
 
-
     suspend fun createOrder(): HttpResponse {
         return mAlpacaClient.createOrder(mOrderRequest)
     }
 
     suspend fun getHistoricalBars(): HttpResponse {
-        return mAlpacaClient.getHistoricalData(mHistoricalRequest)
+        val httpResponse = mAlpacaClient.getHistoricalData(mHistoricalRequest)
+        try {
+            when (httpResponse.status) {
+                HttpStatusCode.OK -> {
+                    val stockResponse = httpResponse.body<StockAggregationResponse>()
+                    mHistoricalBars = stockResponse.bars[getFirstSymbol()]!!
+                }
+            }
+        } catch (e: Exception) {
+            // TODO: Error Handling
+            return httpResponse
+        }
+        return httpResponse
     }
 
     suspend fun fetchAccountDetails(): HttpResponse {
         return mAlpacaClient.getAccountDetails()
     }
+
+    fun calculateValues() {
+        // TODO: calculate
+    }
+
 
 }

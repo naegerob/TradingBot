@@ -55,10 +55,8 @@ fun Application.configureRouting(trader: TradingLogic) {
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
-        HttpStatusCode.OK                   -> {
-            val details = httpResponse.bodyAsText()
-            call.respond(HttpStatusCode.OK, details)
-        }
+        HttpStatusCode.OK                   -> call.respond(HttpStatusCode.OK, httpResponse.bodyAsText())
+        HttpStatusCode.BadRequest           -> call.respond(HttpStatusCode.BadRequest, "Parameter have wrong format. CHeck Alpaca Doc!")
         HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)
         HttpStatusCode.NotFound             -> call.respond(HttpStatusCode.NotFound)
         HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient.")

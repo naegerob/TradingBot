@@ -134,20 +134,12 @@ data class OrderResponse(
 ): ApiResponse()
 
 @Serializable
-data class ErrorResponse(
-    val code: Int,
-    val message: String
-): ApiResponse()
-
-@Serializable
 data class InsufficientBuyingPowerResponse(
     @SerialName("buying_power") val buyingPower: String,
     @SerialName("code") val code: Int,
     @SerialName("cost_basis") val costBasis: String,
     @SerialName("message") val message: String
 ): ApiResponse()
-
-
 
 @Serializable
 data class TakeProfit(
@@ -183,13 +175,13 @@ data class StockAggregationRequest(
     val pageToken: String? = null, // Pagination token for continuing a request
     @SerialName("sort")
     val sort: String = "asc" // Sort order (default: "asc")
-)
+): ApiResponse()
 
 @Serializable
 data class StockAggregationResponse(
     val bars: Map<String, List<StockBar>>, // Dynamic key for each stock symbol
     @SerialName("next_page_token") val nextPageToken: String? = null
-)
+): ApiResponse()
 
 @Serializable
 data class StockBar(
@@ -201,6 +193,11 @@ data class StockBar(
     @SerialName("t") val timestamp: String,  // Timestamp (ISO 8601)
     @SerialName("v") val volume: Int,        // Volume
     @SerialName("vw") val vwap: Double       // Volume-weighted average price
+): ApiResponse()
+
+@Serializable
+data class ErrorResponse(
+    val message: String
 )
 
 val types = listOf(
