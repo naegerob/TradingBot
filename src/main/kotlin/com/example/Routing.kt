@@ -21,7 +21,6 @@ fun Application.configureRouting(trader: TradingLogic) {
         route("/Order") {
             post("/SetAllParameter") {
                 val orderRequest = call.receive<OrderRequest>()
-                println(orderRequest)
                 val isSuccessfulSet = trader.setOrderParameter(orderRequest)
                 if(isSuccessfulSet) {
                     call.respond(orderRequest)
@@ -30,19 +29,19 @@ fun Application.configureRouting(trader: TradingLogic) {
                 call.respond(HttpStatusCode.BadRequest)
             }
             get("/Create") {
-                val request = trader.getOrderRequest()
-                println("request")
-                println(request)
                 val orderResponse = trader.createOrder()
-                println("orderResponse")
-                println(orderResponse)
                 respondToClient(orderResponse, call)
             }
         }
         route("/HistoricalBars") {
             post("/SetAllParameter") {
                 val stockRequest = call.receive<StockAggregationRequest>()
-                trader.setAggregationParameter(stockRequest)
+                val isSuccessfulSet = trader.setAggregationParameter(stockRequest)
+                if(isSuccessfulSet) {
+                    call.respond(stockRequest)
+                    return@post
+                }
+                call.respond(HttpStatusCode.BadRequest)
             }
 
             get("/Request") {
@@ -61,7 +60,6 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
     when (httpResponse.status) {
         HttpStatusCode.OK                   -> {
             val details = httpResponse.bodyAsText()
-            println(details)
             call.respond(HttpStatusCode.OK, details)
         }
         HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)

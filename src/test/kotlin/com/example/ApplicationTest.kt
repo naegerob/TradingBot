@@ -1,9 +1,6 @@
 package com.example
 
-import com.example.data.Account
-import com.example.data.ErrorResponse
-import com.example.data.OrderRequest
-import com.example.data.OrderResponse
+import com.example.data.*
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -17,10 +14,10 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class ApplicationTest {
     private var orderRequest = defaultOrderRequest.copy()
+    private var stockAggregationRequest = defaultStockAggregationRequest.copy()
 
     companion object {
         private val defaultOrderRequest = OrderRequest(
@@ -39,6 +36,19 @@ class ApplicationTest {
             takeProfit = null,
             stopLoss = null,
             positionIntent = null
+        )
+        private val defaultStockAggregationRequest = StockAggregationRequest(
+            symbols = "AAPL",
+            timeframe = "5Min",
+            startDateTime = null,
+            endDateTime = null,
+            limit = 1000,
+            adjustment = "raw",
+            asOfDate = null,
+            feed = "sip",
+            currency = "USD",
+            pageToken = null,
+            sort = "asc"
         )
     }
 
@@ -65,20 +75,29 @@ class ApplicationTest {
     }
 
     @Test
-    fun testSetAllParameter() = testApplication {
+    fun testOrderSetAllParameter() = testApplication {
         application {
             module()
         }
-        val httpResponse = setAllParameter()
+        val httpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, httpResponse.status)
         assertEquals(orderRequest, httpResponse.body())
     }
 
-    private suspend fun setAllParameter(): HttpResponse {
+    private suspend fun setAllOrderParameter(): HttpResponse {
         val client = getClient()
 
         val httpResponse = client.post("/Order/SetAllParameter") {
             setBody(orderRequest)
+        }
+        client.close()
+        return httpResponse
+    }
+
+    private suspend fun setAllHistBarsParameter(): HttpResponse {
+        val client = getClient()
+        val httpResponse = client.post("/HistoricalBars/SetAllParameter") {
+            setBody(stockAggregationRequest)
         }
         client.close()
         return httpResponse
@@ -91,19 +110,11 @@ class ApplicationTest {
         }
         // Precondition
         orderRequest = defaultOrderRequest.copy()
-        println("ORDERREUEST")
-        println(orderRequest)
-        println("default")
-        println(defaultOrderRequest)
-        val preHttpResponse = setAllParameter()
+        val preHttpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
 
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
-        println("httpResponse")
-        println(httpResponse)
-        println("ORDERREUEST")
-        println(orderRequest)
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val response = httpResponse.body<OrderResponse>()
@@ -122,20 +133,17 @@ class ApplicationTest {
         // Precondition
         orderRequest = defaultOrderRequest.copy()
         orderRequest.symbol = "ASDFASDF"
-        val preHttpResponse = setAllParameter()
+        val preHttpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
+        assertEquals(orderRequest, preHttpResponse.body())
 
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
-        println("httpResponse")
-        println(httpResponse.bodyAsText())
 
         val testString = "Input parameters are not recognized."
         when (httpResponse.status) {
             HttpStatusCode.UnprocessableEntity -> {
                 val response = httpResponse.bodyAsText()
-                println("response")
-                println(response)
                 assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
                 assertEquals(response, testString);
             }
@@ -160,4 +168,30 @@ class ApplicationTest {
         assertEquals(accountId, accountDetails.accountNumber)
         assertEquals(state, accountDetails.status)
     }
+
+    @Test
+    fun testHistBarsRequest() = testApplication {
+        application {
+            module()
+        }
+        // Preconditions
+        stockAggregationRequest = defaultStockAggregationRequest.copy()
+        val preHttpResponse = setAllHistBarsParameter()
+        assertEquals(HttpStatusCode.OK, preHttpResponse.status)
+        assertEquals(stockAggregationRequest, preHttpResponse.body())
+
+        val client = getClient()
+
+        val httpResponse = client.get("/HistoricalBars/Request")
+
+        when (httpResponse.status) {
+            HttpStatusCode.OK -> {
+                val response = httpResponse.body<StockAggregationResponse>()
+                assertEquals(HttpStatusCode.OK, httpResponse.status)
+            }
+            else -> assert(false) // TODO: for now: Let test fail
+        }
+
+    }
+
 }
