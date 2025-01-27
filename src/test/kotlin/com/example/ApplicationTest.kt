@@ -40,7 +40,7 @@ class ApplicationTest {
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
             symbols = "AAPL,TSLA",
-            timeframe = "1Min",
+            timeframe = "10Min",
             startDateTime = "2024-01-03T00:00:00Z",
             endDateTime = "2024-01-04T00:00:00Z",
             limit = 1000,
@@ -49,7 +49,7 @@ class ApplicationTest {
             feed = "sip",
             currency = "USD",
             pageToken = null,
-            sort = "asc"
+            sort = "desc"
         )
     }
 

@@ -134,14 +134,6 @@ data class OrderResponse(
 ): ApiResponse()
 
 @Serializable
-data class InsufficientBuyingPowerResponse(
-    @SerialName("buying_power") val buyingPower: String,
-    @SerialName("code") val code: Int,
-    @SerialName("cost_basis") val costBasis: String,
-    @SerialName("message") val message: String
-): ApiResponse()
-
-@Serializable
 data class TakeProfit(
     @SerialName("limit_price") val limitPrice: String
 )
@@ -174,7 +166,7 @@ data class StockAggregationRequest(
     @SerialName("page_token")
     val pageToken: String? = null, // Pagination token for continuing a request
     @SerialName("sort")
-    val sort: String = "asc" // Sort order (default: "asc")
+    val sort: String = "desc" // Sort order: Newest at start
 ): ApiResponse()
 
 @Serializable

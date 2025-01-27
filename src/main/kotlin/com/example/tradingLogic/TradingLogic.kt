@@ -16,6 +16,7 @@ class TradingLogic {
     enum class Windows(val windowLength: Int) {
         SHORT(20),
         LONG(50),
+        BB(40)
     }
 
     private var mMovingAverage = emptyMap<Windows, MutableList<Int>>()
@@ -89,8 +90,28 @@ class TradingLogic {
         return mAlpacaClient.getAccountDetails()
     }
 
-    fun calculateValues() {
-        // TODO: calculate
+    fun calculateIndicators() {
+        val closingPrices: List<Double> = mHistoricalBars.map { it.close }
+        val meanShort = closingPrices
+            .take(Windows.SHORT.windowLength)
+            .average()
+
+        val meanLong = closingPrices
+            .take(Windows.LONG.windowLength)
+            .average()
+
+        val middleBollingerBand = closingPrices
+            .take(Windows.BB.windowLength)
+            .average()
+
+
+        // TODO: Calculate RSI
+        // TODO: Check calculation properly
+        
+
+
+
+
     }
 
 
