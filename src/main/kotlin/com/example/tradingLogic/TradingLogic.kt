@@ -104,10 +104,14 @@ class TradingLogic {
             .take(Windows.BB.windowLength)
             .average()
 
+        val upperBollingerBand = closingPrices
+            .windowed(Windows.BB.windowLength)
 
+
+        // TODO: calculate upper and lower BollingerBand
         // TODO: Calculate RSI
         // TODO: Check calculation properly
-        
+
 
 
 
