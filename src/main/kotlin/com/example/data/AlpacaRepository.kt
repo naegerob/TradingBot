@@ -1,5 +1,7 @@
 package com.example.data
 
+import com.example.data.singleModels.OrderRequest
+import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.DefaultRequest
