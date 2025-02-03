@@ -24,6 +24,10 @@ class TradingLogic {
     private var mResistance = null
     private var mSupport = null
 
+    private var mAverageBolligerBand = emptyList<Double>()
+    private var mLowerBollingerBands = emptyList<Double>()
+    private var mHigherBollingerBands = emptyList<Double>()
+
     enum class Bands {
         LOW, MIDDLE, HIGH
     }
@@ -77,6 +81,7 @@ class TradingLogic {
                 HttpStatusCode.OK -> {
                     val stockResponse = httpResponse.body<StockAggregationResponse>()
                     mHistoricalBars = stockResponse.bars[getFirstSymbol()]!!
+                    calculateIndicators()
                 }
             }
         } catch (e: Exception) {
@@ -92,6 +97,11 @@ class TradingLogic {
 
     fun calculateIndicators() {
         val closingPrices: List<Double> = mHistoricalBars.map { it.close }
+
+        if(closingPrices.size < Windows.SHORT.windowLength) {
+            return
+        }
+        println(closingPrices.size)
         val meanShort = closingPrices
             .take(Windows.SHORT.windowLength)
             .average()
@@ -112,11 +122,37 @@ class TradingLogic {
         // TODO: Calculate RSI
         // TODO: Check calculation properly
 
-
-
-
-
     }
+
+    fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0): Triple<List<Double>, List<Double>, List<Double>> {
+        val smaList = mutableListOf<Double>()
+        val upperBand = mutableListOf<Double>()
+        val lowerBand = mutableListOf<Double>()
+
+        for (i in prices.indices) {
+            if (i >= period - 1) {
+                val window = prices.subList(i - period + 1, i + 1)
+
+                // Calculate SMA
+                val sma = window.average()
+                smaList.add(sma)
+
+                // Calculate Standard Deviation
+                val stdDev = kotlin.math.sqrt(window.map { (it - sma) * (it - sma) }.sum() / period)
+
+                // Calculate Upper and Lower Bands
+                upperBand.add(sma + stdDevMultiplier * stdDev)
+                lowerBand.add(sma - stdDevMultiplier * stdDev)
+            } else {
+                smaList.add(0.0)  // Fill with 0 until enough data points
+                upperBand.add(0.0)
+                lowerBand.add(0.0)
+            }
+        }
+
+        return Triple(smaList, upperBand, lowerBand)
+    }
+
 
 
 }
