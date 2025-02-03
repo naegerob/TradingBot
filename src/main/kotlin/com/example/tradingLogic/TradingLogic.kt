@@ -106,13 +106,12 @@ class TradingLogic {
         println(mUpperBollingerBand)
         println(mUpperBollingerBand.size)
         println("H")
-        // TODO: calculate upper and lower BollingerBand
         // TODO: Calculate RSI
         // TODO: Check calculation properly
 
     }
 
-    fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0) {
+    private fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0) {
         var sortedPrices = prices
         if(mHistoricalRequest.sort == sort[1]) {
             sortedPrices = prices.reversed()
