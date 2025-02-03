@@ -1,5 +1,7 @@
 package com.example.data
 
+import com.example.data.singleModels.OrderRequest
+import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.plugins.DefaultRequest
@@ -19,6 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
+// Consider passing client and Dispatcher for DI
 class AlpacaAPI {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
@@ -65,58 +68,45 @@ class AlpacaAPI {
         }.build()
     }
 
-    private fun createPaperMarketBaseUrl(): Url {
-        return URLBuilder().apply {
+    private fun createPaperMarketBaseUrl(): Url =
+        URLBuilder().apply {
             protocol = URLProtocol.createOrDefault(SCHEME)
             host = PAPERMARKETHOST
             encodedPath = BASEURLAPPENDIX
         }.build()
-    }
 
-    suspend fun getAccountDetails(): HttpResponse {
-        return withContext(Dispatchers.IO) {
+
+    suspend fun getAccountDetails(): HttpResponse =
+        withContext(Dispatchers.IO) {
             client.get(paperBaseUrl) {
                 url {
                     appendPathSegments("account")
                 }
-                headers {
-                    append("accept", "application/json")
-                }
             }
         }
-    }
 
-    suspend fun getOpenPositions(): HttpResponse {
-        return withContext(Dispatchers.IO) {
+    suspend fun getOpenPositions(): HttpResponse =
+        withContext(Dispatchers.IO) {
             client.get(paperBaseUrl) {
                 url {
                     appendPathSegments("positions")
                 }
-                headers {
-                    append("accept", "application/json")
-                }
             }
         }
-    }
 
-    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
-        return withContext(Dispatchers.IO) {
+    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
+        withContext(Dispatchers.IO) {
             client.post(paperBaseUrl) {
                 url {
                     appendPathSegments("orders")
                 }
-                headers {
-                    append("accept", "application/json")
-                    append("content-type", "application/json")
-                }
                 setBody(orderRequest)
             }
         }
-    }
 
     suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
-            : HttpResponse {
-        return withContext(Dispatchers.IO) {
+            : HttpResponse =
+        withContext(Dispatchers.IO) {
             client.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
@@ -133,10 +123,6 @@ class AlpacaAPI {
                     historicalRequest.pageToken?.let { parameters.append("page_token", it) }
                     parameters.append("sort", historicalRequest.sort)
                 }
-                headers {
-                    append("accept", "application/json")
-                }
             }
         }
-    }
 }

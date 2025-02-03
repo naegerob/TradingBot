@@ -1,6 +1,7 @@
 package com.example.tradingLogic
 
 import com.example.data.*
+import com.example.data.singleModels.*
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import io.ktor.http.*

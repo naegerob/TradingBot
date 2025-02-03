@@ -1,7 +1,7 @@
 package com.example
 
-import com.example.data.OrderRequest
-import com.example.data.StockAggregationRequest
+import com.example.data.singleModels.OrderRequest
+import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.TradingLogic
 import io.ktor.client.statement.*
 import io.ktor.http.*
