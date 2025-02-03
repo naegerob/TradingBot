@@ -5,6 +5,9 @@ import com.example.data.singleModels.*
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import java.math.RoundingMode
+import java.text.DecimalFormat
+import kotlin.math.roundToLong
 
 class TradingLogic {
 
@@ -25,15 +28,9 @@ class TradingLogic {
     private var mResistance = null
     private var mSupport = null
 
-    private var mAverageBolligerBand = emptyList<Double>()
-    private var mLowerBollingerBands = emptyList<Double>()
-    private var mHigherBollingerBands = emptyList<Double>()
-
-    enum class Bands {
-        LOW, MIDDLE, HIGH
-    }
-
-    private var mBollingerBands = emptyMap<Bands, MutableList<Int>>()
+    private var mAverageBolligerBand = mutableListOf<Double>()
+    private var mLowerBollingerBand = mutableListOf<Double>()
+    private var mUpperBollingerBand = mutableListOf<Double>()
 
     /************************************************************
     Methods
@@ -99,59 +96,55 @@ class TradingLogic {
     fun calculateIndicators() {
         val closingPrices: List<Double> = mHistoricalBars.map { it.close }
 
-        if(closingPrices.size < Windows.SHORT.windowLength) {
-            return
-        }
+        calculateBollingerBands(closingPrices)
+        println(closingPrices)
         println(closingPrices.size)
-        val meanShort = closingPrices
-            .take(Windows.SHORT.windowLength)
-            .average()
-
-        val meanLong = closingPrices
-            .take(Windows.LONG.windowLength)
-            .average()
-
-        val middleBollingerBand = closingPrices
-            .take(Windows.BB.windowLength)
-            .average()
-
-        val upperBollingerBand = closingPrices
-            .windowed(Windows.BB.windowLength)
-
-
+        println(mAverageBolligerBand)
+        println(mAverageBolligerBand.size)
+        println(mLowerBollingerBand)
+        println(mLowerBollingerBand.size)
+        println(mUpperBollingerBand)
+        println(mUpperBollingerBand.size)
+        println("H")
         // TODO: calculate upper and lower BollingerBand
         // TODO: Calculate RSI
         // TODO: Check calculation properly
 
     }
 
-    fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0): Triple<List<Double>, List<Double>, List<Double>> {
-        val smaList = mutableListOf<Double>()
-        val upperBand = mutableListOf<Double>()
-        val lowerBand = mutableListOf<Double>()
-
-        for (i in prices.indices) {
+    fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0) {
+        var sortedPrices = prices
+        if(mHistoricalRequest.sort == sort[1]) {
+            sortedPrices = prices.reversed()
+        }
+        mAverageBolligerBand.clear()
+        mUpperBollingerBand.clear()
+        mLowerBollingerBand.clear()
+        for (i in sortedPrices.indices) {
             if (i >= period - 1) {
-                val window = prices.subList(i - period + 1, i + 1)
+                val window = sortedPrices.subList(i - period + 1, i + 1)
 
                 // Calculate SMA
                 val sma = window.average()
-                smaList.add(sma)
+                val df = DecimalFormat("#.##")
+                df.roundingMode = RoundingMode.CEILING
+                val roundedAverage =  df.format(sma).toDouble()
+                mAverageBolligerBand.add(roundedAverage)
 
                 // Calculate Standard Deviation
-                val stdDev = kotlin.math.sqrt(window.map { (it - sma) * (it - sma) }.sum() / period)
+                val stdDev = kotlin.math.sqrt(window.sumOf { (it - sma) * (it - sma) } / period)
 
                 // Calculate Upper and Lower Bands
-                upperBand.add(sma + stdDevMultiplier * stdDev)
-                lowerBand.add(sma - stdDevMultiplier * stdDev)
+                val lowerRounded = df.format(sma - stdDevMultiplier * stdDev).toDouble()
+                val upperRounded = df.format(sma + stdDevMultiplier * stdDev).toDouble()
+                mUpperBollingerBand.add(upperRounded)
+                mLowerBollingerBand.add(lowerRounded)
             } else {
-                smaList.add(0.0)  // Fill with 0 until enough data points
-                upperBand.add(0.0)
-                lowerBand.add(0.0)
+                mAverageBolligerBand.add(0.0)  // Fill with 0 until enough data points
+                mUpperBollingerBand.add(0.0)
+                mLowerBollingerBand.add(0.0)
             }
         }
-
-        return Triple(smaList, upperBand, lowerBand)
     }
 
 

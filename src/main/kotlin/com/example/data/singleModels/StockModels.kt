@@ -49,6 +49,9 @@ data class StockBar(
 ): ApiResponse()
 
 
+val sort = listOf(
+    "asc", "desc"
+)
 
 val timeframes = listOf(
     "Min", "T", "Hours", "H", "Day", "D", "Week", "W", "Month", "M",
