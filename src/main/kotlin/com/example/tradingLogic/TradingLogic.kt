@@ -86,6 +86,7 @@ class TradingLogic {
             }
         } catch (e: Exception) {
             // TODO: Error Handling
+            println(e)
             return httpResponse
         }
         return httpResponse
