@@ -39,11 +39,11 @@ class ApplicationTest {
             positionIntent = null
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
-            symbols = "TSLA",
+            symbols = "AAPL",
             timeframe = "1H",
             startDateTime = "2025-01-19T00:00:00Z",
             endDateTime = "2025-02-02T00:00:00Z",
-            limit = 1000,
+            limit = 500,
             adjustment = "raw",
             asOfDate = null,
             feed = "sip",

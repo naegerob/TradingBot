@@ -7,7 +7,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import java.math.RoundingMode
 import java.text.DecimalFormat
-import kotlin.math.roundToLong
+import kotlin.math.pow
 
 class TradingLogic {
 
@@ -31,6 +31,8 @@ class TradingLogic {
     private var mAverageBolligerBand = mutableListOf<Double>()
     private var mLowerBollingerBand = mutableListOf<Double>()
     private var mUpperBollingerBand = mutableListOf<Double>()
+
+    private var mRsi = mutableListOf<Double>()
 
     /************************************************************
     Methods
@@ -93,10 +95,11 @@ class TradingLogic {
         return mAlpacaClient.getAccountDetails()
     }
 
-    fun calculateIndicators() {
+    private fun calculateIndicators() {
         val closingPrices: List<Double> = mHistoricalBars.map { it.close }
 
         calculateBollingerBands(closingPrices)
+        calculateRsi(closingPrices)
         println(closingPrices)
         println(closingPrices.size)
         println(mAverageBolligerBand)
@@ -105,12 +108,53 @@ class TradingLogic {
         println(mLowerBollingerBand.size)
         println(mUpperBollingerBand)
         println(mUpperBollingerBand.size)
+        println(mRsi)
+        println(mRsi.size)
         println("H")
         // TODO: Calculate RSI
         // TODO: Check calculation properly
 
     }
 
+    // TODO: why is it 14 and sometimes 13?
+    private fun calculateRsi(prices: List<Double>, period: Int = 14) {
+
+        mRsi.clear()
+        val gains = mutableListOf<Double>()
+        val losses = mutableListOf<Double>()
+
+        // Calculate initial gains and losses
+        for (i in 1 until period) {
+            val delta = prices[i] - prices[i - 1]
+            if (delta > 0) {
+                gains.add(delta)
+            } else {
+                losses.add(-delta)
+            }
+        }
+
+        // Compute first average gain and loss
+        var avgGain = gains.average()
+        var avgLoss = losses.average()
+
+        // Compute RSI using exponential smoothing
+        for (i in period until prices.size) {
+            val delta = prices[i] - prices[i - 1]
+            val gain = if (delta > 0) delta else 0.0
+            val loss = if (delta < 0) -delta else 0.0
+
+            // Smoothed averages
+            avgGain = ((avgGain * (period - 1)) + gain) / period
+            avgLoss = ((avgLoss * (period - 1)) + loss) / period
+
+            val rs = if (avgLoss == 0.0) Double.POSITIVE_INFINITY else avgGain / avgLoss
+            val rsi = 100 - (100 / (1 + rs))
+
+            mRsi[i] = rsi
+        }
+    }
+
+    // clears the lists, if prices.size < window
     private fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0) {
         var sortedPrices = prices
         if(mHistoricalRequest.sort == sort[1]) {
@@ -123,19 +167,16 @@ class TradingLogic {
             if (i >= period - 1) {
                 val window = sortedPrices.subList(i - period + 1, i + 1)
 
-                // Calculate SMA
                 val sma = window.average()
                 val df = DecimalFormat("#.##")
                 df.roundingMode = RoundingMode.CEILING
-                val roundedAverage =  df.format(sma).toDouble()
-                mAverageBolligerBand.add(roundedAverage)
+                val roundedSma =  df.format(sma).toDouble()
+                mAverageBolligerBand.add(roundedSma)
 
-                // Calculate Standard Deviation
-                val stdDev = kotlin.math.sqrt(window.sumOf { (it - sma) * (it - sma) } / period)
+                val stdDev = kotlin.math.sqrt(window.sumOf { (it - sma).pow(2) } / period)
 
-                // Calculate Upper and Lower Bands
-                val lowerRounded = df.format(sma - stdDevMultiplier * stdDev).toDouble()
-                val upperRounded = df.format(sma + stdDevMultiplier * stdDev).toDouble()
+                val lowerRounded = df.format(roundedSma - stdDevMultiplier * stdDev).toDouble()
+                val upperRounded = df.format(roundedSma + stdDevMultiplier * stdDev).toDouble()
                 mUpperBollingerBand.add(upperRounded)
                 mLowerBollingerBand.add(lowerRounded)
             } else {
