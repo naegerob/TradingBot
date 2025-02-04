@@ -23,8 +23,6 @@ class TradingLogic {
         BB(40)
     }
 
-    private var mMovingAverage = emptyMap<Windows, MutableList<Int>>()
-
     private var mResistance = null
     private var mSupport = null
 
@@ -150,8 +148,11 @@ class TradingLogic {
 
             val rs = if (avgLoss == 0.0) Double.POSITIVE_INFINITY else avgGain / avgLoss
             val rsi = 100 - (100 / (1 + rs))
+            val df = DecimalFormat("#.##")
+            df.roundingMode = RoundingMode.CEILING
+            val roundedRsi =  df.format(rsi).toDouble()
 
-            mRsi[i] = rsi
+            mRsi.add(roundedRsi)
         }
     }
 
@@ -164,7 +165,7 @@ class TradingLogic {
         mAverageBolligerBand.clear()
         mUpperBollingerBand.clear()
         mLowerBollingerBand.clear()
-        for (i in sortedPrices.indices) {
+        for (i in period until sortedPrices.size) {
             if (i >= period - 1) {
                 val window = sortedPrices.subList(i - period + 1, i + 1)
 
@@ -180,10 +181,6 @@ class TradingLogic {
                 val upperRounded = df.format(roundedSma + stdDevMultiplier * stdDev).toDouble()
                 mUpperBollingerBand.add(upperRounded)
                 mLowerBollingerBand.add(lowerRounded)
-            } else {
-                mAverageBolligerBand.add(0.0)  // Fill with 0 until enough data points
-                mUpperBollingerBand.add(0.0)
-                mLowerBollingerBand.add(0.0)
             }
         }
     }
