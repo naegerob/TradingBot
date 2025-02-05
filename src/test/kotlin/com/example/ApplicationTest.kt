@@ -15,6 +15,7 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertTrue
 
 class ApplicationTest {
     private var mOrderRequest = defaultOrderRequest.copy()
@@ -75,16 +76,6 @@ class ApplicationTest {
         }
     }
 
-    @Test
-    fun testOrderSetAllParameter() = testApplication {
-        application {
-            module()
-        }
-        val httpResponse = setAllOrderParameter()
-        assertEquals(HttpStatusCode.OK, httpResponse.status)
-        assertEquals(mOrderRequest, httpResponse.body())
-    }
-
     private suspend fun setAllOrderParameter(): HttpResponse {
         val client = getClient()
 
@@ -105,6 +96,30 @@ class ApplicationTest {
     }
 
     @Test
+    fun testOrderSetAllParameter() = testApplication {
+        application {
+            module()
+        }
+        val httpResponse = setAllOrderParameter()
+        assertEquals(HttpStatusCode.OK, httpResponse.status)
+        assertEquals(mOrderRequest, httpResponse.body())
+    }
+
+    @Test
+    fun testBadHistoricalSetAllParameter() = testApplication {
+        application {
+            module()
+        }
+        val client = getClient()
+        mStockAggregationRequest.symbols = ""
+        val httpResponse = client.post("/HistoricalBars/SetAllParameter") {
+            setBody(mStockAggregationRequest)
+        }
+        println(httpResponse.bodyAsText())
+        assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
+    }
+
+    @Test
     fun testCreateOrder() = testApplication {
         application {
             module()
@@ -116,14 +131,10 @@ class ApplicationTest {
 
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
-        when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                val response = httpResponse.body<OrderResponse>()
-                assertEquals(HttpStatusCode.OK, httpResponse.status)
-                assertEquals(mOrderRequest.quantity, response.qty)
-            }
-            else -> assert(false) // TODO: for now: Let test fail
-        }
+        val response = httpResponse.body<OrderResponse>()
+        assertEquals(HttpStatusCode.OK, httpResponse.status)
+        assertEquals(mOrderRequest.quantity, response.qty)
+
     }
 
     @Test
@@ -133,7 +144,7 @@ class ApplicationTest {
         }
         // Precondition
         mOrderRequest = defaultOrderRequest.copy()
-        mOrderRequest.symbol = "ASDFASDF"
+        mOrderRequest.symbol = ""
         val preHttpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
         assertEquals(mOrderRequest, preHttpResponse.body())
@@ -142,15 +153,9 @@ class ApplicationTest {
         val httpResponse = client.get("/Order/Create")
 
         val testString = "Input parameters are not recognized."
-        when (httpResponse.status) {
-            HttpStatusCode.UnprocessableEntity -> {
-                val response = httpResponse.bodyAsText()
-                assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-                assertEquals(response, testString);
-            }
-            else -> assert(false) // TODO: for now: Let test fail
-        }
-
+        val response = httpResponse.bodyAsText()
+        assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
+        assertEquals(testString, response)
 
     }
 
@@ -183,14 +188,23 @@ class ApplicationTest {
 
         val client = getClient()
         val httpResponse = client.get("/HistoricalBars/Request")
-        when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                val response = httpResponse.body<StockAggregationResponse>()
-                println(response)
-                assertEquals(HttpStatusCode.OK, httpResponse.status)
-                assertNotEquals(response.bars, emptyMap())
-            }
-            else -> assert(false) // TODO: for now: Let test fail
+
+        val response = httpResponse.body<StockAggregationResponse>()
+        println(response)
+        assertEquals(HttpStatusCode.OK, httpResponse.status)
+        assertNotEquals(emptyMap(), response.bars)
+    }
+
+    @Test
+    fun testBadHistBarsRequest() = testApplication {
+        application {
+            module()
         }
+        // Preconditions
+        mStockAggregationRequest = defaultStockAggregationRequest.copy()
+        mStockAggregationRequest.symbols = ""
+        val testString = ""
+        val httpResponse = setAllHistBarsParameter()
+        assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
     }
 }

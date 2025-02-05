@@ -35,18 +35,19 @@ class TradingLogic {
     /************************************************************
     Methods
      ************************************************************/
-    private fun areValidStockRequestParameter(): Boolean {
-        val isTimeframeValid = timeframes.any { mHistoricalRequest.timeframe.contains(it) }
-        val isFeedValid = feeds.any { mHistoricalRequest.feed.contains(it) }
-        val isSortValid = sorts.any { mHistoricalRequest.sort.contains(it) }
-        val hasNumberInTimeFrame = mHistoricalRequest.timeframe.contains(Regex("\\d"))
-        return isTimeframeValid && isFeedValid && isSortValid && hasNumberInTimeFrame
+    private fun areValidStockRequestParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
+        val isSymbolValid = stockAggregationRequest.symbols.isNotEmpty()
+        val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it) }
+        val isFeedValid = feeds.any { stockAggregationRequest.feed.contains(it) }
+        val isSortValid = sorts.any { stockAggregationRequest.sort.contains(it) }
+        val hasNumberInTimeFrame = stockAggregationRequest.timeframe.contains(Regex("\\d"))
+        return isSymbolValid && isTimeframeValid && isFeedValid && isSortValid && hasNumberInTimeFrame
     }
 
-    private fun areValidOrderParameter(): Boolean {
-        return mOrderRequest.type in types &&
-                mOrderRequest.side in sides &&
-                mOrderRequest.timeInForce in timeInForces
+    private fun areValidOrderParameter(orderRequest: OrderRequest): Boolean {
+        return orderRequest.type in types &&
+                orderRequest.side in sides &&
+                orderRequest.timeInForce in timeInForces
     }
 
     private fun getFirstSymbol(): String {
@@ -54,14 +55,14 @@ class TradingLogic {
     }
 
     fun setOrderParameter(orderRequest: OrderRequest): Boolean {
-        if (!areValidOrderParameter())
+        if (!areValidOrderParameter(orderRequest))
             return false
         mOrderRequest = orderRequest
         return true
     }
 
     fun setAggregationParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
-        if (!areValidStockRequestParameter()) {
+        if (!areValidStockRequestParameter(stockAggregationRequest)) {
             return false
         }
         mHistoricalRequest = stockAggregationRequest

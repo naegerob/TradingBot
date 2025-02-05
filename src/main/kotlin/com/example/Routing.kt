@@ -56,7 +56,7 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
         HttpStatusCode.OK                   -> call.respond(HttpStatusCode.OK, httpResponse.bodyAsText())
-        HttpStatusCode.BadRequest           -> call.respond(HttpStatusCode.BadRequest, "Parameter have wrong format. CHeck Alpaca Doc!")
+        HttpStatusCode.BadRequest           -> call.respond(HttpStatusCode.BadRequest, "Parameter have wrong format. Check Alpaca Doc!")
         HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)
         HttpStatusCode.NotFound             -> call.respond(HttpStatusCode.NotFound)
         HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient.")

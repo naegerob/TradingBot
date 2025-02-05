@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class StockAggregationRequest(
     @SerialName("symbols")
-    val symbols: String = "AAPL", // Comma-separated list of stock symbols (e.g., "TSLA,AMZN")
+    var symbols: String = "AAPL", // Comma-separated list of stock symbols (e.g., "TSLA,AMZN")
     @SerialName("timeframe")
     val timeframe: String = "5Min", // Timeframe for aggregation (e.g., "5Min", "1D", "3M")
     @SerialName("start")
