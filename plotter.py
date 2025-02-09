@@ -25,7 +25,11 @@ fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))  # (rows, columns)
 
 print(len(original))
 print(len(sma))
-ax1.plot(x_values[windowSma:], original[windowSma:], label='original', marker='o', linestyle='-', color="red")
+print(len(x_valuesRsi))
+
+del original[:windowSma]
+
+ax1.plot(x_valuesSma, original, label='original', marker='o', linestyle='-', color="red")
 ax1.plot(x_valuesSma, sma, label='mva', marker='x', linestyle='--', color="blue")
 ax1.plot(x_valuesSma, lowerBand, label='lower', marker='x', linestyle='--', color="green")
 ax1.plot(x_valuesSma, upperBand, label='upper', marker='x', linestyle='--', color="green")
@@ -35,10 +39,13 @@ ax1.set_ylabel("Dollar [$]")
 
 rsiLowList = [rsiLow] * len(x_valuesRsi)
 rsiHighList = [rsiHigh] * len(x_valuesRsi)
+del rsiHighList[:windowSma-windowRsi]
+del rsiLowList[:windowSma-windowRsi]
+del rsi[:windowSma-windowRsi]
 ax2.set_ylim([0, 100])
-ax2.plot(x_valuesRsi, rsi, label='RSI', marker='x', linestyle='--', color="blue")
-ax2.plot(x_valuesRsi, rsiLowList, linestyle='-', linewidth=1.0, color="cornflowerblue")
-ax2.plot(x_valuesRsi, rsiHighList, linestyle='-', linewidth=1.0, color="cornflowerblue")
+ax2.plot(x_valuesSma, rsi, label='RSI', marker='x', linestyle='--', color="blue")
+ax2.plot(x_valuesSma, rsiLowList, linestyle='-', linewidth=1.0, color="cornflowerblue")
+ax2.plot(x_valuesSma, rsiHighList, linestyle='-', linewidth=1.0, color="cornflowerblue")
 ax2.set_title("RSI")
 ax2.set_xlabel("Index")
 ax2.set_ylabel("RSI [%]")

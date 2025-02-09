@@ -203,7 +203,6 @@ class ApplicationTest {
         // Preconditions
         mStockAggregationRequest = defaultStockAggregationRequest.copy()
         mStockAggregationRequest.symbols = ""
-        val testString = ""
         val httpResponse = setAllHistBarsParameter()
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
     }

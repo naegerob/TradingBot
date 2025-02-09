@@ -17,14 +17,8 @@ class TradingLogic {
     private var mOrderRequest = OrderRequest()
     private var mHistoricalBars = listOf<StockBar>()
 
-    enum class Windows(val windowLength: Int) {
-        SHORT(20),
-        LONG(50),
-        BB(40)
-    }
-
-    private var mResistance = null
-    private var mSupport = null
+    private var mResistance = 0.0
+    private var mSupport = 0.0
 
     private var mAverageBolligerBand = mutableListOf<Double>()
     private var mLowerBollingerBand = mutableListOf<Double>()
@@ -100,6 +94,7 @@ class TradingLogic {
 
         calculateBollingerBands(closingPrices)
         calculateRsi(closingPrices)
+        calculateSupportResistance(closingPrices)
         println(closingPrices)
         println(closingPrices.size)
         println(mAverageBolligerBand)
@@ -110,6 +105,8 @@ class TradingLogic {
         println(mUpperBollingerBand.size)
         println(mRsi)
         println(mRsi.size)
+        println(mSupport)
+        println(mResistance)
         println("H")
         // TODO: Calculate RSI
         // TODO: Check calculation properly
@@ -134,8 +131,8 @@ class TradingLogic {
         }
 
         // Compute first average gain and loss
-        var avgGain = gains.average()
-        var avgLoss = losses.average()
+        var averageGain = gains.average()
+        var averageLoss = losses.average()
 
         // Compute RSI using exponential smoothing
         for (i in period until prices.size) {
@@ -144,10 +141,10 @@ class TradingLogic {
             val loss = if (delta < 0) -delta else 0.0
 
             // Smoothed averages
-            avgGain = ((avgGain * (period - 1)) + gain) / period
-            avgLoss = ((avgLoss * (period - 1)) + loss) / period
+            averageGain = ((averageGain * (period - 1)) + gain) / period
+            averageLoss = ((averageLoss * (period - 1)) + loss) / period
 
-            val rs = if (avgLoss == 0.0) Double.POSITIVE_INFINITY else avgGain / avgLoss
+            val rs = if (averageLoss == 0.0) Double.POSITIVE_INFINITY else averageGain / averageLoss
             val rsi = 100 - (100 / (1 + rs))
             val df = DecimalFormat("#.##")
             df.roundingMode = RoundingMode.CEILING
@@ -182,6 +179,25 @@ class TradingLogic {
                 val upperRounded = df.format(roundedSma + stdDevMultiplier * stdDev).toDouble()
                 mUpperBollingerBand.add(upperRounded)
                 mLowerBollingerBand.add(lowerRounded)
+            }
+        }
+    }
+
+    private fun calculateSupportResistance(prices: List<Double>, window: Int = 5) {
+        for (i in window until prices.size - window) {
+            val subList = prices.subList(i - window, i + window + 1)
+
+            val minValue = subList.minOrNull() ?: prices[i]
+            val maxValue = subList.maxOrNull() ?: prices[i]
+
+            val df = DecimalFormat("#.##")
+            df.roundingMode = RoundingMode.CEILING
+
+            if (prices[i] == minValue) {
+                mSupport =  df.format(minValue).toDouble()
+            }
+            if (prices[i] == maxValue) {
+                mResistance = df.format(maxValue).toDouble()
             }
         }
     }
