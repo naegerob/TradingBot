@@ -20,11 +20,18 @@ class TradingLogic {
     private var mResistance = 0.0
     private var mSupport = 0.0
 
-    private var mAverageBolligerBand = mutableListOf<Double>()
-    private var mLowerBollingerBand = mutableListOf<Double>()
-    private var mUpperBollingerBand = mutableListOf<Double>()
+    var mOriginal = mutableListOf<Double>()
+        private set
 
-    private var mRsi = mutableListOf<Double>()
+    var mAverageBollingerBand = mutableListOf<Double>()
+        private set
+    var mLowerBollingerBand = mutableListOf<Double>()
+        private set
+    var mUpperBollingerBand = mutableListOf<Double>()
+        private set
+
+    var mRsi = mutableListOf<Double>()
+        private set
 
     /************************************************************
     Methods
@@ -91,24 +98,20 @@ class TradingLogic {
 
     private fun calculateIndicators() {
         val closingPrices: List<Double> = mHistoricalBars.map { it.close }
-
+        mOriginal = closingPrices.toMutableList()
         calculateBollingerBands(closingPrices)
         calculateRsi(closingPrices)
-        calculateSupportResistance(closingPrices)
         println(closingPrices)
         println(closingPrices.size)
-        println(mAverageBolligerBand)
-        println(mAverageBolligerBand.size)
+        println(mAverageBollingerBand)
+        println(mAverageBollingerBand.size)
         println(mLowerBollingerBand)
         println(mLowerBollingerBand.size)
         println(mUpperBollingerBand)
         println(mUpperBollingerBand.size)
         println(mRsi)
         println(mRsi.size)
-        println(mSupport)
-        println(mResistance)
         println("H")
-        // TODO: Calculate RSI
         // TODO: Check calculation properly
 
     }
@@ -160,7 +163,7 @@ class TradingLogic {
         if(mHistoricalRequest.sort == sort[1]) {
             sortedPrices = prices.reversed()
         }
-        mAverageBolligerBand.clear()
+        mAverageBollingerBand.clear()
         mUpperBollingerBand.clear()
         mLowerBollingerBand.clear()
         for (i in period until sortedPrices.size) {
@@ -171,7 +174,7 @@ class TradingLogic {
                 val df = DecimalFormat("#.##")
                 df.roundingMode = RoundingMode.CEILING
                 val roundedSma =  df.format(sma).toDouble()
-                mAverageBolligerBand.add(roundedSma)
+                mAverageBollingerBand.add(roundedSma)
 
                 val stdDev = kotlin.math.sqrt(window.sumOf { (it - sma).pow(2) } / period)
 
@@ -179,25 +182,6 @@ class TradingLogic {
                 val upperRounded = df.format(roundedSma + stdDevMultiplier * stdDev).toDouble()
                 mUpperBollingerBand.add(upperRounded)
                 mLowerBollingerBand.add(lowerRounded)
-            }
-        }
-    }
-
-    private fun calculateSupportResistance(prices: List<Double>, window: Int = 5) {
-        for (i in window until prices.size - window) {
-            val subList = prices.subList(i - window, i + window + 1)
-
-            val minValue = subList.minOrNull() ?: prices[i]
-            val maxValue = subList.maxOrNull() ?: prices[i]
-
-            val df = DecimalFormat("#.##")
-            df.roundingMode = RoundingMode.CEILING
-
-            if (prices[i] == minValue) {
-                mSupport =  df.format(minValue).toDouble()
-            }
-            if (prices[i] == maxValue) {
-                mResistance = df.format(maxValue).toDouble()
             }
         }
     }
