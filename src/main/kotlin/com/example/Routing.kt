@@ -19,30 +19,26 @@ fun Application.configureRouting(trader: TradingLogic) {
         }
         route("/Indicators") {
             get("Original") {
-                val original = trader.mOriginal
+                val original = trader.mOriginalPrices
                 println(original)
                 call.respondText(original.toString(), status = HttpStatusCode.OK)
             }
             route("/BollingerBands") {
                 get("/Middle") {
                     val sma = trader.mAverageBollingerBand
-                    println(sma)
                     call.respondText(sma.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Upper") {
                     val upperBollinger = trader.mUpperBollingerBand
-                    println(upperBollinger)
                     call.respondText(upperBollinger.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Lower") {
                     val lowerBollinger = trader.mLowerBollingerBand
-                    println(lowerBollinger)
                     call.respondText(lowerBollinger.toString(), status = HttpStatusCode.OK)
                 }
             }
             get("/Rsi") {
                 val rsi = trader.mRsi
-                println(rsi)
                 call.respondText(rsi.toString(), status = HttpStatusCode.OK)
             }
         }

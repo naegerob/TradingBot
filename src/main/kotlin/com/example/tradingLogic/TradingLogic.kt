@@ -16,11 +16,11 @@ class TradingLogic {
     private var mHistoricalRequest = StockAggregationRequest()
     private var mOrderRequest = OrderRequest()
     private var mHistoricalBars = listOf<StockBar>()
-
+    private var stock = ""
     private var mResistance = 0.0
     private var mSupport = 0.0
 
-    var mOriginal = mutableListOf<Double>()
+    var mOriginalPrices = mutableListOf<Double>()
         private set
 
     var mAverageBollingerBand = mutableListOf<Double>()
@@ -52,7 +52,8 @@ class TradingLogic {
     }
 
     private fun getFirstSymbol(): String {
-        return mHistoricalRequest.symbols.substringBefore(",")
+        stock = mHistoricalRequest.symbols.substringBefore(",")
+        return stock
     }
 
     fun setOrderParameter(orderRequest: OrderRequest): Boolean {
@@ -98,11 +99,13 @@ class TradingLogic {
 
     private fun calculateIndicators() {
         val closingPrices: List<Double> = mHistoricalBars.map { it.close }
-        mOriginal = closingPrices.toMutableList()
+        mOriginalPrices = closingPrices.toMutableList()
         calculateBollingerBands(closingPrices)
         calculateRsi(closingPrices)
-        println(closingPrices)
-        println(closingPrices.size)
+        // trim all to shortest
+        trimListsToShortest()
+        println(mOriginalPrices)
+        println(mOriginalPrices.size)
         println(mAverageBollingerBand)
         println(mAverageBollingerBand.size)
         println(mLowerBollingerBand)
@@ -118,7 +121,6 @@ class TradingLogic {
 
     // TODO: why is it 14 and sometimes 13?
     private fun calculateRsi(prices: List<Double>, period: Int = 14) {
-
         mRsi.clear()
         val gains = mutableListOf<Double>()
         val losses = mutableListOf<Double>()
@@ -183,6 +185,20 @@ class TradingLogic {
                 mUpperBollingerBand.add(upperRounded)
                 mLowerBollingerBand.add(lowerRounded)
             }
+        }
+    }
+    private fun trimListsToShortest() {
+        val allLists = listOf(mLowerBollingerBand, mUpperBollingerBand, mAverageBollingerBand, mOriginalPrices, mRsi)
+        val minSize = allLists.minOf { it.size }
+        allLists.forEach { list ->
+            while (list.size > minSize) {
+                list.subList(0, list.size - minSize).clear() // Remove from the front
+            }
+        }
+    }
+    private fun simulateTrading() {
+        for(price in mOriginalPrices) {
+
         }
     }
 
