@@ -8,79 +8,100 @@ urlBands = urlIndicators + "/BollingerBands"
 urlMiddle = urlBands + "/Middle"
 urlLower = urlBands + "/Lower"
 urlUpper = urlBands + "/Upper"
+urlSma = "/Sma"
+urlShort = urlSma + "/Short"
+urlLong = urlSma + "/Long"
+urlSMAShort = urlIndicators + urlShort
+urlSMALong = urlIndicators + urlLong
 urlRsi = urlIndicators + "/Rsi"
 
 # Data series
 original = requests.get(urlOriginal)
-sma = requests.get(urlMiddle)
-lowerBand = requests.get(urlLower)
-upperBand = requests.get(urlUpper)
+smaShort = requests.get(urlSMAShort)
+smaLong = requests.get(urlSMALong)
+bollingerMiddle = requests.get(urlMiddle)
+bollingerLower = requests.get(urlLower)
+bollingerUpper = requests.get(urlUpper)
 rsi = requests.get(urlRsi)
 
 # Configuration
-windowSma = 20
+windowBollinger = 20
+windowSMALong = 50
+windowSMAShort = 20
 windowRsi = 14
 rsiLow = 30
 rsiHigh = 70
 
 # Modifying the data
-sma = sma.text.replace("[", "").replace("]", "").replace("'", "").split(",")
-sma = [float(value) for value in sma]
-lowerBand = lowerBand.text.replace("[", "").replace("]", "").replace("'", "").split(",")
-lowerBand = [float(value) for value in lowerBand]
-upperBand = upperBand.text.replace("[", "").replace("]", "").replace("'", "").split(",")
-upperBand = [float(value) for value in upperBand]
+bollingerMiddle = bollingerMiddle.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+bollingerMiddle = [float(value) for value in bollingerMiddle]
+bollingerLower = bollingerLower.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+bollingerLower = [float(value) for value in bollingerLower]
+bollingerUpper = bollingerUpper.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+bollingerUpper = [float(value) for value in bollingerUpper]
 rsi = rsi.text.replace("[", "").replace("]", "").replace("'", "").split(",")
 rsi = [float(value) for value in rsi]
 original = original.text.replace("[", "").replace("]", "").replace("'", "").split(",")
 original = [float(value) for value in original]
+smaShort = smaShort.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+smaShort = [float(value) for value in smaShort]
+smaLong = smaLong.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+smaLong = [float(value) for value in smaLong]
 
-x_values = list(range(len(original)))
-x_valuesSma = list(range(len(sma)))
-x_valuesRsi = list(range(len(rsi)))
+xValuesOriginal = list(range(len(original)))
+xValuesBollinger = list(range(len(bollingerMiddle)))
+xValuesSmaShort = list(range(len(smaShort)))
+xValuesSmaLong = list(range(len(smaLong)))
+xValuesRsi = list(range(len(rsi)))
 
-rsiLowList = [rsiLow] * len(x_valuesRsi)
-rsiHighList = [rsiHigh] * len(x_valuesRsi)
-del rsiHighList[:windowSma-windowRsi]
-del rsiLowList[:windowSma-windowRsi]
-
-del original[:windowSma]
-del rsi[:windowSma-windowRsi]
+rsiLowList = [rsiLow] * len(xValuesRsi)
+rsiHighList = [rsiHigh] * len(xValuesRsi)
 
 # Plot the data
 # Create a figure with 2 subplots (one above the other)
-fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 6))  # (rows, columns)
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 6))  # (rows, columns)
 
 print("original")
 print(original)
 print("rsi")
 print(rsi)
 print("sma")
-print(sma)
+print(bollingerMiddle)
 print("upperBand")
-print(upperBand)
+print(bollingerUpper)
 print("lowerBand")
-print(lowerBand)
-print(x_valuesRsi)
+print(bollingerLower)
+print(xValuesRsi)
 print("----")
 print(len(original))
-print(len(x_valuesRsi))
+print(len(xValuesRsi))
+print(len(xValuesSmaLong))
+print(len(xValuesSmaShort))
 
-ax1.plot(x_valuesSma, original, label='original', marker='o', linestyle='-', color="red")
-ax1.plot(x_valuesSma, sma, label='mva', marker='x', linestyle='--', color="blue")
-ax1.plot(x_valuesSma, lowerBand, label='lower', marker='x', linestyle='--', color="green")
-ax1.plot(x_valuesSma, upperBand, label='upper', marker='x', linestyle='--', color="green")
-ax1.set_title("Stock")
+ax1.plot(xValuesBollinger, original, label='original', marker='o', linestyle='-', color="red")
+ax1.plot(xValuesBollinger, bollingerMiddle, label='mva', marker='x', linestyle='--', color="blue")
+ax1.plot(xValuesBollinger, bollingerLower, label='lower', marker='x', linestyle='--', color="green")
+ax1.plot(xValuesBollinger, bollingerUpper, label='upper', marker='x', linestyle='--', color="green")
+ax1.set_title("BollingerBands")
 ax1.set_xlabel("Index")
 ax1.set_ylabel("Dollar [$]")
 
-ax2.set_ylim([0, 100])
-ax2.plot(x_valuesSma, rsi, label='RSI', marker='x', linestyle='--', color="blue")
-ax2.plot(x_valuesSma, rsiLowList, linestyle='-', linewidth=1.0, color="cornflowerblue")
-ax2.plot(x_valuesSma, rsiHighList, linestyle='-', linewidth=1.0, color="cornflowerblue")
-ax2.set_title("RSI")
+del original[:windowSMALong-windowSMAShort]
+del smaShort[:windowSMALong-windowSMAShort]
+ax2.plot(xValuesSmaLong, original, label='original', marker='o', linestyle='-', color="red")
+ax2.plot(xValuesSmaLong, smaLong, label='smaLong', marker='x', linestyle='--', color="green")
+ax2.plot(xValuesSmaLong, smaShort, label='smaShort', marker='x', linestyle='--', color="blue")
+ax2.set_title("SMA")
 ax2.set_xlabel("Index")
-ax2.set_ylabel("RSI [%]")
+ax2.set_ylabel("Dollar [$]")
+
+ax3.set_ylim([0, 100])
+ax3.plot(xValuesBollinger, rsi, label='RSI', marker='x', linestyle='--', color="blue")
+ax3.plot(xValuesBollinger, rsiLowList, linestyle='-', linewidth=1.0, color="cornflowerblue")
+ax3.plot(xValuesBollinger, rsiHighList, linestyle='-', linewidth=1.0, color="cornflowerblue")
+ax3.set_title("RSI")
+ax3.set_xlabel("Index")
+ax3.set_ylabel("RSI [%]")
 # Adjust layout to prevent overlap
 plt.tight_layout()
 plt.legend()

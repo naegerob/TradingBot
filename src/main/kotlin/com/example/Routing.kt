@@ -17,11 +17,21 @@ fun Application.configureRouting(trader: TradingLogic) {
             val accountResponse = trader.fetchAccountDetails()
             respondToClient(accountResponse, call)
         }
+        // TODO: Remove local variables of indicators and insert it directyl
         route("/Indicators") {
             get("Original") {
                 val original = trader.mOriginalPrices
-                println(original)
                 call.respondText(original.toString(), status = HttpStatusCode.OK)
+            }
+            route("/Sma") {
+                get("/Short") {
+                    val smaShort = trader.mShortSMA
+                    call.respondText(smaShort.toString(), status = HttpStatusCode.OK)
+                }
+                get("/Long") {
+                    val smaLong = trader.mLongSMA
+                    call.respondText(smaLong.toString(), status = HttpStatusCode.OK)
+                }
             }
             route("/BollingerBands") {
                 get("/Middle") {

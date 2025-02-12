@@ -30,6 +30,12 @@ class TradingLogic {
     var mUpperBollingerBand = mutableListOf<Double>()
         private set
 
+    var mShortSMA = mutableListOf<Double>()
+        private set
+    var mLongSMA = mutableListOf<Double>()
+        private set
+
+
     var mRsi = mutableListOf<Double>()
         private set
 
@@ -100,12 +106,19 @@ class TradingLogic {
     private fun calculateIndicators() {
         val closingPrices: List<Double> = mHistoricalBars.map { it.close }
         mOriginalPrices = closingPrices.toMutableList()
+        // TODO: refactoring
         calculateBollingerBands(closingPrices)
         calculateRsi(closingPrices)
+        calculateShortSMA(closingPrices)
+        calculateLongSMA(closingPrices)
         // trim all to shortest
         trimListsToShortest()
         println(mOriginalPrices)
         println(mOriginalPrices.size)
+        println(mShortSMA)
+        println(mShortSMA.size)
+        println(mLongSMA)
+        println(mLongSMA.size)
         println(mAverageBollingerBand)
         println(mAverageBollingerBand.size)
         println(mLowerBollingerBand)
@@ -161,21 +174,17 @@ class TradingLogic {
 
     // clears the lists, if prices.size < window
     private fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0) {
-        var sortedPrices = prices
-        if(mHistoricalRequest.sort == sort[1]) {
-            sortedPrices = prices.reversed()
-        }
         mAverageBollingerBand.clear()
         mUpperBollingerBand.clear()
         mLowerBollingerBand.clear()
-        for (i in period until sortedPrices.size) {
+        for (i in period until prices.size) {
             if (i >= period - 1) {
-                val window = sortedPrices.subList(i - period + 1, i + 1)
+                val window = prices.subList(i - period + 1, i + 1)
 
                 val sma = window.average()
                 val df = DecimalFormat("#.##")
                 df.roundingMode = RoundingMode.CEILING
-                val roundedSma =  df.format(sma).toDouble()
+                val roundedSma = df.format(sma).toDouble()
                 mAverageBollingerBand.add(roundedSma)
 
                 val stdDev = kotlin.math.sqrt(window.sumOf { (it - sma).pow(2) } / period)
@@ -196,10 +205,45 @@ class TradingLogic {
             }
         }
     }
-    private fun simulateTrading() {
-        for(price in mOriginalPrices) {
 
+    private fun calculateShortSMA(prices: List<Double>, period: Int = 20) {
+        mShortSMA.clear()
+        for (i in period until prices.size) {
+            if (i >= period - 1) {
+                val window = prices.subList(i - period + 1, i + 1)
+
+                val sma = window.average()
+                val df = DecimalFormat("#.##")
+                df.roundingMode = RoundingMode.CEILING
+                val roundedSma = df.format(sma).toDouble()
+                mShortSMA.add(roundedSma)
+            }
         }
+    }
+
+    private fun calculateLongSMA(prices: List<Double>, period: Int = 50) {
+        mLongSMA.clear()
+        for (i in period until prices.size) {
+            if (i >= period - 1) {
+                val window = prices.subList(i - period + 1, i + 1)
+
+                val sma = window.average()
+                val df = DecimalFormat("#.##")
+                df.roundingMode = RoundingMode.CEILING
+                val roundedSma = df.format(sma).toDouble()
+                mLongSMA.add(roundedSma)
+            }
+        }
+    }
+
+    // Moving Average Crossover
+    private fun simulateTrading() {
+        /*
+        mOriginalPrices.forEach { index, price ->
+            println("sd")
+        }
+
+         */
     }
 
 

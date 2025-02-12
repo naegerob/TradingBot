@@ -41,7 +41,7 @@ class ApplicationTest {
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
             symbols = "AAPL",
-            timeframe = "1Day",
+            timeframe = "1H",
             startDateTime = "2024-12-01T00:00:00Z",
             endDateTime = "2025-02-02T00:00:00Z",
             limit = 500,
