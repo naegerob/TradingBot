@@ -238,12 +238,14 @@ class TradingLogic {
 
     // Moving Average Crossover
     private fun simulateTrading() {
-        /*
-        mOriginalPrices.forEach { index, price ->
-            println("sd")
+
+        mOriginalPrices.forEachIndexed { index, price ->
+            if(mShortSMA[index] > mLongSMA[index] && price < mLowerBollingerBand[index]) {
+
+            }
         }
 
-         */
+
     }
 
 
