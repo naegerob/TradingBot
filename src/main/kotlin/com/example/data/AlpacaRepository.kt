@@ -22,7 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 // Consider passing client and Dispatcher for DI
-class AlpacaAPI {
+class AlpacaRepository {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
             json(Json {

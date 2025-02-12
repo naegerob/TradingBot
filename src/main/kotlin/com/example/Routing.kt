@@ -2,7 +2,7 @@ package com.example
 
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
-import com.example.tradingLogic.TradingLogic
+import com.example.tradingLogic.TradingController
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -10,45 +10,45 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(trader: TradingLogic) {
+fun Application.configureRouting(tradingController: TradingController) {
 
     routing {
         get("/AccountDetails") {
-            val accountResponse = trader.fetchAccountDetails()
+            val accountResponse = tradingController.fetchAccountDetails()
             respondToClient(accountResponse, call)
         }
         // TODO: Remove local variables of indicators and insert it directyl
         route("/Indicators") {
             get("Original") {
-                val original = trader.mOriginalPrices
+                val original = tradingController.mIndicators.mOriginalPrices
                 call.respondText(original.toString(), status = HttpStatusCode.OK)
             }
             route("/Sma") {
                 get("/Short") {
-                    val smaShort = trader.mShortSMA
+                    val smaShort = tradingController.mIndicators.mShortSMA
                     call.respondText(smaShort.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Long") {
-                    val smaLong = trader.mLongSMA
+                    val smaLong = tradingController.mIndicators.mLongSMA
                     call.respondText(smaLong.toString(), status = HttpStatusCode.OK)
                 }
             }
             route("/BollingerBands") {
                 get("/Middle") {
-                    val sma = trader.mAverageBollingerBand
+                    val sma = tradingController.mIndicators.mAverageBollingerBand
                     call.respondText(sma.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Upper") {
-                    val upperBollinger = trader.mUpperBollingerBand
+                    val upperBollinger = tradingController.mIndicators.mUpperBollingerBand
                     call.respondText(upperBollinger.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Lower") {
-                    val lowerBollinger = trader.mLowerBollingerBand
+                    val lowerBollinger = tradingController.mIndicators.mLowerBollingerBand
                     call.respondText(lowerBollinger.toString(), status = HttpStatusCode.OK)
                 }
             }
             get("/Rsi") {
-                val rsi = trader.mRsi
+                val rsi = tradingController.mIndicators.mRsi
                 call.respondText(rsi.toString(), status = HttpStatusCode.OK)
             }
         }
@@ -56,7 +56,7 @@ fun Application.configureRouting(trader: TradingLogic) {
         route("/Order") {
             post("/SetAllParameter") {
                 val orderRequest = call.receive<OrderRequest>()
-                val isSuccessfulSet = trader.setOrderParameter(orderRequest)
+                val isSuccessfulSet = tradingController.setOrderParameter(orderRequest)
                 if(isSuccessfulSet) {
                     call.respond(orderRequest)
                     return@post
@@ -64,14 +64,14 @@ fun Application.configureRouting(trader: TradingLogic) {
                 call.respond(HttpStatusCode.BadRequest)
             }
             get("/Create") {
-                val orderResponse = trader.createOrder()
+                val orderResponse = tradingController.createOrder()
                 respondToClient(orderResponse, call)
             }
         }
         route("/HistoricalBars") {
             post("/SetAllParameter") {
                 val stockRequest = call.receive<StockAggregationRequest>()
-                val isSuccessfulSet = trader.setAggregationParameter(stockRequest)
+                val isSuccessfulSet = tradingController.setAggregationParameter(stockRequest)
                 if(isSuccessfulSet) {
                     call.respond(stockRequest)
                     return@post
@@ -80,8 +80,16 @@ fun Application.configureRouting(trader: TradingLogic) {
             }
 
             get("/Request") {
-                val historicalBarsResponse = trader.getHistoricalBars()
+                val historicalBarsResponse = tradingController.getHistoricalBars()
                 respondToClient(historicalBarsResponse, call)
+            }
+        }
+        route("/Bot") {
+            get("/Start") {
+                tradingController.startBot()
+            }
+            get("/Stop") {
+                tradingController.stopBot()
             }
         }
     }

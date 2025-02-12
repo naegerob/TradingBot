@@ -2,21 +2,25 @@ package com.example.tradingLogic
 
 import com.example.data.*
 import com.example.data.singleModels.*
+import com.example.tradingLogic.strategies.Strategies
+import com.example.tradingLogic.strategies.StrategyFactory
 import io.ktor.client.call.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 
-class TradingLogic {
+class TradingController {
 
-    private val mAlpacaClient = AlpacaAPI()
+    private val mAlpacaClient = AlpacaRepository()
 
     private var mHistoricalRequest = StockAggregationRequest()
     private var mOrderRequest = OrderRequest()
     private var mHistoricalBars = listOf<StockBar>()
-    private var stock = ""
+    private var mStock = ""
 
-    private val mIndicators = Indicators()
-    private var mTradingStrategy: TradingStrategy()
+    var mIndicators = Indicators()
+        private set
+    private val mStrategySelector: Strategies = Strategies.none
+    private val mTradingBot = TradingBot(StrategyFactory().createStrategy(mStrategySelector), mIndicators, mAlpacaClient)
 
     /************************************************************
     Methods
@@ -37,13 +41,10 @@ class TradingLogic {
     }
 
     private fun getFirstSymbol(): String {
-        stock = mHistoricalRequest.symbols.substringBefore(",")
-        return stock
+        mStock = mHistoricalRequest.symbols.substringBefore(",")
+        return mStock
     }
 
-    fun setStrategy(strategy: TradingStrategy) {
-        mTradingStrategy = strategy
-    }
 
     fun setOrderParameter(orderRequest: OrderRequest): Boolean {
         if (!areValidOrderParameter(orderRequest))
@@ -84,5 +85,13 @@ class TradingLogic {
 
     suspend fun fetchAccountDetails(): HttpResponse {
         return mAlpacaClient.getAccountDetails()
+    }
+
+    fun startBot() {
+        mTradingBot.mIsRunning = true
+    }
+
+    fun stopBot() {
+        mTradingBot.mIsRunning = false
     }
 }

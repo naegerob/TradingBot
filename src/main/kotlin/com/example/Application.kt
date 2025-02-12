@@ -1,6 +1,6 @@
 package com.example
 
-import com.example.tradingLogic.TradingLogic
+import com.example.tradingLogic.TradingController
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {
@@ -11,5 +11,5 @@ fun Application.module() {
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
     configureDatabases()
     configureMonitoring()
-    configureRouting(TradingLogic()) // The routes itself
+    configureRouting(TradingController()) // The routes itself
 }
