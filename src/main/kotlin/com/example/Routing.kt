@@ -23,6 +23,14 @@ fun Application.configureRouting(tradingController: TradingController) {
                 val original = tradingController.mIndicators.mOriginalPrices
                 call.respondText(original.toString(), status = HttpStatusCode.OK)
             }
+            get("/Support") {
+                val support = tradingController.mIndicators.mSupports
+                call.respondText(support.toString(), status = HttpStatusCode.OK)
+            }
+            get("/Resistance") {
+                val resistance = tradingController.mIndicators.mResistances
+                call.respondText(resistance.toString(), status = HttpStatusCode.OK)
+            }
             route("/Sma") {
                 get("/Short") {
                     val smaShort = tradingController.mIndicators.mShortSMA

@@ -5,6 +5,8 @@ baseUrl = "http://127.0.0.1:8080"
 urlIndicators = baseUrl + "/Indicators"
 urlOriginal = urlIndicators + "/Original"
 urlBands = urlIndicators + "/BollingerBands"
+urlSupport = urlIndicators + "/Support"
+urlResistance = urlIndicators + "/Resistance"
 urlMiddle = urlBands + "/Middle"
 urlLower = urlBands + "/Lower"
 urlUpper = urlBands + "/Upper"
@@ -17,12 +19,15 @@ urlRsi = urlIndicators + "/Rsi"
 
 # Data series
 original = requests.get(urlOriginal)
+resistance = requests.get(urlResistance)
+support = requests.get(urlSupport)
 smaShort = requests.get(urlSMAShort)
 smaLong = requests.get(urlSMALong)
 bollingerMiddle = requests.get(urlMiddle)
 bollingerLower = requests.get(urlLower)
 bollingerUpper = requests.get(urlUpper)
 rsi = requests.get(urlRsi)
+
 
 # Configuration
 windowBollinger = 20
@@ -43,12 +48,25 @@ rsi = rsi.text.replace("[", "").replace("]", "").replace("'", "").split(",")
 rsi = [float(value) for value in rsi]
 original = original.text.replace("[", "").replace("]", "").replace("'", "").split(",")
 original = [float(value) for value in original]
+support = support.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+support = [float(value) for value in support]
+resistance = resistance.text.replace("[", "").replace("]", "").replace("'", "").split(",")
+resistance = [float(value) for value in resistance]
 smaShort = smaShort.text.replace("[", "").replace("]", "").replace("'", "").split(",")
 smaShort = [float(value) for value in smaShort]
 smaLong = smaLong.text.replace("[", "").replace("]", "").replace("'", "").split(",")
 smaLong = [float(value) for value in smaLong]
 
+print(original)
+print(len(original))
+print(resistance)
+print(len(resistance))
+print(support)
+print(len(support))
+
 xValuesOriginal = list(range(len(original)))
+xValuesResistance = list(range(len(resistance)))
+xValuesSupport = list(range(len(support)))
 xValuesBollinger = list(range(len(bollingerMiddle)))
 xValuesSmaShort = list(range(len(smaShort)))
 xValuesSmaLong = list(range(len(smaLong)))
@@ -59,10 +77,14 @@ rsiHighList = [rsiHigh] * len(xValuesRsi)
 
 # Plot the data
 # Create a figure with 2 subplots (one above the other)
-fig, (ax1, ax2, ax3) = plt.subplots(3, 1, figsize=(8, 6))  # (rows, columns)
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(4, 1, figsize=(8, 6))  # (rows, columns)
 
 print("original")
 print(original)
+print("support")
+print(support)
+print("resistance")
+print(resistance)
 print("rsi")
 print(rsi)
 print("sma")
@@ -74,6 +96,8 @@ print(bollingerLower)
 print(xValuesRsi)
 print("----")
 print(len(original))
+print(len(support))
+print(len(resistance))
 print(len(xValuesRsi))
 print(len(xValuesSmaLong))
 print(len(xValuesSmaShort))
@@ -102,6 +126,13 @@ ax3.plot(xValuesBollinger, rsiHighList, linestyle='-', linewidth=1.0, color="cor
 ax3.set_title("RSI")
 ax3.set_xlabel("Index")
 ax3.set_ylabel("RSI [%]")
+
+ax4.plot(xValuesResistance, resistance, label='resistance', marker='x', linestyle='--', color="blue")
+ax4.plot(xValuesSupport, support, label='support', marker='x', linestyle='--', color="green")
+ax4.set_title("Res & Support")
+ax4.set_xlabel("Index")
+ax4.set_ylabel("Dollar [$]")
+
 # Adjust layout to prevent overlap
 plt.tight_layout()
 plt.legend()

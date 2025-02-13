@@ -11,6 +11,12 @@ class Indicators {
 
     var mOriginalPrices = mutableListOf<Double>()
         private set
+
+    var mResistances = mutableListOf<Double>()
+        private set
+    var mSupports = mutableListOf<Double>()
+        private set
+
     var mAverageBollingerBand = mutableListOf<Double>()
         private set
     var mLowerBollingerBand = mutableListOf<Double>()
@@ -29,6 +35,8 @@ class Indicators {
         val closingPrices: List<Double> = historicalBars.map { it.close }
         mOriginalPrices = closingPrices.toMutableList()
         // TODO: refactoring
+        calculateSupportLevels(closingPrices)
+        calculateResistanceLevels(closingPrices)
         calculateBollingerBands(closingPrices)
         calculateRsi(closingPrices)
         calculateShortSMA(closingPrices)
@@ -38,6 +46,10 @@ class Indicators {
         println(mStock)
         println(mOriginalPrices)
         println(mOriginalPrices.size)
+        println(mResistances)
+        println(mResistances.size)
+        println(mSupports)
+        println(mSupports.size)
         println(mShortSMA)
         println(mShortSMA.size)
         println(mLongSMA)
@@ -53,8 +65,27 @@ class Indicators {
         println("H")
         // TODO: Check calculation properly
     }
+    private fun calculateSupportLevels(prices: List<Double>) {
+        mSupports.clear()
+        var lastSupport = prices.first()
+        for (i in 1 until prices.lastIndex) {
+            if (prices[i] < prices[i - 1] && prices[i] < prices[i + 1]) {
+                lastSupport = prices[i]
+            }
+            mSupports.add(lastSupport)
+        }
+    }
 
-    // TODO: why is it 14 and sometimes 13?
+    private fun calculateResistanceLevels(prices: List<Double>) {
+        mResistances.clear()
+        var lastResistance = prices.first()
+        for (i in 1 until prices.lastIndex) {
+            if (prices[i] > prices[i - 1] && prices[i] > prices[i + 1]) {
+                lastResistance = prices[i]
+            }
+            mResistances.add(lastResistance) // Local maximum (resistance)
+        }
+    }
     private fun calculateRsi(prices: List<Double>, period: Int = 14) {
         mRsi.clear()
         val gains = mutableListOf<Double>()
