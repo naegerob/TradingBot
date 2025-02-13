@@ -1,7 +1,9 @@
 package com.example.tradingLogic.strategies
 
+import com.example.tradingLogic.Indicators
+
 interface TradingStrategy {
-    fun executeAlgorithm() : TradingSignal
+    fun executeAlgorithm(indicators: Indicators) : TradingSignal
 }
 enum class TradingSignal {
     BUY,

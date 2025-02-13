@@ -15,12 +15,16 @@ class TradingController {
     private var mHistoricalRequest = StockAggregationRequest()
     private var mOrderRequest = OrderRequest()
     private var mHistoricalBars = listOf<StockBar>()
-    private var mStock = ""
 
     var mIndicators = Indicators()
         private set
     private val mStrategySelector: Strategies = Strategies.none
-    private val mTradingBot = TradingBot(StrategyFactory().createStrategy(mStrategySelector), mIndicators, mAlpacaClient)
+    // TODO: Consider using builder pattern
+    private val mTradingBot = TradingBot(
+        mHistoricalRequest,
+        StrategyFactory().createStrategy(mStrategySelector),
+        mIndicators,
+        mAlpacaClient)
 
     /************************************************************
     Methods
@@ -40,9 +44,9 @@ class TradingController {
                 orderRequest.timeInForce in timeInForces
     }
 
-    private fun getFirstSymbol(): String {
-        mStock = mHistoricalRequest.symbols.substringBefore(",")
-        return mStock
+    private fun setAndGetFirstSymbol(): String {
+        mIndicators.mStock = mHistoricalRequest.symbols.substringBefore(",")
+        return mIndicators.mStock
     }
 
 
@@ -71,8 +75,8 @@ class TradingController {
             when (httpResponse.status) {
                 HttpStatusCode.OK -> {
                     val stockResponse = httpResponse.body<StockAggregationResponse>()
-                    mHistoricalBars = stockResponse.bars[getFirstSymbol()]!!
-                    mIndicators.calculateIndicators(mHistoricalBars) // TODO: This should be moved and called from the strategy. As User we should only read the indicators, but not set manually
+                    mHistoricalBars = stockResponse.bars[setAndGetFirstSymbol()]!!
+                    mIndicators.updateIndicators(mHistoricalBars) // TODO: This should be moved and called from the strategy. As User we should only read the indicators, but not set manually
                 }
             }
         } catch (e: Exception) {

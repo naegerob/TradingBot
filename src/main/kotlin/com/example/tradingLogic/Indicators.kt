@@ -7,6 +7,8 @@ import kotlin.math.pow
 
 class Indicators {
 
+    var mStock = ""
+
     var mOriginalPrices = mutableListOf<Double>()
         private set
     var mAverageBollingerBand = mutableListOf<Double>()
@@ -20,13 +22,10 @@ class Indicators {
         private set
     var mLongSMA = mutableListOf<Double>()
         private set
-
-
     var mRsi = mutableListOf<Double>()
         private set
 
-
-    fun calculateIndicators(historicalBars: List<StockBar>) {
+    fun updateIndicators(historicalBars: List<StockBar>) {
         val closingPrices: List<Double> = historicalBars.map { it.close }
         mOriginalPrices = closingPrices.toMutableList()
         // TODO: refactoring
@@ -36,6 +35,7 @@ class Indicators {
         calculateLongSMA(closingPrices)
         // trim all to shortest
         trimListsToShortest()
+        println(mStock)
         println(mOriginalPrices)
         println(mOriginalPrices.size)
         println(mShortSMA)
@@ -52,7 +52,6 @@ class Indicators {
         println(mRsi.size)
         println("H")
         // TODO: Check calculation properly
-
     }
 
     // TODO: why is it 14 and sometimes 13?
