@@ -206,4 +206,48 @@ class ApplicationTest {
         val httpResponse = setAllHistBarsParameter()
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
     }
+
+    @Test
+    fun testIndicatorOriginal() = testApplication {
+        application {
+            module()
+        }
+        // Preconditions
+        testHistBarsRequest()
+
+        val client = getClient()
+        val urlList = listOf(
+            "/Indicators/Original",
+            "/Indicators/Support",
+            "/Indicators/Resistance",
+            "/Indicators/Sma/Short",
+            "/Indicators/Sma/Long",
+            "/Indicators/BollingerBands/Middle",
+            "/Indicators/BollingerBands/Upper",
+            "/Indicators/BollingerBands/Lower",
+            "/Indicators/Rsi",
+        )
+
+        for (url in urlList) {
+            val httpResponse = client.get(url)
+            val response = httpResponse.body<List<Double>>()
+            println(response)
+            assertEquals(HttpStatusCode.OK, httpResponse.status)
+            assertNotEquals(emptyList(), response)
+        }
+    }
+
+    @Test
+    fun testStartAndStopBot() = testApplication {
+        application {
+            module()
+        }
+
+        val client = getClient()
+
+        var httpResponse = client.get("/Bot/Start")
+        assertEquals(HttpStatusCode.OK, httpResponse.status)
+        httpResponse = client.get("/Bot/Stop")
+        assertEquals(HttpStatusCode.OK, httpResponse.status)
+    }
 }

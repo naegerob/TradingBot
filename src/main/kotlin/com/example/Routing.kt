@@ -19,7 +19,7 @@ fun Application.configureRouting(tradingController: TradingController) {
         }
         // TODO: Remove local variables of indicators and insert it directyl
         route("/Indicators") {
-            get("Original") {
+            get("/Original") {
                 val original = tradingController.mIndicators.mOriginalPrices
                 call.respondText(original.toString(), status = HttpStatusCode.OK)
             }
@@ -88,16 +88,18 @@ fun Application.configureRouting(tradingController: TradingController) {
             }
 
             get("/Request") {
-                val historicalBarsResponse = tradingController.getHistoricalBars()
+                val historicalBarsResponse = tradingController.storeStockData()
                 respondToClient(historicalBarsResponse, call)
             }
         }
         route("/Bot") {
             get("/Start") {
                 tradingController.startBot()
+                call.respond(HttpStatusCode.OK)
             }
             get("/Stop") {
                 tradingController.stopBot()
+                call.respond(HttpStatusCode.OK)
             }
         }
     }

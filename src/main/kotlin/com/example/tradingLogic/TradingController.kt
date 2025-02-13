@@ -69,7 +69,7 @@ class TradingController {
         return mAlpacaClient.createOrder(mOrderRequest)
     }
 
-    suspend fun getHistoricalBars(): HttpResponse {
+    suspend fun storeStockData(): HttpResponse {
         val httpResponse = mAlpacaClient.getHistoricalData(mHistoricalRequest)
         try {
             when (httpResponse.status) {
