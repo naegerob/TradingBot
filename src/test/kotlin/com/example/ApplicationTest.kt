@@ -138,7 +138,7 @@ class ApplicationTest {
     }
 
     @Test
-    fun testBadOrder() = testApplication {
+    fun testCreateBadOrder() = testApplication {
         application {
             module()
         }
