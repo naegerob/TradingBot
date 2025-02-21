@@ -21,7 +21,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
-// Consider passing client and Dispatcher for DI
+// TODO: Consider passing client and Dispatcher for DI
 class AlpacaRepository {
     private val client = HttpClient(CIO) {
         install(ContentNegotiation) {
