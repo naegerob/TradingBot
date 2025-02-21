@@ -73,6 +73,8 @@ fun Application.configureRouting(tradingController: TradingController) {
             }
             get("/Create") {
                 val orderResponse = tradingController.createOrder()
+                println(orderResponse.status)
+                println(orderResponse.bodyAsText())
                 respondToClient(orderResponse, call)
             }
         }

@@ -1,9 +1,11 @@
 package com.example.tradingLogic
 
 import com.example.data.AlpacaRepository
+import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
+import com.example.tradingLogic.strategies.TradingSignal
 import com.example.tradingLogic.strategies.TradingStrategy
 import io.ktor.client.call.*
 import io.ktor.http.*
@@ -12,6 +14,7 @@ import kotlinx.coroutines.runBlocking
 
 class TradingBot(
     private val mStockAggregationRequest: StockAggregationRequest,
+    private val mOrderRequest: OrderRequest,
     private val mStrategy: TradingStrategy,
     private val mIndicators: Indicators,
     private val mAlpacaRepository: AlpacaRepository
@@ -38,7 +41,18 @@ class TradingBot(
             val historicalBars = getValidatedHistoricalBars()
             mIndicators.updateIndicators(historicalBars)
             val signal = mStrategy.executeAlgorithm(mIndicators)
-            // TODO: Buy and hold
+            when(signal) {
+                TradingSignal.BUY -> {
+                    mOrderRequest.side = "buy"
+                }
+                TradingSignal.SELL -> {
+                    mOrderRequest.side = "sell"
+                }
+                TradingSignal.HOLD -> { return@runBlocking }
+            }
+
+            mAlpacaRepository.createOrder(mOrderRequest)
+
         }
     }
 }

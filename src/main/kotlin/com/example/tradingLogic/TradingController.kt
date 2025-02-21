@@ -22,6 +22,7 @@ class TradingController {
     // TODO: Consider using builder pattern
     private val mTradingBot = TradingBot(
         mHistoricalRequest,
+        mOrderRequest,
         StrategyFactory().createStrategy(mStrategySelector),
         mIndicators,
         mAlpacaClient)

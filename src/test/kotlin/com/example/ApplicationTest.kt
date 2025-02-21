@@ -15,7 +15,6 @@ import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
-import kotlin.test.assertTrue
 
 class ApplicationTest {
     private var mOrderRequest = defaultOrderRequest.copy()
@@ -26,7 +25,8 @@ class ApplicationTest {
             side = "buy",
             type = "market",
             timeInForce = "day",
-            quantity = "2",
+            quantity = null,
+            notional = "20",
             symbol = "AAPL",
             limitPrice = null,
             stopPrice = null,
@@ -148,12 +148,14 @@ class ApplicationTest {
         val preHttpResponse = setAllOrderParameter()
         assertEquals(HttpStatusCode.OK, preHttpResponse.status)
         assertEquals(mOrderRequest, preHttpResponse.body())
+        println(mOrderRequest)
 
         val client = getClient()
         val httpResponse = client.get("/Order/Create")
 
         val testString = "Input parameters are not recognized."
         val response = httpResponse.bodyAsText()
+        println(response)
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
         assertEquals(testString, response)
 
