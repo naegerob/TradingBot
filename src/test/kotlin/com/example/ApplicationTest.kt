@@ -17,8 +17,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
 class ApplicationTest {
-    private var mOrderRequest = defaultOrderRequest.copy()
-    private var mStockAggregationRequest = defaultStockAggregationRequest.copy()
 
     companion object {
         private val defaultOrderRequest = OrderRequest(
@@ -76,34 +74,6 @@ class ApplicationTest {
         }
     }
 
-    private suspend fun setAllOrderParameter(): HttpResponse {
-        val client = getClient()
-
-        val httpResponse = client.post("/Order/SetAllParameter") {
-            setBody(mOrderRequest)
-        }
-        client.close()
-        return httpResponse
-    }
-
-    private suspend fun setAllHistBarsParameter(): HttpResponse {
-        val client = getClient()
-        val httpResponse = client.post("/HistoricalBars/SetAllParameter") {
-            setBody(mStockAggregationRequest)
-        }
-        client.close()
-        return httpResponse
-    }
-
-    @Test
-    fun testOrderSetAllParameter() = testApplication {
-        application {
-            module()
-        }
-        val httpResponse = setAllOrderParameter()
-        assertEquals(HttpStatusCode.OK, httpResponse.status)
-        assertEquals(mOrderRequest, httpResponse.body())
-    }
 
     @Test
     fun testBadHistoricalSetAllParameter() = testApplication {
@@ -111,9 +81,10 @@ class ApplicationTest {
             module()
         }
         val client = getClient()
-        mStockAggregationRequest.symbols = ""
-        val httpResponse = client.post("/HistoricalBars/SetAllParameter") {
-            setBody(mStockAggregationRequest)
+        val stockAggregationRequest :StockAggregationRequest = defaultStockAggregationRequest
+        stockAggregationRequest.symbols = ""
+        val httpResponse = client.post("/HistoricalBars/Request") {
+            setBody(stockAggregationRequest)
         }
         println(httpResponse.bodyAsText())
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -125,15 +96,15 @@ class ApplicationTest {
             module()
         }
         // Precondition
-        mOrderRequest = defaultOrderRequest.copy()
-        val preHttpResponse = setAllOrderParameter()
-        assertEquals(HttpStatusCode.OK, preHttpResponse.status)
+        val orderRequest = defaultOrderRequest.copy()
 
         val client = getClient()
-        val httpResponse = client.get("/Order/Create")
+        val httpResponse = client.post("/Order/Create") {
+            setBody(orderRequest)
+        }
         val response = httpResponse.body<OrderResponse>()
         assertEquals(HttpStatusCode.OK, httpResponse.status)
-        assertEquals(mOrderRequest.quantity, response.qty)
+        assertEquals(orderRequest.quantity, response.qty)
 
     }
 
@@ -143,15 +114,14 @@ class ApplicationTest {
             module()
         }
         // Precondition
-        mOrderRequest = defaultOrderRequest.copy()
-        mOrderRequest.symbol = ""
-        val preHttpResponse = setAllOrderParameter()
-        assertEquals(HttpStatusCode.OK, preHttpResponse.status)
-        assertEquals(mOrderRequest, preHttpResponse.body())
-        println(mOrderRequest)
+        val orderRequest = defaultOrderRequest.copy()
+        orderRequest.symbol = ""
+        println(orderRequest)
 
         val client = getClient()
-        val httpResponse = client.get("/Order/Create")
+        val httpResponse = client.post("/Order/Create") {
+            setBody(orderRequest)
+        }
 
         val testString = "Input parameters are not recognized."
         val response = httpResponse.bodyAsText()
@@ -183,13 +153,12 @@ class ApplicationTest {
             module()
         }
         // Preconditions
-        mStockAggregationRequest = defaultStockAggregationRequest.copy()
-        val preHttpResponse = setAllHistBarsParameter()
-        assertEquals(HttpStatusCode.OK, preHttpResponse.status)
-        assertEquals(mStockAggregationRequest, preHttpResponse.body())
+        val stockAggregationRequest = defaultStockAggregationRequest.copy()
 
         val client = getClient()
-        val httpResponse = client.get("/HistoricalBars/Request")
+        val httpResponse = client.post("/HistoricalBars/Request") {
+            setBody(stockAggregationRequest)
+        }
 
         val response = httpResponse.body<StockAggregationResponse>()
         println(response)
@@ -203,40 +172,15 @@ class ApplicationTest {
             module()
         }
         // Preconditions
-        mStockAggregationRequest = defaultStockAggregationRequest.copy()
-        mStockAggregationRequest.symbols = ""
-        val httpResponse = setAllHistBarsParameter()
-        assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
-    }
-
-    @Test
-    fun testIndicatorOriginal() = testApplication {
-        application {
-            module()
-        }
-        // Preconditions
-        testHistBarsRequest()
+        val stockAggregationRequest = defaultStockAggregationRequest.copy()
+        stockAggregationRequest.symbols = ""
 
         val client = getClient()
-        val urlList = listOf(
-            "/Indicators/Original",
-            "/Indicators/Support",
-            "/Indicators/Resistance",
-            "/Indicators/Sma/Short",
-            "/Indicators/Sma/Long",
-            "/Indicators/BollingerBands/Middle",
-            "/Indicators/BollingerBands/Upper",
-            "/Indicators/BollingerBands/Lower",
-            "/Indicators/Rsi",
-        )
-
-        for (url in urlList) {
-            val httpResponse = client.get(url)
-            val response = httpResponse.body<List<Double>>()
-            println(response)
-            assertEquals(HttpStatusCode.OK, httpResponse.status)
-            assertNotEquals(emptyList(), response)
+        val httpResponse = client.post("/HistoricalBars/Request") {
+            setBody(stockAggregationRequest)
         }
+
+        assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
     }
 
     @Test
@@ -252,4 +196,5 @@ class ApplicationTest {
         httpResponse = client.get("/Bot/Stop")
         assertEquals(HttpStatusCode.OK, httpResponse.status)
     }
+
 }

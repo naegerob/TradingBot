@@ -62,36 +62,31 @@ fun Application.configureRouting(tradingController: TradingController) {
         }
 
         route("/Order") {
-            post("/SetAllParameter") {
+            post("/Create") {
                 val orderRequest = call.receive<OrderRequest>()
-                val isSuccessfulSet = tradingController.setOrderParameter(orderRequest)
-                if(isSuccessfulSet) {
-                    call.respond(orderRequest)
+                val isValidRequest = tradingController.areValidOrderParameter(orderRequest)
+                if(isValidRequest) {
+                    val orderResponse = tradingController.createOrder(orderRequest)
+                    respondToClient(orderResponse, call)
                     return@post
                 }
                 call.respond(HttpStatusCode.BadRequest)
-            }
-            get("/Create") {
-                val orderResponse = tradingController.createOrder()
-                println(orderResponse.status)
-                println(orderResponse.bodyAsText())
-                respondToClient(orderResponse, call)
             }
         }
         route("/HistoricalBars") {
-            post("/SetAllParameter") {
+            post("/Request") {
                 val stockRequest = call.receive<StockAggregationRequest>()
-                val isSuccessfulSet = tradingController.setAggregationParameter(stockRequest)
+                println(stockRequest)
+                val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
                 if(isSuccessfulSet) {
-                    call.respond(stockRequest)
+                    val stockResponse = tradingController.getStockData(stockRequest)
+                    println("----")
+                    println(stockResponse.status)
+                    println(stockResponse.bodyAsText())
+                    respondToClient(stockResponse, call)
                     return@post
                 }
                 call.respond(HttpStatusCode.BadRequest)
-            }
-
-            get("/Request") {
-                val historicalBarsResponse = tradingController.storeStockData()
-                respondToClient(historicalBarsResponse, call)
             }
         }
         route("/Bot") {
