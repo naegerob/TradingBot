@@ -5,9 +5,7 @@ import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
-import com.example.tradingLogic.strategies.MovingAverageStrategy
-import com.example.tradingLogic.strategies.TradingSignal
-import com.example.tradingLogic.strategies.TradingStrategy
+import com.example.tradingLogic.strategies.*
 import io.ktor.client.call.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
@@ -20,20 +18,20 @@ class TradingBot(
     @Volatile
     private var mIsRunning = false
     private var mJob: Job? = null
-    private var mIndicators: Indicators = Indicators()
-    private var mStrategy: TradingStrategy = MovingAverageStrategy()
-    private val mOrderRequest: OrderRequest = OrderRequest()
-    private val mStockAggregationRequest: StockAggregationRequest = StockAggregationRequest()
-    private var mTimeframe: String = StockAggregationRequest().timeframe
+    private var mIndicators = Indicators()
+    private var mStrategy = StrategyFactory().createStrategy(Strategies.none)
+    private var mOrderRequest = OrderRequest()
+    private var mStockAggregationRequest = StockAggregationRequest()
+    private var mTimeframe = StockAggregationRequest().timeframe
 
-    private suspend fun getValidatedHistoricalBars(): List<StockBar> {
-        val httpResponse = mAlpacaRepository.getHistoricalData(mStockAggregationRequest)
+    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators): List<StockBar> {
+        val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
 
         try {
             when (httpResponse.status) {
                 HttpStatusCode.OK -> {
                     val stockResponse = httpResponse.body<StockAggregationResponse>()
-                    return stockResponse.bars[mIndicators.mStock]!!
+                    return stockResponse.bars[indicators.mStock]!!
                 }
                 else -> return emptyList() // TODO: is just bad
             }
@@ -43,8 +41,35 @@ class TradingBot(
         }
     }
 
-    fun setStrategy(strategy: TradingStrategy) {
-        mStrategy = strategy
+    fun setStrategy(strategySelector: Strategies) {
+        mStrategy = StrategyFactory().createStrategy(strategySelector)
+    }
+
+    fun setStockAggregationRequest(stockAggregationRequest: StockAggregationRequest) {
+        mStockAggregationRequest = stockAggregationRequest
+    }
+
+    fun setOrderRequest(orderRequest: OrderRequest) {
+        mOrderRequest = orderRequest
+    }
+
+    fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest) {
+        val strategy = StrategyFactory().createStrategy(strategySelector)
+        val backTestIndicators = Indicators()
+        backTestIndicators.mStock = stockAggregationRequest.symbols
+
+        runBlocking {
+            val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, backTestIndicators)
+            backTestIndicators.updateIndicators(historicalBars)
+            for (originalPrice in backTestIndicators.mOriginalPrices) {
+                val signal = strategy.executeAlgorithm(backTestIndicators)
+                if (signal == TradingSignal.BUY) {
+                    println("BUY at $originalPrice")
+                } else if (signal == TradingSignal.SELL) {
+                    println("SELL at $originalPrice")
+                }
+            }
+        }
     }
 
     fun run() {
@@ -55,7 +80,7 @@ class TradingBot(
 
         mJob = CoroutineScope(Dispatchers.IO).launch {
             while(mIsRunning) {
-                val historicalBars = getValidatedHistoricalBars()
+                val historicalBars = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)
                 mIndicators.updateIndicators(historicalBars)
                 val signal = mStrategy.executeAlgorithm(mIndicators)
                 when(signal) {
@@ -91,7 +116,6 @@ class TradingBot(
             else -> null
         }
     }
-
 
     fun stop() {
         mJob?.cancel()

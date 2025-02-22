@@ -12,11 +12,9 @@ class TradingController {
 
     private val mAlpacaClient = AlpacaRepository()
 
-    private var mHistoricalRequest = StockAggregationRequest()
-    private var mOrderRequest = OrderRequest()
     var mIndicators = Indicators()
         private set
-    private val mStrategySelector: Strategies = Strategies.none
+
     // TODO: Consider using builder pattern
     private val mTradingBot = TradingBot(mAlpacaClient)
 
