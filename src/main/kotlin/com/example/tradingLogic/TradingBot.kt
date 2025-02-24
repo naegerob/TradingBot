@@ -84,7 +84,6 @@ class TradingBot(
                 val signal = strategy.executeAlgorithm(backTestIndicators)
                 if (signal == TradingSignal.Buy) {
                     println("BUY at $originalPrice")
-
                     balance -= positionSize * originalPrice
 
                 } else if (signal == TradingSignal.Sell) {

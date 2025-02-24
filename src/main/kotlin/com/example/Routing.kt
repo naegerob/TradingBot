@@ -81,10 +81,8 @@ fun Application.configureRouting(tradingController: TradingController) {
                 val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
                 if(isSuccessfulSet) {
                     val stockResponse = tradingController.getStockData(stockRequest)
-                    println("----")
-                    println(stockResponse.status)
-                    println(stockResponse.bodyAsText())
                     respondToClient(stockResponse, call)
+                    call.respond(stockResponse)
                     return@post
                 }
                 call.respond(HttpStatusCode.BadRequest)
@@ -93,16 +91,10 @@ fun Application.configureRouting(tradingController: TradingController) {
         route("/Bot") {
             post("/Backtesting") {
                 val backtestConfig = call.receive<BacktestConfig>()
-                println("--------")
-                println(backtestConfig)
 
                 val backtestResult = backtestConfig.let {
                     tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
                 }
-                println(backtestResult.winRate)
-                println(backtestResult.avgProfit)
-                println(backtestResult.totalProfit)
-                println(backtestResult.strategyName)
                 call.respond(HttpStatusCode.OK, backtestResult)
             }
 
@@ -117,6 +109,7 @@ fun Application.configureRouting(tradingController: TradingController) {
         }
     }
 }
+
 
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 

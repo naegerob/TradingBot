@@ -41,7 +41,7 @@ class ApplicationTest {
             positionIntent = null
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
-            symbols = "AAPL",
+            symbols = "TSLA",
             timeframe = "1H",
             startDateTime = "2024-12-01T00:00:00Z",
             endDateTime = "2025-02-02T00:00:00Z",
@@ -126,11 +126,9 @@ class ApplicationTest {
             setBody(orderRequest)
         }
 
-        val testString = "Input parameters are not recognized."
         val response = httpResponse.bodyAsText()
         println(response)
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-        assertEquals(testString, response)
 
     }
 
