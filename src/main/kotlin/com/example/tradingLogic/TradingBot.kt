@@ -5,6 +5,7 @@ import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.*
 import io.ktor.client.call.*
 import io.ktor.http.*
+import io.ktor.server.response.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.SerializationException
 
@@ -65,7 +66,7 @@ class TradingBot(
         mOrderRequest = orderRequest
     }
 
-    fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {
+    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {
         val strategy = StrategyFactory().createStrategy(strategySelector)
         val backTestIndicators = Indicators()
         backTestIndicators.mStock = stockAggregationRequest.symbols
@@ -74,11 +75,9 @@ class TradingBot(
         val positionSize = 100 // Money per trade
         var wins = 0
         var losses = 0
-        var maxDrawdown = 0.0
-        var peakBalance = balance
         val returns = mutableListOf<Double>()
 
-        runBlocking {
+        val job = CoroutineScope(Dispatchers.IO).async {
             val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, backTestIndicators)
             backTestIndicators.updateIndicators(historicalBars)
             for (originalPrice in backTestIndicators.mOriginalPrices) {
@@ -90,9 +89,9 @@ class TradingBot(
 
                 } else if (signal == TradingSignal.Sell) {
                     println("SELL at $originalPrice")
-                    val profit = positionSize * originalPrice
+                    val profit = positionSize * (originalPrice - positionSize)  // Profit is the price difference
                     balance += profit
-                    val tradeReturn = (profit - (positionSize * originalPrice)) / (positionSize * originalPrice)
+                    val tradeReturn = (originalPrice - positionSize) / positionSize  // Percentage return per trade
                     returns.add(tradeReturn)
 
                     if (tradeReturn > 0) wins++ else losses++
@@ -103,10 +102,9 @@ class TradingBot(
             val totalReturn = (balance - 10000) / 10000 * 100
             val winRate = if (wins + losses > 0) wins.toDouble() / (wins + losses) * 100 else 0.0
             val avgReturn = if (returns.isNotEmpty()) returns.average() else 0.0
-
-            return@runBlocking BacktestResult(strategySelector, totalReturn, avgReturn, winRate)
+            BacktestResult(strategySelector, totalReturn, avgReturn, winRate)
         }
-        return BacktestResult()
+        return job.await()
     }
 
     fun run() {

@@ -1,6 +1,9 @@
 package com.example
 
 import com.example.data.singleModels.*
+import com.example.tradingLogic.BacktestConfig
+import com.example.tradingLogic.BacktestResult
+import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
@@ -183,6 +186,29 @@ class ApplicationTest {
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
     }
 
+    @Test
+    fun testBacktesting() = testApplication {
+        application {
+            module()
+        }
+        val stockAggregationRequest = defaultStockAggregationRequest.copy()
+        val strategySelector = Strategies.MovingAverage
+
+        val backtestConfig = BacktestConfig(strategySelector, stockAggregationRequest)
+
+
+        val client = getClient()
+        val httpResponse = client.post("/Bot/Backtesting") {
+            setBody(backtestConfig)
+        }
+        val backtestResult = httpResponse.body<BacktestResult>()
+        backtestResult.let {
+            println(it.strategyName)
+            println(it.winRate)
+            println(it.avgProfit)
+            println(it.totalProfit)
+        }
+    }
     @Test
     fun testStartAndStopBot() = testApplication {
         application {

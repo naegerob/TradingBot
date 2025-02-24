@@ -48,6 +48,9 @@ class TradingController {
         return mAlpacaClient.getAccountDetails()
     }
 
+    suspend fun doBacktesting(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {
+        return mTradingBot.backtest(strategySelector, stockAggregationRequest)
+    }
     fun startBot() {
         mTradingBot.run()
     }

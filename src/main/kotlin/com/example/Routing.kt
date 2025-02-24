@@ -2,6 +2,7 @@ package com.example
 
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
+import com.example.tradingLogic.BacktestConfig
 import com.example.tradingLogic.TradingController
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -90,6 +91,21 @@ fun Application.configureRouting(tradingController: TradingController) {
             }
         }
         route("/Bot") {
+            post("/Backtesting") {
+                val backtestConfig = call.receive<BacktestConfig>()
+                println("--------")
+                println(backtestConfig)
+
+                val backtestResult = backtestConfig.let {
+                    tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
+                }
+                println(backtestResult.winRate)
+                println(backtestResult.avgProfit)
+                println(backtestResult.totalProfit)
+                println(backtestResult.strategyName)
+                call.respond(HttpStatusCode.OK, backtestResult)
+            }
+
             get("/Start") {
                 tradingController.startBot()
                 call.respond(HttpStatusCode.OK)
