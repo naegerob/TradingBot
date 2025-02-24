@@ -4,6 +4,6 @@ import com.example.tradingLogic.Indicators
 
 class NoOpStrategy : TradingStrategy {
     override fun executeAlgorithm(indicators: Indicators): TradingSignal {
-        return TradingSignal.HOLD
+        return TradingSignal.Hold
     }
 }

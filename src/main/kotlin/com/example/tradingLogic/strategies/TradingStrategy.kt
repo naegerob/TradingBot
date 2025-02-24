@@ -6,21 +6,21 @@ interface TradingStrategy {
     fun executeAlgorithm(indicators: Indicators) : TradingSignal
 }
 enum class TradingSignal {
-    BUY,
-    SELL,
-    HOLD
+    Buy,
+    Sell,
+    Hold
 }
 
 class StrategyFactory {
     fun createStrategy(strategy: Strategies): TradingStrategy {
         return when (strategy) {
-            Strategies.movingAverage    -> MovingAverageStrategy()
-            Strategies.none             -> NoOpStrategy()
+            Strategies.MovingAverage    -> MovingAverageStrategy()
+            Strategies.None             -> NoOpStrategy()
         }
     }
 }
 
 enum class Strategies {
-    movingAverage,
-    none    // Do Nothing
+    MovingAverage,
+    None    // Do Nothing
 }

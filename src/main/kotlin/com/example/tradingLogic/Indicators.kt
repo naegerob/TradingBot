@@ -65,6 +65,7 @@ class Indicators {
         println("H")
         // TODO: Check calculation properly
     }
+
     private fun calculateSupportLevels(prices: List<Double>) {
         mSupports.clear()
         var lastSupport = prices.first()

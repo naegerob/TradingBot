@@ -8,11 +8,11 @@ class MovingAverageStrategy : TradingStrategy {
         val shortSMA = indicators.mShortSMA
         val longSMA = indicators.mLongSMA
         if(shortSMA.last() > longSMA.last()) {
-            return TradingSignal.BUY
+            return TradingSignal.Buy
         } else if (shortSMA.last() < longSMA.last()) {
-            return TradingSignal.SELL
+            return TradingSignal.Sell
         }
-        return TradingSignal.HOLD
+        return TradingSignal.Hold
     }
 
 }
