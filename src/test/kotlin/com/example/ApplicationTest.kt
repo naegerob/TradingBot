@@ -41,11 +41,11 @@ class ApplicationTest {
             positionIntent = null
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
-            symbols = "TSLA",
+            symbols = "AAPL",
             timeframe = "1H",
-            startDateTime = "2024-12-01T00:00:00Z",
+            startDateTime = "2024-01-01T00:00:00Z",
             endDateTime = "2025-02-02T00:00:00Z",
-            limit = 500,
+            limit = 1000,
             adjustment = "raw",
             asOfDate = null,
             feed = "sip",
@@ -203,8 +203,8 @@ class ApplicationTest {
         backtestResult.let {
             println(it.strategyName)
             println(it.winRate)
-            println(it.avgProfit)
-            println(it.totalProfit)
+            println(it.finalBalance)
+            println(it.positions)
         }
     }
     @Test

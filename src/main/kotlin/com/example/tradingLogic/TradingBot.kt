@@ -5,7 +5,6 @@ import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.*
 import io.ktor.client.call.*
 import io.ktor.http.*
-import io.ktor.server.response.*
 import kotlinx.coroutines.*
 import kotlinx.serialization.SerializationException
 
@@ -71,37 +70,34 @@ class TradingBot(
         val backTestIndicators = Indicators()
         backTestIndicators.mStock = stockAggregationRequest.symbols
 
-        var balance = 10000.0 // Starting capital
-        val positionSize = 100 // Money per trade
-        var wins = 0
-        var losses = 0
-        val returns = mutableListOf<Double>()
+        val initialBalance = 10000.0 // Starting capital
+        var balance = initialBalance
+        val positionSize = 10 // Money per trade
+        var positions = 0
 
         val job = CoroutineScope(Dispatchers.IO).async {
             val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, backTestIndicators)
             backTestIndicators.updateIndicators(historicalBars)
             for (originalPrice in backTestIndicators.mOriginalPrices) {
                 val signal = strategy.executeAlgorithm(backTestIndicators)
-                if (signal == TradingSignal.Buy) {
+                if (signal == TradingSignal.Buy && positions == 0) {
                     println("BUY at $originalPrice")
+                    positions = positionSize
                     balance -= positionSize * originalPrice
 
-                } else if (signal == TradingSignal.Sell) {
+                } else if (signal == TradingSignal.Sell && positions == positionSize) {
                     println("SELL at $originalPrice")
-                    val profit = positionSize * (originalPrice - positionSize)  // Profit is the price difference
-                    balance += profit
-                    val tradeReturn = (originalPrice - positionSize) / positionSize  // Percentage return per trade
-                    returns.add(tradeReturn)
+                    positions = 0
+                    balance += positionSize * originalPrice
 
-                    if (tradeReturn > 0) wins++ else losses++
+                } else {
+                    println("Hold Position at $originalPrice")
                 }
             }
 
-            // Compute performance metrics
-            val totalReturn = (balance - 10000) / 10000 * 100
-            val winRate = if (wins + losses > 0) wins.toDouble() / (wins + losses) * 100 else 0.0
-            val avgReturn = if (returns.isNotEmpty()) returns.average() else 0.0
-            BacktestResult(strategySelector, totalReturn, avgReturn, winRate)
+            val finalBalance = balance + positions * backTestIndicators.mOriginalPrices.last()
+            val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
+            BacktestResult(strategySelector, finalBalance, winRateInPercent, positions)
         }
         return job.await()
     }

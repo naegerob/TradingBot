@@ -22,7 +22,7 @@ data class BacktestConfig(
 @Serializable
 data class BacktestResult(
     val strategyName: Strategies = Strategies.None,
-    val totalProfit: Double = 0.0,
-    val avgProfit: Double = 0.0,
+    val finalBalance: Double = 0.0,
     val winRate: Double = 0.0,
+    val positions: Int = 0
 )
