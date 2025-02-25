@@ -4,6 +4,8 @@ import com.example.tradingLogic.Indicators
 
 interface TradingStrategy {
     fun executeAlgorithm(indicators: Indicators) : TradingSignal
+
+    fun backTestAlgorithm(indicators: Indicators) : List<TradingSignal>
 }
 enum class TradingSignal {
     Buy,

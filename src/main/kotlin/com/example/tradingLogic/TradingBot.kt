@@ -78,14 +78,17 @@ class TradingBot(
         val job = CoroutineScope(Dispatchers.IO).async {
             val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, backTestIndicators)
             backTestIndicators.updateIndicators(historicalBars)
-            for (originalPrice in backTestIndicators.mOriginalPrices) {
-                val signal = strategy.executeAlgorithm(backTestIndicators)
-                if (signal == TradingSignal.Buy && positions == 0) {
+            val signalList = strategy.backTestAlgorithm(backTestIndicators)
+            println("----")
+            println(signalList.size)
+            println(backTestIndicators.mOriginalPrices.size)
+            backTestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
+                if (signalList[index] == TradingSignal.Buy && positions == 0) {
                     println("BUY at $originalPrice")
                     positions = positionSize
                     balance -= positionSize * originalPrice
 
-                } else if (signal == TradingSignal.Sell && positions == positionSize) {
+                } else if (signalList[index] == TradingSignal.Sell && positions == positionSize) {
                     println("SELL at $originalPrice")
                     positions = 0
                     balance += positionSize * originalPrice
