@@ -18,46 +18,87 @@ fun Application.configureRouting(tradingController: TradingController) {
             val accountResponse = tradingController.fetchAccountDetails()
             respondToClient(accountResponse, call)
         }
-        // TODO: Remove local variables of indicators and insert it directyl
         route("/Indicators") {
             get("/Original") {
-                val original = tradingController.mIndicators.mOriginalPrices
+                val original = tradingController.mTradingBot.mIndicators.mOriginalPrices
                 call.respondText(original.toString(), status = HttpStatusCode.OK)
             }
             get("/Support") {
-                val support = tradingController.mIndicators.mSupports
+                val support = tradingController.mTradingBot.mIndicators.mSupports
                 call.respondText(support.toString(), status = HttpStatusCode.OK)
             }
             get("/Resistance") {
-                val resistance = tradingController.mIndicators.mResistances
+                val resistance = tradingController.mTradingBot.mIndicators.mResistances
                 call.respondText(resistance.toString(), status = HttpStatusCode.OK)
             }
             route("/Sma") {
                 get("/Short") {
-                    val smaShort = tradingController.mIndicators.mShortSMA
+                    val smaShort = tradingController.mTradingBot.mIndicators.mShortSMA
                     call.respondText(smaShort.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Long") {
-                    val smaLong = tradingController.mIndicators.mLongSMA
+                    val smaLong = tradingController.mTradingBot.mIndicators.mLongSMA
                     call.respondText(smaLong.toString(), status = HttpStatusCode.OK)
                 }
             }
             route("/BollingerBands") {
                 get("/Middle") {
-                    val sma = tradingController.mIndicators.mAverageBollingerBand
+                    val sma = tradingController.mTradingBot.mIndicators.mAverageBollingerBand
                     call.respondText(sma.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Upper") {
-                    val upperBollinger = tradingController.mIndicators.mUpperBollingerBand
+                    val upperBollinger = tradingController.mTradingBot.mIndicators.mUpperBollingerBand
                     call.respondText(upperBollinger.toString(), status = HttpStatusCode.OK)
                 }
                 get("/Lower") {
-                    val lowerBollinger = tradingController.mIndicators.mLowerBollingerBand
+                    val lowerBollinger = tradingController.mTradingBot.mIndicators.mLowerBollingerBand
                     call.respondText(lowerBollinger.toString(), status = HttpStatusCode.OK)
                 }
             }
             get("/Rsi") {
-                val rsi = tradingController.mIndicators.mRsi
+                val rsi = tradingController.mTradingBot.mIndicators.mRsi
+                call.respondText(rsi.toString(), status = HttpStatusCode.OK)
+            }
+        }
+        route("/BacktestIndicators") {
+            get("/Original") {
+                val original = tradingController.mTradingBot.mBacktestIndicators.mOriginalPrices
+                call.respondText(original.toString(), status = HttpStatusCode.OK)
+            }
+            get("/Support") {
+                val support = tradingController.mTradingBot.mBacktestIndicators.mSupports
+                call.respondText(support.toString(), status = HttpStatusCode.OK)
+            }
+            get("/Resistance") {
+                val resistance = tradingController.mTradingBot.mBacktestIndicators.mResistances
+                call.respondText(resistance.toString(), status = HttpStatusCode.OK)
+            }
+            route("/Sma") {
+                get("/Short") {
+                    val smaShort = tradingController.mTradingBot.mBacktestIndicators.mShortSMA
+                    call.respondText(smaShort.toString(), status = HttpStatusCode.OK)
+                }
+                get("/Long") {
+                    val smaLong = tradingController.mTradingBot.mBacktestIndicators.mLongSMA
+                    call.respondText(smaLong.toString(), status = HttpStatusCode.OK)
+                }
+            }
+            route("/BollingerBands") {
+                get("/Middle") {
+                    val sma = tradingController.mTradingBot.mBacktestIndicators.mAverageBollingerBand
+                    call.respondText(sma.toString(), status = HttpStatusCode.OK)
+                }
+                get("/Upper") {
+                    val upperBollinger = tradingController.mTradingBot.mBacktestIndicators.mUpperBollingerBand
+                    call.respondText(upperBollinger.toString(), status = HttpStatusCode.OK)
+                }
+                get("/Lower") {
+                    val lowerBollinger = tradingController.mTradingBot.mBacktestIndicators.mLowerBollingerBand
+                    call.respondText(lowerBollinger.toString(), status = HttpStatusCode.OK)
+                }
+            }
+            get("/Rsi") {
+                val rsi = tradingController.mTradingBot.mBacktestIndicators.mRsi
                 call.respondText(rsi.toString(), status = HttpStatusCode.OK)
             }
         }

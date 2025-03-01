@@ -41,7 +41,7 @@ class ApplicationTest {
             positionIntent = null
         )
         private val defaultStockAggregationRequest = StockAggregationRequest(
-            symbols = "AMZN",
+            symbols = "AAPL",
             timeframe = "1H",
             startDateTime = "2024-01-01T00:00:00Z",
             endDateTime = "2025-02-02T00:00:00Z",
@@ -193,7 +193,6 @@ class ApplicationTest {
         val strategySelector = Strategies.MovingAverage
 
         val backtestConfig = BacktestConfig(strategySelector, stockAggregationRequest)
-
 
         val client = getClient()
         val httpResponse = client.post("/Bot/Backtesting") {

@@ -27,7 +27,7 @@ data class StockAggregationRequest(
     @SerialName("page_token")
     val pageToken: String? = null, // Pagination token for continuing a request
     @SerialName("sort")
-    val sort: String = "desc" // Sort order: Newest at start
+    val sort: String = "asc" // Sort order: Newest at end
 ): ApiResponse()
 
 @Serializable

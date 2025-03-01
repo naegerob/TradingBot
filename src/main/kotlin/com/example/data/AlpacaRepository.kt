@@ -110,7 +110,6 @@ class AlpacaRepository {
             client.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
-
                     parameters.append("symbols", historicalRequest.symbols)
                     parameters.append("timeframe", historicalRequest.timeframe)
                     historicalRequest.startDateTime?.let { parameters.append("start", it) }
@@ -121,7 +120,7 @@ class AlpacaRepository {
                     parameters.append("feed", historicalRequest.feed)
                     parameters.append("currency", historicalRequest.currency)
                     historicalRequest.pageToken?.let { parameters.append("page_token", it) }
-                    parameters.append("sort", historicalRequest.sort)
+                    parameters.append("sort", StockAggregationRequest().sort) // Hardcode to newest datapoint at end of list
                 }
             }
         }

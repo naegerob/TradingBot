@@ -1,13 +1,10 @@
 package com.example.tradingLogic.strategies
 
-import com.example.tradingLogic.Indicators
+import com.example.tradingLogic.IndicatorSnapshot
 
 class NoOpStrategy : TradingStrategy {
-    override fun executeAlgorithm(indicators: Indicators): TradingSignal {
+    override fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal {
         return TradingSignal.Hold
     }
 
-    override fun backTestAlgorithm(indicators: Indicators): List<TradingSignal> {
-        return emptyList()
-    }
 }

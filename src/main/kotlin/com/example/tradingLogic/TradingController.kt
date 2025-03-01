@@ -1,12 +1,9 @@
 package com.example.tradingLogic
 
-import com.example.data.*
+import com.example.data.AlpacaRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
-import com.example.tradingLogic.strategies.StrategyFactory
-import io.ktor.client.call.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
 
 class TradingController {
 
@@ -16,7 +13,8 @@ class TradingController {
         private set
 
     // TODO: Consider using builder pattern
-    private val mTradingBot = TradingBot(mAlpacaClient)
+    var mTradingBot = TradingBot(mAlpacaClient)
+        private set
 
     /************************************************************
     Methods

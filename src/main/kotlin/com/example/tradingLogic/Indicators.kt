@@ -5,6 +5,18 @@ import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.math.pow
 
+data class IndicatorSnapshot(
+    val originalPrice: Double,
+    val resistance: Double,
+    val support: Double,
+    val averageBollingerBand: Double,
+    val lowerBollingerBand: Double,
+    val upperBollingerBand: Double,
+    val shortSMA: Double,
+    val longSMA: Double,
+    val rsi: Double
+)
+
 class Indicators {
 
     var mStock = ""
@@ -87,6 +99,7 @@ class Indicators {
             mResistances.add(lastResistance) // Local maximum (resistance)
         }
     }
+
     private fun calculateRsi(prices: List<Double>, period: Int = 14) {
         mRsi.clear()
         val gains = mutableListOf<Double>()
@@ -120,7 +133,7 @@ class Indicators {
             val rsi = 100 - (100 / (1 + rs))
             val df = DecimalFormat("#.##")
             df.roundingMode = RoundingMode.CEILING
-            val roundedRsi =  df.format(rsi).toDouble()
+            val roundedRsi = df.format(rsi).toDouble()
 
             mRsi.add(roundedRsi)
         }
@@ -150,8 +163,19 @@ class Indicators {
             }
         }
     }
+
     private fun trimListsToShortest() {
-        val allLists = listOf(mLowerBollingerBand, mUpperBollingerBand, mAverageBollingerBand, mOriginalPrices, mRsi)
+        val allLists = listOf(
+            mLowerBollingerBand,
+            mUpperBollingerBand,
+            mAverageBollingerBand,
+            mOriginalPrices,
+            mRsi,
+            mSupports,
+            mResistances,
+            mShortSMA,
+            mLongSMA
+        )
         val minSize = allLists.minOf { it.size }
         allLists.forEach { list ->
             while (list.size > minSize) {
@@ -189,4 +213,27 @@ class Indicators {
             }
         }
     }
+
+    private fun getValue(list: List<Double>, index: Int?): Double {
+        return if (list.isNotEmpty()) {
+            index?.takeIf { it in list.indices }?.let { list[it] } ?: list.last()
+        } else {
+            0.0
+        }
+    }
+
+    fun getIndicatorPoints(index: Int? = null): IndicatorSnapshot {
+        return IndicatorSnapshot(
+            originalPrice = getValue(mOriginalPrices, index),
+            resistance = getValue(mResistances, index),
+            support = getValue(mSupports, index),
+            averageBollingerBand = getValue(mAverageBollingerBand, index),
+            lowerBollingerBand = getValue(mLowerBollingerBand, index),
+            upperBollingerBand = getValue(mUpperBollingerBand, index),
+            shortSMA = getValue(mShortSMA, index),
+            longSMA = getValue(mLongSMA, index),
+            rsi = getValue(mRsi, index)
+        )
+    }
+
 }

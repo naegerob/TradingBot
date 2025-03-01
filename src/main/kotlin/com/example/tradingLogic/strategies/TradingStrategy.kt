@@ -1,11 +1,10 @@
 package com.example.tradingLogic.strategies
 
-import com.example.tradingLogic.Indicators
+import com.example.tradingLogic.IndicatorSnapshot
+
 
 interface TradingStrategy {
-    fun executeAlgorithm(indicators: Indicators) : TradingSignal
-
-    fun backTestAlgorithm(indicators: Indicators) : List<TradingSignal>
+    fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal
 }
 enum class TradingSignal {
     Buy,

@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import requests
 
 baseUrl = "http://127.0.0.1:8080"
-urlIndicators = baseUrl + "/Indicators"
+urlIndicators = baseUrl + "/BacktestIndicators"
 urlOriginal = urlIndicators + "/Original"
 urlBands = urlIndicators + "/BollingerBands"
 urlSupport = urlIndicators + "/Support"
@@ -110,8 +110,6 @@ ax1.set_title("BollingerBands")
 ax1.set_xlabel("Index")
 ax1.set_ylabel("Dollar [$]")
 
-del original[:windowSMALong-windowSMAShort]
-del smaShort[:windowSMALong-windowSMAShort]
 ax2.plot(xValuesSmaLong, original, label='original', marker='o', linestyle='-', color="red")
 ax2.plot(xValuesSmaLong, smaLong, label='smaLong', marker='x', linestyle='--', color="green")
 ax2.plot(xValuesSmaLong, smaShort, label='smaShort', marker='x', linestyle='--', color="blue")
@@ -137,6 +135,6 @@ ax4.set_ylabel("Dollar [$]")
 plt.tight_layout()
 plt.legend()
 
-# Show the figure with both subplots
+# Show the figure with all subplots
 plt.show()
 

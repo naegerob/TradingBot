@@ -16,7 +16,10 @@ class TradingBot(
     @Volatile
     private var mIsRunning = false
     private var mJob: Job? = null
-    private var mIndicators = Indicators()
+    var mIndicators = Indicators()
+        private set
+    var mBacktestIndicators = Indicators()
+        private set
     private var mStrategy = StrategyFactory().createStrategy(Strategies.None)
     private var mOrderRequest = OrderRequest()
     private var mStockAggregationRequest = StockAggregationRequest()
@@ -67,8 +70,7 @@ class TradingBot(
 
     suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {
         val strategy = StrategyFactory().createStrategy(strategySelector)
-        val backTestIndicators = Indicators()
-        backTestIndicators.mStock = stockAggregationRequest.symbols
+        mBacktestIndicators.mStock = stockAggregationRequest.symbols
 
         val initialBalance = 10000.0 // Starting capital
         var balance = initialBalance
@@ -76,19 +78,18 @@ class TradingBot(
         var positions = 0
 
         val job = CoroutineScope(Dispatchers.IO).async {
-            val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, backTestIndicators)
-            backTestIndicators.updateIndicators(historicalBars)
-            val signalList = strategy.backTestAlgorithm(backTestIndicators)
-            println("----")
-            println(signalList.size)
-            println(backTestIndicators.mOriginalPrices.size)
-            backTestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
-                if (signalList[index] == TradingSignal.Buy && positions == 0) {
+            val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)
+            mBacktestIndicators.updateIndicators(historicalBars)
+
+            mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
+                val indicatorSnapshot = mBacktestIndicators.getIndicatorPoints(index)
+                val tradingSignal = strategy.executeAlgorithm(indicatorSnapshot)
+                if (tradingSignal == TradingSignal.Buy && positions == 0) {
                     println("BUY at $originalPrice")
                     positions = positionSize
                     balance -= positionSize * originalPrice
 
-                } else if (signalList[index] == TradingSignal.Sell && positions == positionSize) {
+                } else if (tradingSignal == TradingSignal.Sell && positions == positionSize) {
                     println("SELL at $originalPrice")
                     positions = 0
                     balance += positionSize * originalPrice
@@ -97,8 +98,8 @@ class TradingBot(
                     println("Hold Position at $originalPrice")
                 }
             }
-
-            val finalBalance = balance + positions * backTestIndicators.mOriginalPrices.last()
+            println("Final position: $positions")
+            val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
             val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
             BacktestResult(strategySelector, finalBalance, winRateInPercent, positions)
         }
@@ -116,7 +117,8 @@ class TradingBot(
                 val accountBalance = getAccountBalance().getOrNull() // TODO: implement
                 val historicalBars = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)
                 mIndicators.updateIndicators(historicalBars)
-                val signal = mStrategy.executeAlgorithm(mIndicators)
+                val latestIndicators = mIndicators.getIndicatorPoints()
+                val signal = mStrategy.executeAlgorithm(latestIndicators)
                 when(signal) {
                     TradingSignal.Buy -> {
                         mOrderRequest.side = "buy"
