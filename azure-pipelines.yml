@@ -17,3 +17,24 @@ steps:
     echo Add other tasks to build, test, and deploy your project.
     echo See https://aka.ms/yaml
   displayName: 'Run a multi-line script'
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: 'df'
+    Contents: '**'
+    TargetFolder: 'd'
+- task: Gradle@4
+  inputs:
+    gradleWrapperFile: 'gradlew'
+    tasks: 'build'
+    publishJUnitResults: true
+    testResultsFiles: '**/Backend-*.xml'
+    javaHomeOption: 'JDKVersion'
+    sonarQubeRunAnalysis: true
+    sqGradlePluginVersionChoice: 'specify'
+    sonarQubeGradlePluginVersion: '2.6.1'
+    checkStyleRunAnalysis: true
+    findBugsRunAnalysis: true
+    pmdRunAnalysis: true
+    spotBugsAnalysis: true
+    spotBugsGradlePluginVersionChoice: 'specify'
+    spotbugsGradlePluginVersion: '4.7.0'
