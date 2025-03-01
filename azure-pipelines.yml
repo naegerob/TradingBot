@@ -15,7 +15,6 @@ steps:
     chmod +x gradlew
     ./gradlew clean build
     nohup ./gradlew run
-    sleep 10
   displayName: 'Start the server'
 
 - task: Gradle@4
