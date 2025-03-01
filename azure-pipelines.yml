@@ -12,6 +12,7 @@ pool:
 steps:
 - script: |
     echo "Starting the server..."
+    chmod +x gradlew
     ./gradlew clean build
     nohup ./gradlew run
     sleep 10
