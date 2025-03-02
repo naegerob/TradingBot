@@ -1,0 +1,1 @@
+FROM gradle:jdk23-corretto-al2023

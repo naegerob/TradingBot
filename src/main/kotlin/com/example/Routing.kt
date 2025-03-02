@@ -14,6 +14,9 @@ import io.ktor.server.routing.*
 fun Application.configureRouting(tradingController: TradingController) {
 
     routing {
+        get("/") {
+            call.respondText("Welcome", status = HttpStatusCode.OK)
+        }
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()
             respondToClient(accountResponse, call)
