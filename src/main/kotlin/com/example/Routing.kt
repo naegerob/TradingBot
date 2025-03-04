@@ -15,7 +15,8 @@ fun Application.configureRouting(tradingController: TradingController) {
 
     routing {
         get("/") {
-            call.respondText("Welcome", status = HttpStatusCode.OK)
+            val key = System.getenv("SECRET") ?: "Hi"
+            call.respondText(key, status    = HttpStatusCode.OK)
         }
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()

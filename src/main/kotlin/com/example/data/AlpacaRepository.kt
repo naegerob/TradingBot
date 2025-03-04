@@ -54,10 +54,10 @@ class AlpacaRepository {
         private const val PAPERHOST = "paper-api.alpaca.markets"
         private const val PAPERMARKETHOST = "data.alpaca.markets"
         private const val BASEURLAPPENDIX = "v2"
-        private const val PAPERAPIKEY = "PK5TLV8XYYKYCDRLO27S"
-        private const val PAPERSECRET = "8m0gXDS87YwZfhUiXrSMCWElFagoqwgGHUbfAbmy"
-        private const val APIKEY = "AKFKVCZGHSW6OHQQS4K0"
-        private const val SECRET = "Pu5t7eaRNqxdcmLgjwlm8ohsdW5Kz0leaSfw14EU"
+        private val PAPERAPIKEY = System.getenv("PAPERAPIKEY")
+        private val PAPERSECRET = System.getenv("PAPERSECRET")
+        private val APIKEY = System.getenv("APIKEY")
+        private val SECRET = System.getenv("SECRET")
     }
 
     private fun createPaperBaseUrl(): Url {
