@@ -1,8 +1,8 @@
 # Stage 1: Cache Gradle dependencies
 FROM gradle:jdk23-corretto-al2023 as cache
 
-RUN mkdir -p /home/gradle/cache_home
 ENV GRADLE_USER_HOME=/home/gradle/cache_home
+RUN mkdir -p $GRADLE_USER_HOME
 COPY build.gradle.* gradle.properties /home/gradle/app/
 COPY gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app

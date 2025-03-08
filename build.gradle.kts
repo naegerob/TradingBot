@@ -9,6 +9,7 @@ plugins {
 group = "com.example"
 version = "0.0.1"
 ktor {
+
     docker {
         jreVersion.set(JavaVersion.VERSION_21)
         localImageName.set("tradingbot-docker-image")
