@@ -1,7 +1,10 @@
 # Stage 1: Cache Gradle dependencies
-FROM gradle:jdk23-corretto-al2023 as cache
+FROM gradle:8.13.0-jdk17-corretto-al2023 as cache
 
 ENV GRADLE_USER_HOME=/home/gradle/cache_home
+RUN echo "GRADLE_USER_HOME=$GRADLE_USER_HOME_CACHE"
+RUN mkdir -p $GRADLE_USER_HOME_CACHE
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
 RUN mkdir -p $GRADLE_USER_HOME
 COPY build.gradle.* gradle.properties /home/gradle/app/
 COPY gradle /home/gradle/app/gradle
@@ -20,7 +23,7 @@ WORKDIR /home/gradle/src
 RUN gradle buildFatJar --no-daemon
 
 # Stage 3: Create the Runtime Image
-FROM amazoncorretto:22 AS runtime
+FROM amazoncorretto:23 AS runtime
 EXPOSE 8080
 RUN mkdir /app
 COPY --from=build /home/gradle/src/build/libs/*.jar /app/ktor-docker-sample.jar
