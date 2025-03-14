@@ -1,7 +1,7 @@
 # Stage 1: Cache Gradle dependencies
 FROM gradle:8.13.0-jdk17-corretto-al2023 as cache
 
-ENV GRADLE_USER_HOME=/home/gradle/cache_home
+ENV GRADLE_USER_HOME_CACHE=/home/gradle/cache_home
 RUN echo "GRADLE_USER_HOME=$GRADLE_USER_HOME_CACHE"
 RUN mkdir -p $GRADLE_USER_HOME_CACHE
 ENV GRADLE_USER_HOME=/home/gradle/.gradle
