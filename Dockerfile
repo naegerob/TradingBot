@@ -22,7 +22,16 @@ WORKDIR /home/gradle/src
 # and boot JAR by default.
 RUN gradle buildFatJar --no-daemon
 
-# Stage 3: Create the Runtime Image
+# Stage 3: Test Application
+FROM gradle:jdk23-alpine AS test
+WORKDIR /app
+
+COPY . .
+
+RUN gradle test              # Runs tests
+RUN gradle build -x test     # Builds the JAR file
+
+# Stage 4: Create the Runtime Image
 FROM amazoncorretto:23 AS runtime
 EXPOSE 8080
 RUN mkdir /app
