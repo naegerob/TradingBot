@@ -14,6 +14,14 @@
           </list>
         </option>
         <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/app" />
+              <option name="hostPath" value="." />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
       </settings>
     </deployment>
     <method v="2" />
