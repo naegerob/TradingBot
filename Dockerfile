@@ -12,7 +12,7 @@ WORKDIR /home/gradle/app
 RUN gradle clean build -i --stacktrace
 
 # Stage 2: Build Application
-FROM gradle:latest AS build
+FROM gradle:8.13.0-jdk17-corretto-al2023 AS build
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
 COPY . /usr/src/app/
 WORKDIR /usr/src/app
@@ -20,21 +20,27 @@ COPY --chown=gradle:gradle . /home/gradle/src
 WORKDIR /home/gradle/src
 # Build the fat JAR, Gradle also supports shadow
 # and boot JAR by default.
-RUN gradle koverHtmlReport
 RUN gradle buildFatJar --no-daemon
 
 # Stage 3: Test Application
-FROM gradle:jdk23-alpine AS test
+FROM gradle:8.13.0-jdk17-corretto-al2023 AS test
 WORKDIR /app
+ENV REPORT_DIR=/app/reports
+COPY --from=build /home/gradle/src/build/libs/*.jar /app/ktor-docker-sample.jar
 
-COPY . .
+RUN java -jar /app/ktor-docker-sample.jar
 
 RUN gradle test              # Runs tests
-RUN gradle build -x test     # Builds the JAR file
+RUN gradle koverHtmlReport   # Report tests
 
+RUN pkill -f java -jar /app/ktor-docker-sample.jar
+
+COPY /app/*.html $REPORT_DIR
 # Stage 4: Create the Runtime Image
 FROM amazoncorretto:23 AS runtime
 EXPOSE 8080
 RUN mkdir /app
-COPY --from=build /home/gradle/src/build/libs/*.jar /app/ktor-docker-sample.jar
+COPY --from=build /home/gradle/src/build/libs/*.jar                      /app/ktor-docker-sample.jar
+COPY --from=test /home/gradle/src/build/reports/kover/html/*.html        /app/kover_report.html
+COPY --from=test /home/gradle/src/build/reports/tests/test/*.html        /app/test_report.html
 ENTRYPOINT ["java","-jar","/app/ktor-docker-sample.jar"]
