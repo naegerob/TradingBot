@@ -21,6 +21,7 @@ steps:
 
 - task: Gradle@4
   inputs:
+    displayName: "Gradle"
     gradleWrapperFile: 'gradlew'
     tasks: 'build'
     publishJUnitResults: true

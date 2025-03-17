@@ -9,6 +9,9 @@ out
 # Log file
 *.log
 
+# configs
+.run
+
 # BlueJ files
 *.ctxt
 
