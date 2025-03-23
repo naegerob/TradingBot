@@ -3,17 +3,18 @@ package com.example.tradingLogic
 import com.example.data.AlpacaRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
+import io.ktor.client.*
 import io.ktor.client.statement.*
 
-class TradingController {
+class TradingController(mAlpacaClient: HttpClient) {
 
-    private val mAlpacaClient = AlpacaRepository()
+    private val mAlpacaRepo = AlpacaRepository(mAlpacaClient)
 
     var mIndicators = Indicators()
         private set
 
     // TODO: Consider using builder pattern
-    var mTradingBot = TradingBot(mAlpacaClient)
+    var mTradingBot = TradingBot(mAlpacaRepo)
         private set
 
     /************************************************************
@@ -35,15 +36,15 @@ class TradingController {
     }
 
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
-        return mAlpacaClient.createOrder(orderRequest)
+        return mAlpacaRepo.createOrder(orderRequest)
     }
 
     suspend fun getStockData(stockAggregationRequest: StockAggregationRequest): HttpResponse {
-        return mAlpacaClient.getHistoricalData(stockAggregationRequest)
+        return mAlpacaRepo.getHistoricalData(stockAggregationRequest)
     }
 
     suspend fun fetchAccountDetails(): HttpResponse {
-        return mAlpacaClient.getAccountDetails()
+        return mAlpacaRepo.getAccountDetails()
     }
 
     suspend fun doBacktesting(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {

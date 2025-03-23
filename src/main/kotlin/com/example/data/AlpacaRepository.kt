@@ -22,30 +22,30 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 // TODO: Consider passing client and Dispatcher for DI
-class AlpacaRepository {
-    private val client = HttpClient(CIO) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = false
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            })
-        }
-        engine {
-            requestTimeout = 0 // 0 to disable, or a millisecond value to fit your needs
-        }
-        install(Logging) {
-            logger = Logger.SIMPLE
-            level = LogLevel.ALL
-        }
-        install(DefaultRequest) {
-            header("APCA-API-KEY-ID", PAPERAPIKEY)
-            header("APCA-API-SECRET-KEY", PAPERSECRET)
-            header("content-type", "application/json")
-            header("accept", "application/json")
-        }
+class AlpacaRepository(private val mClient: HttpClient = HttpClient(CIO) {
+    install(ContentNegotiation) {
+        json(Json {
+            prettyPrint = true
+            isLenient = false
+            ignoreUnknownKeys = true
+            encodeDefaults = true
+        })
     }
+    engine {
+        requestTimeout = 0 // 0 to disable, or a millisecond value to fit your needs
+    }
+    install(Logging) {
+        logger = Logger.SIMPLE
+        level = LogLevel.ALL
+    }
+    install(DefaultRequest) {
+        header("APCA-API-KEY-ID", PAPERAPIKEY)
+        header("APCA-API-SECRET-KEY", PAPERSECRET)
+        header("content-type", "application/json")
+        header("accept", "application/json")
+    }
+}) {
+
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()
 
@@ -54,8 +54,8 @@ class AlpacaRepository {
         private const val PAPERHOST = "paper-api.alpaca.markets"
         private const val PAPERMARKETHOST = "data.alpaca.markets"
         private const val BASEURLAPPENDIX = "v2"
-        private val PAPERAPIKEY = System.getenv("PAPERAPIKEY")
-        private val PAPERSECRET = System.getenv("PAPERSECRET")
+        val PAPERAPIKEY = System.getenv("PAPERAPIKEY")
+        val PAPERSECRET = System.getenv("PAPERSECRET")
         private val APIKEY = System.getenv("APIKEY")
         private val SECRET = System.getenv("SECRET")
     }
@@ -78,7 +78,7 @@ class AlpacaRepository {
 
     suspend fun getAccountDetails(): HttpResponse =
         withContext(Dispatchers.IO) {
-            client.get(paperBaseUrl) {
+            mClient.get(paperBaseUrl) {
                 url {
                     appendPathSegments("account")
                 }
@@ -87,7 +87,7 @@ class AlpacaRepository {
 
     suspend fun getOpenPositions(): HttpResponse =
         withContext(Dispatchers.IO) {
-            client.get(paperBaseUrl) {
+            mClient.get(paperBaseUrl) {
                 url {
                     appendPathSegments("positions")
                 }
@@ -96,7 +96,7 @@ class AlpacaRepository {
 
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
         withContext(Dispatchers.IO) {
-            client.post(paperBaseUrl) {
+            mClient.post(paperBaseUrl) {
                 url {
                     appendPathSegments("orders")
                 }
@@ -107,7 +107,7 @@ class AlpacaRepository {
     suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
             : HttpResponse =
         withContext(Dispatchers.IO) {
-            client.get(paperBaseMarketUrl) {
+            mClient.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
                     parameters.append("symbols", historicalRequest.symbols)

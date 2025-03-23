@@ -19,7 +19,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-class ApplicationTest {
+class IntegrationTest {
 
     companion object {
         private val defaultOrderRequest = OrderRequest(
@@ -54,29 +54,26 @@ class ApplicationTest {
             sort = "asc"
         )
     }
-
-    private fun getClient(): HttpClient {
-        return HttpClient(CIO) {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = true
-                    ignoreUnknownKeys = false
-                    encodeDefaults = true
-                })
-            }
-            defaultRequest {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-                url {
-                    protocol = URLProtocol.HTTP
-                    host = "127.0.0.1"
-                    port = 8080
-                }
+    // Used to connect to tradingbot server
+    private fun getClient(): HttpClient = HttpClient(CIO) {
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = true
+                ignoreUnknownKeys = false
+                encodeDefaults = true
+            })
+        }
+        defaultRequest {
+            header("content-type", "application/json")
+            header("accept", "application/json")
+            url {
+                protocol = URLProtocol.HTTPS
+                host = "127.0.0.1"
+                port = 8080
             }
         }
     }
-
 
     @Test
     fun testBadHistoricalSetAllParameter() = testApplication {

@@ -1,4 +1,3 @@
-
 plugins {
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ktor)
@@ -62,11 +61,12 @@ dependencies {
     // Ktor client
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.cio)
-    implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.client.logging)
     implementation(libs.ktor.client.content.negotiation)
 
+    testImplementation(libs.ktor.client.mock)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
-
+    testImplementation(libs.kotlin.test)
+    testImplementation(libs.mockk.lib)
 }
