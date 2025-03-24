@@ -22,29 +22,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
 
 // TODO: Consider passing client and Dispatcher for DI
-class AlpacaRepository(private val mClient: HttpClient = HttpClient(CIO) {
-    install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = true
-            isLenient = false
-            ignoreUnknownKeys = true
-            encodeDefaults = true
-        })
-    }
-    engine {
-        requestTimeout = 0 // 0 to disable, or a millisecond value to fit your needs
-    }
-    install(Logging) {
-        logger = Logger.SIMPLE
-        level = LogLevel.ALL
-    }
-    install(DefaultRequest) {
-        header("APCA-API-KEY-ID", PAPERAPIKEY)
-        header("APCA-API-SECRET-KEY", PAPERSECRET)
-        header("content-type", "application/json")
-        header("accept", "application/json")
-    }
-}) {
+class AlpacaRepository(private val mClient: HttpClient) {
 
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()

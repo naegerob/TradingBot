@@ -1,0 +1,355 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > TradingBot</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.tradingLogic</a>
+</div>
+
+<h1>Coverage Summary for Class: TradingBot (com.example.tradingLogic)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">TradingBot</td>
+<td class="coverageStat">
+  <span class="percent">
+    10%
+  </span>
+  <span class="absValue">
+    (1/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/24)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    15.7%
+  </span>
+  <span class="absValue">
+    (8/51)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">TradingBot$backtest$job$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/19)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TradingBot$getAccountBalance$1</td>
+  </tr>
+  <tr>
+    <td class="name">TradingBot$getValidatedHistoricalBars$1</td>
+  </tr>
+  <tr>
+    <td class="name">TradingBot$run$1</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/7)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/12)
+  </span>
+</td>
+  </tr>
+  <tr>
+    <td class="name">TradingBot$run$1$WhenMappings</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    8.3%
+  </span>
+  <span class="absValue">
+    (1/12)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    0%
+  </span>
+  <span class="absValue">
+    (0/39)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    9.8%
+  </span>
+  <span class="absValue">
+    (8/82)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.tradingLogic
+&nbsp;
+&nbsp;import com.example.data.AlpacaRepository
+&nbsp;import com.example.data.singleModels.*
+&nbsp;import com.example.tradingLogic.strategies.*
+&nbsp;import io.ktor.client.call.*
+&nbsp;import io.ktor.http.*
+&nbsp;import kotlinx.coroutines.*
+&nbsp;import kotlinx.serialization.SerializationException
+&nbsp;
+&nbsp;
+<b class="fc">&nbsp;class TradingBot(</b>
+<b class="fc">&nbsp;    private val mAlpacaRepository: AlpacaRepository</b>
+&nbsp;) {
+&nbsp;
+&nbsp;    @Volatile
+&nbsp;    private var mIsRunning = false
+&nbsp;    private var mJob: Job? = null
+<b class="fc">&nbsp;    var mIndicators = Indicators()</b>
+&nbsp;        private set
+<b class="fc">&nbsp;    var mBacktestIndicators = Indicators()</b>
+&nbsp;        private set
+<b class="fc">&nbsp;    private var mStrategy = StrategyFactory().createStrategy(Strategies.None)</b>
+<b class="fc">&nbsp;    private var mOrderRequest = OrderRequest()</b>
+<b class="fc">&nbsp;    private var mStockAggregationRequest = StockAggregationRequest()</b>
+<b class="fc">&nbsp;    private var mTimeframe = StockAggregationRequest().timeframe</b>
+&nbsp;
+&nbsp;    // TODO: Consider changing to handling errors similar to getAccountBalance
+&nbsp;    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators): List&lt;StockBar&gt; {
+&nbsp;        try {
+<b class="nc">&nbsp;            val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)</b>
+<b class="nc">&nbsp;            when (httpResponse.status) {</b>
+<b class="nc">&nbsp;                HttpStatusCode.OK -&gt; {</b>
+<b class="nc">&nbsp;                    val stockResponse = httpResponse.body&lt;StockAggregationResponse&gt;()</b>
+<b class="nc">&nbsp;                    return stockResponse.bars[indicators.mStock]!!</b>
+&nbsp;                }
+<b class="nc">&nbsp;                else -&gt; return emptyList() // TODO: is just bad</b>
+&nbsp;            }
+&nbsp;        } catch (e: Exception) {
+<b class="nc">&nbsp;            println(e)</b>
+<b class="nc">&nbsp;            return emptyList()</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private suspend fun getAccountBalance(): Result&lt;Double&gt; {
+<b class="nc">&nbsp;        return runCatching {</b>
+<b class="nc">&nbsp;            val httpResponse = mAlpacaRepository.getAccountDetails()</b>
+<b class="nc">&nbsp;            when (httpResponse.status) {</b>
+<b class="nc">&nbsp;                HttpStatusCode.OK -&gt; {</b>
+<b class="nc">&nbsp;                    httpResponse.body&lt;Account&gt;().buyingPower.toDouble()</b>
+&nbsp;                }
+&nbsp;                else -&gt; {
+<b class="nc">&nbsp;                    throw SerializationException(&quot;Serialization or API request did not work&quot;)</b>
+&nbsp;                }
+<b class="nc">&nbsp;            }</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    fun setStrategy(strategySelector: Strategies) {
+<b class="nc">&nbsp;        mStrategy = StrategyFactory().createStrategy(strategySelector)</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun setStockAggregationRequest(stockAggregationRequest: StockAggregationRequest) {
+<b class="nc">&nbsp;        mStockAggregationRequest = stockAggregationRequest</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun setOrderRequest(orderRequest: OrderRequest) {
+<b class="nc">&nbsp;        mOrderRequest = orderRequest</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {
+<b class="nc">&nbsp;        val strategy = StrategyFactory().createStrategy(strategySelector)</b>
+<b class="nc">&nbsp;        mBacktestIndicators.mStock = stockAggregationRequest.symbols</b>
+&nbsp;
+<b class="nc">&nbsp;        val initialBalance = 10000.0 // Starting capital</b>
+<b class="nc">&nbsp;        var balance = initialBalance</b>
+<b class="nc">&nbsp;        val positionSize = 10 // Money per trade</b>
+<b class="nc">&nbsp;        var positions = 0</b>
+&nbsp;
+<b class="nc">&nbsp;        val job = CoroutineScope(Dispatchers.IO).async {</b>
+<b class="nc">&nbsp;            val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)</b>
+<b class="nc">&nbsp;            mBacktestIndicators.updateIndicators(historicalBars)</b>
+&nbsp;
+<b class="nc">&nbsp;            mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice -&gt;</b>
+<b class="nc">&nbsp;                val indicatorSnapshot = mBacktestIndicators.getIndicatorPoints(index)</b>
+<b class="nc">&nbsp;                val tradingSignal = strategy.executeAlgorithm(indicatorSnapshot)</b>
+<b class="nc">&nbsp;                if (tradingSignal == TradingSignal.Buy &amp;&amp; positions == 0) {</b>
+<b class="nc">&nbsp;                    println(&quot;BUY at $originalPrice&quot;)</b>
+<b class="nc">&nbsp;                    positions = positionSize</b>
+<b class="nc">&nbsp;                    balance -= positionSize * originalPrice</b>
+&nbsp;
+<b class="nc">&nbsp;                } else if (tradingSignal == TradingSignal.Sell &amp;&amp; positions == positionSize) {</b>
+<b class="nc">&nbsp;                    println(&quot;SELL at $originalPrice&quot;)</b>
+<b class="nc">&nbsp;                    positions = 0</b>
+<b class="nc">&nbsp;                    balance += positionSize * originalPrice</b>
+&nbsp;
+&nbsp;                } else {
+<b class="nc">&nbsp;                    println(&quot;Hold Position at $originalPrice&quot;)</b>
+&nbsp;                }
+<b class="nc">&nbsp;            }</b>
+<b class="nc">&nbsp;            println(&quot;Final position: $positions&quot;)</b>
+<b class="nc">&nbsp;            val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()</b>
+<b class="nc">&nbsp;            val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100</b>
+<b class="nc">&nbsp;            BacktestResult(strategySelector, finalBalance, winRateInPercent, positions)</b>
+&nbsp;        }
+<b class="nc">&nbsp;        return job.await()</b>
+&nbsp;    }
+&nbsp;
+&nbsp;    fun run() {
+<b class="nc">&nbsp;        if (mIsRunning) return</b>
+<b class="nc">&nbsp;        val delayInMs = parseTimeframeToMillis(mTimeframe) ?: return</b>
+&nbsp;
+<b class="nc">&nbsp;        mIsRunning = true</b>
+&nbsp;
+<b class="nc">&nbsp;        mJob = CoroutineScope(Dispatchers.IO).launch {</b>
+<b class="nc">&nbsp;            while(mIsRunning) {</b>
+<b class="nc">&nbsp;                val accountBalance = getAccountBalance().getOrNull() // TODO: implement</b>
+<b class="nc">&nbsp;                val historicalBars = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)</b>
+<b class="nc">&nbsp;                mIndicators.updateIndicators(historicalBars)</b>
+<b class="nc">&nbsp;                val latestIndicators = mIndicators.getIndicatorPoints()</b>
+<b class="nc">&nbsp;                val signal = mStrategy.executeAlgorithm(latestIndicators)</b>
+<b class="nc">&nbsp;                when(signal) {</b>
+&nbsp;                    TradingSignal.Buy -&gt; {
+<b class="nc">&nbsp;                        mOrderRequest.side = &quot;buy&quot;</b>
+<b class="nc">&nbsp;                        mAlpacaRepository.createOrder(mOrderRequest)</b>
+&nbsp;                    }
+&nbsp;                    TradingSignal.Sell -&gt; {
+<b class="nc">&nbsp;                        mOrderRequest.side = &quot;sell&quot;</b>
+<b class="nc">&nbsp;                        mAlpacaRepository.createOrder(mOrderRequest)</b>
+&nbsp;                    }
+&nbsp;                    TradingSignal.Hold -&gt; { /* Do nothing */ }
+&nbsp;                }
+<b class="nc">&nbsp;                delay(delayInMs)</b>
+&nbsp;
+&nbsp;            }
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    private fun parseTimeframeToMillis(timeframe: String): Long? {
+<b class="nc">&nbsp;        val regex = &quot;&quot;&quot;(\d+)(Min|T|Hour|H|Day|D|Week|W|Month|M)&quot;&quot;&quot;.toRegex()</b>
+<b class="nc">&nbsp;        val match = regex.matchEntire(timeframe) ?: return null</b>
+&nbsp;
+<b class="nc">&nbsp;        val (valueStr, unit) = match.destructured</b>
+<b class="nc">&nbsp;        val value = valueStr.toIntOrNull() ?: return null</b>
+&nbsp;
+<b class="nc">&nbsp;        return when (unit) {</b>
+<b class="nc">&nbsp;            &quot;Min&quot;, &quot;T&quot; -&gt; value * 60_000L // Minutes</b>
+<b class="nc">&nbsp;            &quot;Hour&quot;, &quot;H&quot; -&gt; value * 60 * 60_000L // Hours</b>
+<b class="nc">&nbsp;            &quot;Day&quot;, &quot;D&quot; -&gt; value * 24 * 60 * 60_000L // Days</b>
+<b class="nc">&nbsp;            &quot;Week&quot;, &quot;W&quot; -&gt; value * 7 * 24 * 60 * 60_000L // Weeks</b>
+<b class="nc">&nbsp;            &quot;Month&quot;, &quot;M&quot; -&gt; value * 30 * 24 * 60 * 60_000L // Approximate months</b>
+<b class="nc">&nbsp;            else -&gt; null</b>
+&nbsp;        }
+&nbsp;    }
+&nbsp;
+&nbsp;    fun stop() {
+<b class="nc">&nbsp;        mJob?.cancel()</b>
+<b class="nc">&nbsp;        mIsRunning = false</b>
+&nbsp;    }
+&nbsp;}
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-03-24 07:17</div>
+</div>
+</body>
+</html>

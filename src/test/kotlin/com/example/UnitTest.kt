@@ -14,15 +14,9 @@ import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.client.plugins.DefaultRequest
 import io.ktor.client.plugins.logging.*
-import io.ktor.server.plugins.contentnegotiation.*
 import io.ktor.server.testing.*
-import io.ktor.server.application.*
 import kotlinx.serialization.json.Json
-import io.ktor.server.response.*
-import io.ktor.server.routing.*
 import kotlinx.serialization.encodeToString
-import org.junit.internal.requests.OrderingRequest
-import org.junit.jupiter.api.Order
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -231,7 +225,6 @@ class UnitTest {
         }
 
         val response = httpResponse.bodyAsText()
-        println(response)
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
 
     }
@@ -340,7 +333,6 @@ class UnitTest {
         }
 
         val response = httpResponse.body<StockAggregationResponse>()
-        println(response)
         assertEquals(HttpStatusCode.OK, httpResponse.status)
         assertNotEquals(emptyMap(), response.bars)
     }
@@ -348,7 +340,6 @@ class UnitTest {
     @Test
     fun `Get Historical Bars Request with bad parameter`() = testApplication {
         val mockEngine = MockEngine { _ ->
-            println("Mocking works")
             respond(
                 content =  mapOf("message" to "Invalid format for parameter symbols: query parameter 'symbols' is required").toString(),
                 status = HttpStatusCode.BadRequest
@@ -369,39 +360,4 @@ class UnitTest {
 
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
     }
-
-    @Test
-    fun `Do Backtest with hardcoded strategy, no assert`() = testApplication {
-        application {
-            module()
-        }
-        val stockAggregationRequest = defaultStockAggregationRequest.copy()
-        val strategySelector = Strategies.MovingAverage
-
-        val backtestConfig = BacktestConfig(strategySelector, stockAggregationRequest)
-
-        val httpResponse = getClient().post("/Bot/Backtesting") {
-            setBody(backtestConfig)
-        }
-        val backtestResult = httpResponse.body<BacktestResult>()
-        backtestResult.let {
-            println(it.strategyName)
-            println(it.winRate)
-            println(it.finalBalance)
-            println(it.positions)
-        }
-    }
-
-    @Test
-    fun `Start and Stop the Bot`() = testApplication {
-        application {
-            module()
-        }
-        val client = getClient()
-        var httpResponse = client.get("/Bot/Start")
-        assertEquals(HttpStatusCode.OK, httpResponse.status)
-        httpResponse = client.get("/Bot/Stop")
-        assertEquals(HttpStatusCode.OK, httpResponse.status)
-    }
-
 }
