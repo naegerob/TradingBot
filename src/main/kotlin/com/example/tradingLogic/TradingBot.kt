@@ -1,6 +1,7 @@
 package com.example.tradingLogic
 
 import com.example.data.AlpacaRepository
+import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.*
 import io.ktor.client.call.*
@@ -10,7 +11,7 @@ import kotlinx.serialization.SerializationException
 
 
 class TradingBot(
-    private val mAlpacaRepository: AlpacaRepository
+    private val mAlpacaRepository: TradingRepository
 ) {
 
     @Volatile

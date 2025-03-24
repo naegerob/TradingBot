@@ -151,7 +151,6 @@ fun Application.configureRouting(tradingController: TradingController) {
     }
 }
 
-
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
@@ -159,7 +158,7 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
         HttpStatusCode.BadRequest           -> call.respond(HttpStatusCode.BadRequest, "Parameter have wrong format. Check Alpaca Doc!")
         HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)
         HttpStatusCode.NotFound             -> call.respond(HttpStatusCode.NotFound)
-        HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient.")
+        HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient. Or proxy blocks API call.")
         HttpStatusCode.UnprocessableEntity  -> call.respond(HttpStatusCode.UnprocessableEntity, "Input parameters are not recognized.")
         else                                -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
     }

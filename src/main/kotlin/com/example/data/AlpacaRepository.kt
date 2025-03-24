@@ -3,26 +3,15 @@ package com.example.data
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.DefaultRequest
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.logging.SIMPLE
 import io.ktor.client.request.get
-import io.ktor.client.request.header
 import io.ktor.client.request.post
 import io.ktor.client.request.setBody
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 
-// TODO: Consider passing client and Dispatcher for DI
-class AlpacaRepository(private val mClient: HttpClient) {
+class AlpacaRepository(private val mClient: HttpClient) : TradingRepository {
 
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()
@@ -54,7 +43,7 @@ class AlpacaRepository(private val mClient: HttpClient) {
         }.build()
 
 
-    suspend fun getAccountDetails(): HttpResponse =
+    override suspend fun getAccountDetails(): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseUrl) {
                 url {
@@ -63,7 +52,7 @@ class AlpacaRepository(private val mClient: HttpClient) {
             }
         }
 
-    suspend fun getOpenPositions(): HttpResponse =
+    override suspend fun getOpenPositions(): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseUrl) {
                 url {
@@ -72,7 +61,7 @@ class AlpacaRepository(private val mClient: HttpClient) {
             }
         }
 
-    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
+    override suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.post(paperBaseUrl) {
                 url {
@@ -82,7 +71,7 @@ class AlpacaRepository(private val mClient: HttpClient) {
             }
         }
 
-    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
+    override suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
             : HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseMarketUrl) {

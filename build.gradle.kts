@@ -5,7 +5,6 @@ plugins {
     alias(libs.plugins.kotlin.plugin.kover)
 }
 
-
 group = "com.example"
 version = "0.0.1"
 ktor {
@@ -58,6 +57,10 @@ dependencies {
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.status.pages)
 
+    implementation(project.dependencies.platform(libs.koin.bom))
+    implementation(libs.koin.core)
+    implementation(libs.koin.ktor)
+
     // Ktor client
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.cio)
@@ -68,5 +71,5 @@ dependencies {
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
     testImplementation(libs.kotlin.test)
-    testImplementation(libs.mockk.lib)
+    testImplementation(libs.koin.test)
 }

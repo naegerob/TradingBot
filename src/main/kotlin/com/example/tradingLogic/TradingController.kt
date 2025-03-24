@@ -1,6 +1,7 @@
 package com.example.tradingLogic
 
 import com.example.data.AlpacaRepository
+import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.*
@@ -8,7 +9,7 @@ import io.ktor.client.statement.*
 
 class TradingController(mAlpacaClient: HttpClient) {
 
-    private val mAlpacaRepo = AlpacaRepository(mAlpacaClient)
+    private val mAlpacaRepo: TradingRepository = AlpacaRepository(mAlpacaClient)
 
     var mIndicators = Indicators()
         private set
