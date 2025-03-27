@@ -143,10 +143,9 @@ class UnitTest {
                 status = HttpStatusCode.OK,
             )
         }
-        val mockAlpacaHttpClient = getMockAlpacaClient(mockEngine)
 
         application {
-            module(mockAlpacaHttpClient)
+            configureRouting(mockEngine)
         }
 
         // Precondition
@@ -210,10 +209,8 @@ class UnitTest {
                 status = HttpStatusCode.UnprocessableEntity,
             )
         }
-        val mockAlpacaHttpClient = getMockAlpacaClient(mockEngine)
-
         application {
-            module(mockAlpacaHttpClient)
+            configureRouting(mockEngine)
         }
 
         // Precondition
@@ -281,10 +278,9 @@ class UnitTest {
                 status = HttpStatusCode.OK,
             )
         }
-        val mockAlpacaHttpClient = getMockAlpacaClient(mockEngine)
 
         application {
-            module(mockAlpacaHttpClient)
+            configureRouting(mockEngine)
         }
 
         val accountId = "PA3ALX4NGLN0"
@@ -320,10 +316,9 @@ class UnitTest {
                 status = HttpStatusCode.OK,
             )
         }
-        val mockAlpacaHttpClient = getMockAlpacaClient(mockEngine)
 
         application {
-            module(mockAlpacaHttpClient)
+            configureRouting(mockEngine)
         }
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
@@ -345,10 +340,8 @@ class UnitTest {
                 status = HttpStatusCode.BadRequest
             )
         }
-        val mockAlpacaHttpClient = getMockAlpacaClient(mockEngine)
-
         application {
-            module(mockAlpacaHttpClient)
+            configureRouting(mockEngine)
         }
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()

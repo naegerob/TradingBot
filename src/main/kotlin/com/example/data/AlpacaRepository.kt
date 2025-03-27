@@ -3,16 +3,41 @@ package com.example.data
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.HttpClient
-import io.ktor.client.request.get
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.client.engine.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.json.Json
 
-class AlpacaRepository(private val mClient: HttpClient) : TradingRepository {
+class AlpacaRepository(engine: HttpClientEngine) : TradingRepository {
 
+    private val mClient = HttpClient(engine) {
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = false
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            })
+        }
+        install(Logging) {
+            logger = Logger.SIMPLE
+            level = LogLevel.ALL
+        }
+        install(DefaultRequest) {
+            header("APCA-API-KEY-ID", PAPERAPIKEY)
+            header("APCA-API-SECRET-KEY", PAPERSECRET)
+            header("content-type", "application/json")
+            header("accept", "application/json")
+        }
+    }
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()
 

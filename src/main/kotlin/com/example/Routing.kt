@@ -4,6 +4,7 @@ import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.BacktestConfig
 import com.example.tradingLogic.TradingController
+import io.ktor.client.engine.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -11,8 +12,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(tradingController: TradingController) {
-
+fun Application.configureRouting(engine: HttpClientEngine) {
+    val tradingController = TradingController(engine)
     routing {
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()

@@ -5,11 +5,12 @@ import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.*
+import io.ktor.client.engine.*
 import io.ktor.client.statement.*
 
-class TradingController(mAlpacaClient: HttpClient) {
+class TradingController(engine: HttpClientEngine) {
 
-    private val mAlpacaRepo: TradingRepository = AlpacaRepository(mAlpacaClient)
+    private val mAlpacaRepo: TradingRepository = AlpacaRepository(engine)
 
     var mIndicators = Indicators()
         private set
