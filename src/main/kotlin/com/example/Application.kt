@@ -1,8 +1,8 @@
 package com.example
 
-import io.ktor.client.engine.cio.*
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
+import org.koin.core.context.startKoin
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
@@ -13,5 +13,5 @@ fun Application.module(){
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
     configureDatabases()
     configureMonitoring()
-    configureRouting(CIO.create()) // The routes itself
+    configureRouting() // The routes itself
 }

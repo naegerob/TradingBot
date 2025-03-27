@@ -12,8 +12,8 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 
-fun Application.configureRouting(engine: HttpClientEngine) {
-    val tradingController = TradingController(engine)
+fun Application.configureRouting() {
+    val tradingController = TradingController()
     routing {
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()

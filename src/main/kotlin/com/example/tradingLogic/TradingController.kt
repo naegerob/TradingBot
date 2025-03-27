@@ -8,9 +8,9 @@ import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.statement.*
 
-class TradingController(engine: HttpClientEngine) {
+class TradingController() {
 
-    private val mAlpacaRepo: TradingRepository = AlpacaRepository(engine)
+    private val mAlpacaRepo: TradingRepository = AlpacaRepository()
 
     var mIndicators = Indicators()
         private set

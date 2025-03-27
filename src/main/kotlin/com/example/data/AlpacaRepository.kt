@@ -15,10 +15,13 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class AlpacaRepository(engine: HttpClientEngine) : TradingRepository {
+class AlpacaRepository() : TradingRepository, KoinComponent {
 
-    private val mClient = HttpClient(engine) {
+    private val mEngine by inject<HttpClientEngine>()
+    private val mClient = HttpClient(mEngine) {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
