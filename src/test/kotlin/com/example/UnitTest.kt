@@ -2,29 +2,29 @@ package com.example
 
 
 import com.example.data.singleModels.*
-import com.example.tradingLogic.BacktestConfig
-import com.example.tradingLogic.BacktestResult
-import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.mock.*
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
-import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
-import io.ktor.client.plugins.DefaultRequest
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
+import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
+import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.ktor.plugin.Koin
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
+import org.koin.test.KoinTest
+import kotlin.test.*
 
-class UnitTest {
+class UnitTest : KoinTest {
 
     companion object {
         private val defaultOrderRequest = OrderRequest(
@@ -59,7 +59,6 @@ class UnitTest {
             sort = "asc"
         )
 
-
         private fun getMockAlpacaClient(mockEngine: MockEngine) = HttpClient(mockEngine) {
             install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
                 json(Json {
@@ -83,20 +82,32 @@ class UnitTest {
     }
 
     // Used to connect to in-memory server
-    private fun getClient(engine : HttpClientEngine): HttpClient = HttpClient(engine) {
-        install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = false
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            })
-        }
-        install(DefaultRequest) {
-            header("content-type", "application/json")
-            header("accept", "application/json")
-        }
-    }
+//    private fun getClient() = createClient {
+//        install(ContentNegotiation) {
+//            json(Json {
+//                prettyPrint = true
+//                isLenient = false
+//                ignoreUnknownKeys = true
+//                encodeDefaults = true
+//            })
+//        }
+//        install(DefaultRequest) {
+//            header("content-type", "application/json")
+//            header("accept", "application/json")
+//        }
+//    }
+
+//    @BeforeTest
+//    fun setUp() {
+//        startKoin {
+//            modules()
+//        }
+//    }
+//
+//    @AfterTest
+//    fun shutdown() {
+//        stopKoin()
+//    }
 
     @Test
     fun `Create a Good Order to Alpaca`() = testApplication {
@@ -143,24 +154,42 @@ class UnitTest {
         val mockEngine = MockEngine { _ ->
             respond(
                 content = Json.encodeToString(mockOrderResponse),
-                status = HttpStatusCode.OK,
+                status = OK,
             )
         }
 
         application {
-            configureRouting()
+            install(Koin){
+                modules (org.koin.dsl.module {
+                        single<HttpClientEngine> { mockEngine }
+                    }
+                )
+            }
         }
 
         // Precondition
         val orderRequest = defaultOrderRequest.copy()
-
-//        val httpResponse = getClient().post("/Order/Create") {
-//            setBody(orderRequest)
-//        }
-//        val response = httpResponse.body<OrderResponse>()
-//        assertEquals(HttpStatusCode.OK, httpResponse.status)
-//        assertEquals(orderRequest.quantity, response.qty)
-//        assertEquals(orderRequest.symbol, response.symbol)
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val httpResponse = client.post("/Order/Create") {
+            setBody(orderRequest)
+        }
+        val response = httpResponse.body<OrderResponse>()
+        assertEquals(OK, httpResponse.status)
+        assertEquals(orderRequest.quantity, response.qty)
+        assertEquals(orderRequest.symbol, response.symbol)
 
     }
 
@@ -213,19 +242,36 @@ class UnitTest {
             )
         }
         application {
-           // modules(testModule)
+            install(Koin){
+                modules (org.koin.dsl.module {
+                        single<HttpClientEngine> { mockEngine }
+                    }
+                )
+            }
         }
 
         // Precondition
         val orderRequest = defaultOrderRequest.copy()
         orderRequest.symbol = ""
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val httpResponse = client.post("/Order/Create") {
+            setBody(orderRequest)
+        }
 
-//        val httpResponse = getClient().post("/Order/Create") {
-//            setBody(orderRequest)
-//        }
-//
-//        val response = httpResponse.bodyAsText()
-//        assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
+        assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
 
     }
 
@@ -278,23 +324,43 @@ class UnitTest {
         val mockEngine = MockEngine { _ ->
             respond(
                 content = Json.encodeToString(mockAccountResponse),
-                status = HttpStatusCode.OK,
+                status = OK,
             )
         }
 
         application {
+            install(Koin){
+                modules (org.koin.dsl.module {
+                        single<HttpClientEngine> { mockEngine }
+                    }
+                )
+            }
+
             configureRouting()
         }
 
-//        val accountId = "PA3ALX4NGLN0"
-//        val state = "ACTIVE"
-//        val client = getClient()
-//        val httpResponse = client.get("/AccountDetails")
-//
-//        assertEquals(HttpStatusCode.OK, httpResponse.status)
-//        val accountDetails = httpResponse.body<Account>()
-//        assertEquals(accountId, accountDetails.accountNumber)
-//        assertEquals(state, accountDetails.status)
+        val accountId = "PA3ALX4NGLN0"
+        val state = "ACTIVE"
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val httpResponse = client.get("/AccountDetails")
+
+        assertEquals(OK, httpResponse.status)
+        val accountDetails = httpResponse.body<Account>()
+        assertEquals(accountId, accountDetails.accountNumber)
+        assertEquals(state, accountDetails.status)
     }
 
     @Test
@@ -316,14 +382,14 @@ class UnitTest {
         val mockEngine = MockEngine { _ ->
             respond(
                 content = Json.encodeToString(mockStockAggregationResponse),
-                status = HttpStatusCode.OK,
+                status = OK,
             )
         }
 
         application {
             install(Koin){
                 modules (org.koin.dsl.module {
-                        single { getClient(mockEngine) }
+                        single<HttpClientEngine> { mockEngine }
                     }
                 )
             }
@@ -331,12 +397,27 @@ class UnitTest {
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
 
-        val httpResponse = restClient().post("/HistoricalBars/Request") {
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+
+        val httpResponse = client.post("/HistoricalBars/Request") {
             setBody(stockAggregationRequest)
         }
 
         val response = httpResponse.body<StockAggregationResponse>()
-        assertEquals(HttpStatusCode.OK, httpResponse.status)
+        assertEquals(OK, httpResponse.status)
         assertNotEquals(emptyMap(), response.bars)
     }
 
@@ -349,16 +430,34 @@ class UnitTest {
             )
         }
         application {
-            configureRouting()
+            install(Koin){
+                modules (org.koin.dsl.module {
+                        single<HttpClientEngine> { mockEngine }
+                    }
+                )
+            }
         }
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         stockAggregationRequest.symbols = ""
-
-        val httpResponse = getClient().post("/HistoricalBars/Request") {
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val httpResponse = client.post("/HistoricalBars/Request") {
             setBody(stockAggregationRequest)
         }
 
-        assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
+        assertEquals(BadRequest, httpResponse.status)
     }
 }
