@@ -18,6 +18,7 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.ktor.plugin.Koin
 import org.koin.test.KoinTest
 import kotlin.test.*
@@ -79,33 +80,11 @@ class UnitTest : KoinTest {
         }
     }
 
-    // Used to connect to in-memory server
-//    private fun getClient() = createClient {
-//        install(ContentNegotiation) {
-//            json(Json {
-//                prettyPrint = true
-//                isLenient = false
-//                ignoreUnknownKeys = true
-//                encodeDefaults = true
-//            })
-//        }
-//        install(DefaultRequest) {
-//            header("content-type", "application/json")
-//            header("accept", "application/json")
-//        }
-//    }
 
-//    @BeforeTest
-//    fun setUp() {
-//        startKoin {
-//            modules()
-//        }
-//    }
-//
-//    @AfterTest
-//    fun shutdown() {
-//        stopKoin()
-//    }
+    @AfterTest
+    fun shutdown() {
+        stopKoin()
+    }
 
     @Test
     fun `Create a Good Order to Alpaca`() = testApplication {
@@ -163,6 +142,8 @@ class UnitTest : KoinTest {
                     }
                 )
             }
+            configureSerialization()
+            configureRouting()
         }
 
         // Precondition
@@ -246,6 +227,8 @@ class UnitTest : KoinTest {
                     }
                 )
             }
+            configureSerialization()
+            configureRouting()
         }
 
         // Precondition
@@ -270,7 +253,6 @@ class UnitTest : KoinTest {
         }
 
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-
     }
 
     @Test
@@ -333,6 +315,7 @@ class UnitTest : KoinTest {
                     }
                 )
             }
+            configureSerialization()
             configureRouting()
         }
 
@@ -390,6 +373,8 @@ class UnitTest : KoinTest {
                     }
                 )
             }
+            configureSerialization()
+            configureRouting()
         }
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
@@ -433,6 +418,8 @@ class UnitTest : KoinTest {
                     }
                 )
             }
+            configureSerialization()
+            configureRouting()
         }
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
