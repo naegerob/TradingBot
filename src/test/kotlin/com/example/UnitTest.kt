@@ -18,8 +18,6 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.koin.core.context.GlobalContext.startKoin
-import org.koin.core.context.stopKoin
 import org.koin.ktor.plugin.Koin
 import org.koin.test.KoinTest
 import kotlin.test.*
@@ -335,7 +333,6 @@ class UnitTest : KoinTest {
                     }
                 )
             }
-
             configureRouting()
         }
 
@@ -440,7 +437,7 @@ class UnitTest : KoinTest {
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         stockAggregationRequest.symbols = ""
-        val client = createClient {
+        val mockClient = createClient {
             install(ContentNegotiation) {
                 json(Json {
                     prettyPrint = true
@@ -454,7 +451,7 @@ class UnitTest : KoinTest {
                 header("accept", "application/json")
             }
         }
-        val httpResponse = client.post("/HistoricalBars/Request") {
+        val httpResponse = mockClient.post("/HistoricalBars/Request") {
             setBody(stockAggregationRequest)
         }
 

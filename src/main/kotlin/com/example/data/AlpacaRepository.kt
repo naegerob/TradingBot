@@ -4,7 +4,6 @@ import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
@@ -21,7 +20,26 @@ import org.koin.core.component.inject
 class AlpacaRepository() : TradingRepository, KoinComponent {
 
     private val mEngine by inject<HttpClientEngine>()
-    private val mClient = HttpClient(mEngine)
+    private val mClient = HttpClient(mEngine) {
+        install(ContentNegotiation) {
+            json(Json {
+                prettyPrint = true
+                isLenient = false
+                ignoreUnknownKeys = true
+                encodeDefaults = true
+            })
+        }
+        install(Logging) {
+            logger = Logger.SIMPLE
+            level = LogLevel.ALL
+        }
+        install(DefaultRequest) {
+            header("APCA-API-KEY-ID", PAPERAPIKEY)
+            header("APCA-API-SECRET-KEY", PAPERSECRET)
+            header("content-type", "application/json")
+            header("accept", "application/json")
+        }
+    }
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()
 
