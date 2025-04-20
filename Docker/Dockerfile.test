@@ -11,7 +11,7 @@ COPY ../gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app
 RUN gradle clean build -i --stacktrace
 
-# Stage 2: Tes
+# Stage 2: Test
 FROM gradle:8.13.0-jdk17-corretto-al2023  AS test
 
 ENV REPORT_DIR=/app/reports
