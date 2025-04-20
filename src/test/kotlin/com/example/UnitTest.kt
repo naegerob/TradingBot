@@ -18,7 +18,6 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.koin.core.context.GlobalContext.stopKoin
 import org.koin.ktor.plugin.Koin
 import org.koin.test.KoinTest
 import kotlin.test.*
@@ -78,12 +77,6 @@ class UnitTest : KoinTest {
                 header("accept", "application/json")
             }
         }
-    }
-
-
-    @AfterTest
-    fun shutdown() {
-        stopKoin()
     }
 
     @Test
