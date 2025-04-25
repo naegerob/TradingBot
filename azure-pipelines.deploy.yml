@@ -1,13 +1,23 @@
+name: '$(Build.DefinitionName)_$(Build.BuildId)'
+
 trigger:
 - main
 
 pool:
   vmImage: 'ubuntu-latest'
 
-jobs:
-  - job:
-    steps:
-      - task: Checkout@1
-      - script: |
-          docker run -p 127.0.0.1:8080:8080 --name tradingbot -e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET tradingbot
-        displayName: 'Run Docker Image'
+steps:
+  - task: DownloadBuildArtifacts@0
+    inputs:
+      buildType: 'specific'
+      project: '$(System.TeamProject)'
+      definition: ''  # Replace with your build pipeline name
+      buildVersionToDownload: 'latest'
+      downloadType: 'specific'
+      artifactName: 'docker-image'
+      targetPath: '$(Pipeline.Workspace)'
+  - task: Checkout@1
+  - script: |
+      echo "Running existing Docker image"
+      docker run -p 127.0.0.1:8080:8080 --name tradingbot -e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET tradingbot
+    displayName: 'Run Docker Image'

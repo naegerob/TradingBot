@@ -1,3 +1,5 @@
+name: '$(Build.DefinitionName)_$(Build.BuildId)'
+
 trigger: none  # no automatic trigger
 
 pool:
@@ -11,4 +13,9 @@ steps:
       tags: |
         $(Build.BuildId)
         latest
-      repository: yourdockerregistry/tradingbot
+
+  - task: PublishBuildArtifacts@1
+    inputs:
+      PathtoPublish: $(Build.ArtifactStagingDirectory)  # Path to the directory where the image is built
+      ArtifactName: 'docker-image'
+      publishLocation: 'Container'
