@@ -1,0 +1,14 @@
+trigger: none  # no automatic trigger
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Docker@2
+    inputs:
+      command: build
+      Dockerfile: '**/Dockerfile'
+      tags: |
+        $(Build.BuildId)
+        latest
+      repository: yourdockerregistry/tradingbot

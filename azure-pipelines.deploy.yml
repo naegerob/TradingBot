@@ -1,0 +1,12 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+
+steps:
+  - name: Checkout repository
+    uses: actions/checkout@v4
+  - name: Run Docker image
+    run: docker run -p 127.0.0.1:8080:8080 --name tradingbot -e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET tradingbot

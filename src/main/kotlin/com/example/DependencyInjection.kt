@@ -14,8 +14,5 @@ fun Application.configureDependencies() {
     install(Koin) {
         modules(appModule)
     }
-    startKoin {
-        modules(appModule)
-    }
 }
 

@@ -7,7 +7,7 @@ ENV GRADLE_USER_HOME=/home/gradle/.gradle
 RUN mkdir -p $GRADLE_USER_HOME
 
 COPY build.gradle.* gradle.properties settings.gradle.kts /home/gradle/app/
-COPY ../gradle /home/gradle/app/gradle
+COPY gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app
 
 # Only download dependencies here
@@ -24,7 +24,6 @@ WORKDIR /home/gradle/app
 
 RUN gradle test --no-daemon
 RUN gradle koverHtmlReport --no-daemon
-
 
 # Stage 3: Build Application (fatJar)
 FROM gradle:8.13.0-jdk17-corretto-al2023 AS build
