@@ -8,14 +8,9 @@ pool:
 steps:
   - task: Docker@2
     inputs:
-      command: build
+      command: 'buildAndPush'
       Dockerfile: '**/Dockerfile'
+      repository: 'naegerr/tradingbot'
+      containerRegistry: 'Tradingbot'
       tags: |
         $(Build.BuildId)
-        latest
-
-  - task: PublishBuildArtifacts@1
-    inputs:
-      PathtoPublish: $(Build.ArtifactStagingDirectory)  # Path to the directory where the image is built
-      ArtifactName: 'docker-image'
-      publishLocation: 'Container'
