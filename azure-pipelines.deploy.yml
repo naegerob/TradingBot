@@ -3,6 +3,13 @@ name: '$(Build.DefinitionName)_$(Build.BuildId)'
 trigger:
 - main
 
+variables:
+  APIKEY: $(APIKEY)
+  PAPERAPIKEY: $(PAPERAPIKEY)
+  PAPERSECRET: $(PAPERSECRET)
+  SECRET: $(SECRET)
+
+
 pool:
   vmImage: 'ubuntu-latest'
 
