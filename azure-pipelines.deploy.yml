@@ -4,11 +4,15 @@ trigger:
 - main
 
 variables:
-  APIKEY: $(APIKEY)
-  PAPERAPIKEY: $(PAPERAPIKEY)
-  PAPERSECRET: $(PAPERSECRET)
-  SECRET: $(SECRET)
 
+- name:   APIKEY
+  value:  $(APIKEY)
+- name:   PAPERAPIKEY
+  value:  $(PAPERAPIKEY)
+- name:   PAPERSECRET
+  value:  $(PAPERSECRET)
+- name:   SECRET
+  value:  $(SECRET)
 
 pool:
   vmImage: 'ubuntu-latest'
