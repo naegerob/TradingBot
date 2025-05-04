@@ -3,17 +3,6 @@ name: '$(Build.DefinitionName)_$(Build.BuildId)'
 trigger:
 - main
 
-variables:
-
-- name:   APIKEY
-  value:  $(APIKEY)
-- name:   PAPERAPIKEY
-  value:  $(PAPERAPIKEY)
-- name:   PAPERSECRET
-  value:  $(PAPERSECRET)
-- name:   SECRET
-  value:  $(SECRET)
-
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -26,5 +15,6 @@ steps:
   - task: Checkout@1
   - script: |
       echo "Running existing Docker image"
+      echo $PAPERAPIKEY
       docker run -p 127.0.0.1:8080:8080 naegerr/tradingbot:82 -e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET tradingbot
     displayName: 'Run Docker Image'
