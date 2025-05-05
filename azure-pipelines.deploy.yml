@@ -17,10 +17,10 @@ steps:
       echo "Running existing Docker image"
       echo $PAPERAPIKEY
       docker run -p 127.0.0.1:8080:8080 \
-      -e APIKEY=$(APIKEY) \
-      -e PAPERAPIKEY=$(PAPERAPIKEY) \
-      -e PAPERSECRET=$(PAPERSECRET) \
-      -e SECRET=$(SECRET) \
+      -e APIKEY=${env:APIKEY} \
+      -e PAPERAPIKEY=${env:PAPERAPIKEY} \
+      -e PAPERSECRET=${env:PAPERSECRET} \
+      -e SECRET=${env:SECRET} \
       naegerr/tradingbot:82 \
       tradingbot
     displayName: 'Run Docker Image'
