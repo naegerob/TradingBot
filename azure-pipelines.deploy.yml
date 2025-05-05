@@ -16,6 +16,12 @@ steps:
   - script: |
       echo "Running existing Docker image"
       echo $PAPERAPIKEY
-      docker run -p 127.0.0.1:8080:8080 naegerr/tradingbot:82 -e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET tradingbot
+      docker run -p 127.0.0.1:8080:8080 \
+      -e APIKEY=$(APIKEY) \
+      -e PAPERAPIKEY=$(PAPERAPIKEY) \
+      -e PAPERSECRET=$(PAPERSECRET) \
+      -e SECRET=$(SECRET) \
+      naegerr/tradingbot:82 \
+      tradingbot
     displayName: 'Run Docker Image'
-    condition: 
+
