@@ -11,16 +11,15 @@ variables:
 
 steps:
 
-
-  - task: Checkout@1
-  - powershell: |
-      echo "Running existing Docker image"
-      docker run -p 127.0.0.1:8080:8080 \
-      -e APIKEY=${env:APIKEY} \
-      -e PAPERAPIKEY=${env:PAPERAPIKEY} \
-      -e PAPERSECRET=${env:PAPERSECRET} \
-      -e SECRET=${env:SECRET} \
-      naegerr/tradingbot:82 \
-      tradingbot
+  - task: PowerShell@2
+    inputs:
+      targetType: 'inline'
+      script: |
+        Write-Host "Running existing Docker image"
+        docker run -p 127.0.0.1:8080:8080 `
+          -e APIKEY=$env:APIKEY `
+          -e PAPERAPIKEY=$env:PAPERAPIKEY `
+          -e PAPERSECRET=$env:PAPERSECRET `
+          -e SECRET=$env:SECRET `
+          naegerr/tradingbot:82 tradingbot
     displayName: 'Run Docker Image'
-
