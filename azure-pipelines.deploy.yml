@@ -3,27 +3,33 @@ name: '$(Build.DefinitionName)_$(Build.BuildId)'
 trigger:
 - main
 
+variables:
+  group: AlpacaAccess
+  dockerImage: naegerr/tradingbot:latest
+
 pool:
   vmImage: 'ubuntu-latest'
 
-variables:
-- group: AlpacaAccess
 
 steps:
-  - task: Docker@2
-    displayName: 'Login to Docker Hub'
+  - task: AzureCLI@2
     inputs:
-      command: 'login'
-      containerRegistry: 'Tradingbot'
-  - task: PowerShell@2
+      azureSubscription: 'TradingbotSubscription'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo "Logged in to Azure"
+
+  # Deploy container image to Azure Web App
+  - task: AzureWebApp@1
     inputs:
-      targetType: 'inline'
-      script: |
-        Write-Host "Running existing Docker image"
-        docker run -p 127.0.0.1:8080:8080 `
-          -e APIKEY=$env:APIKEY `
-          -e PAPERAPIKEY=$env:PAPERAPIKEY `
-          -e PAPERSECRET=$env:PAPERSECRET `
-          -e SECRET=$env:SECRET `
-          naegerr/tradingbot:82 tradingbot
-    displayName: 'Run Docker Image'
+      appType: 'webAppLinux'
+      azureSubscription: 'TradingbotSubscription'
+      resourceGroupName: 'TradingBot'
+      appName: 'tradingbot'
+      package: '$(System.DefaultWorkingDirectory)/**/*.zip'
+      appSettings: |
+        PAPERSECRET=$(PAPERSECRET)
+        PAPERAPIKEY=$(PAPERAPIKEY)
+        APIKEY=$(APIKEY)
+        SECRET=$(SECRET)
