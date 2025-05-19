@@ -14,7 +14,7 @@ pool:
 steps:
   - task: AzureCLI@2
     inputs:
-      azureSubscription: 'TradingbotSubscription'
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
@@ -24,7 +24,7 @@ steps:
   - task: AzureWebApp@1
     inputs:
       appType: 'webAppLinux'
-      azureSubscription: 'TradingbotSubscription'
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
       resourceGroupName: 'TradingBot'
       appName: 'tradingbot'
       package: '$(System.DefaultWorkingDirectory)/**/*.zip'
