@@ -30,7 +30,7 @@ steps:
         az containerapp secret set \
           --name tradingbot \
           --resource-group TradingBot \
-          --secrets PAPERSECRET=$(PAPERSECRET) PAPERAPIKEY=$(PAPERAPIKEY) APIKEY=$(APIKEY)SECRET=$(SECRET)
+          --secrets PAPERSECRET="$PAPERSECRET" PAPERAPIKEY="$PAPERAPIKEY" APIKEY="$APIKEY" SECRET="$SECRET"
 
   # Deploy container image to Azure Web App
   - task: AzureContainerApps@1
