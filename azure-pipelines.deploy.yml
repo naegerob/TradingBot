@@ -19,6 +19,18 @@ steps:
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo "Logged in to Azure"
+ 
+  # Store the secrets
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp secret set \
+          --name tradingbot \
+          --resource-group TradingBot \
+          --secrets PAPERSECRET=$(PAPERSECRET) PAPERAPIKEY=$(PAPERAPIKEY) APIKEY=$(APIKEY)SECRET=$(SECRET)
 
   # Deploy container image to Azure Web App
   - task: AzureContainerApps@1
@@ -27,7 +39,7 @@ steps:
       imageToDeploy: 'naegerr/tradingbot:82'
       containerAppName: 'tradingbotcontainer'
       environmentVariables: |
-        secretref:PAPERSECRET=$(PAPERSECRET)
-        secretref:PAPERAPIKEY=$(PAPERAPIKEY)
-        secretref:APIKEY=$(APIKEY)
-        secretref:SECRET=$(SECRET)
+        PAPERSECRET=secretref:PAPERSECRET
+        PAPERAPIKEY=secretref:PAPERAPIKEY
+        APIKEY=secretref:APIKEY
+        SECRET=secretref:SECRET
