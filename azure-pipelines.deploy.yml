@@ -21,14 +21,13 @@ steps:
         echo "Logged in to Azure"
 
   # Deploy container image to Azure Web App
-  - task: AzureWebApp@1
+  - task: AzureContainerApps@1
     inputs:
-      appType: 'webAppContainer'
       azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
-      resourceGroupName: 'TradingBot'
-      appName: 'tradingbot'
-      imageName: 'naegerr/tradingbot:82'
-      appSettings: |
+      imageToDeploy: 'naegerr/tradingbot:82'
+      containerAppName: 'tradingbotcontainer'
+  
+      environmentVariables: |
         PAPERSECRET=$(PAPERSECRET)
         PAPERAPIKEY=$(PAPERAPIKEY)
         APIKEY=$(APIKEY)
