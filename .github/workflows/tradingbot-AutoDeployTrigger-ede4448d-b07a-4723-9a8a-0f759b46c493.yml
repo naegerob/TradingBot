@@ -1,0 +1,48 @@
+name: Trigger auto deployment for tradingbot
+
+# When this action will be executed
+on:
+  # Automatically trigger it when detected changes in repo
+  push:
+    branches: 
+      [ DockerSetup ]
+    paths:
+    - '**'
+    - '.github/workflows/tradingbot-AutoDeployTrigger-ede4448d-b07a-4723-9a8a-0f759b46c493.yml'
+
+  # Allow manual trigger 
+  workflow_dispatch:      
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions: 
+      id-token: write #This is required for requesting the OIDC JWT Token
+      contents: read #Required when GH token is used to authenticate with private repo
+
+    steps:
+      - name: Checkout to the branch
+        uses: actions/checkout@v2
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.TRADINGBOT_AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.TRADINGBOT_AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.TRADINGBOT_AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build and push container image to registry
+        uses: azure/container-apps-deploy-action@v2
+        with:
+          appSourcePath: ${{ github.workspace }}
+          _dockerfilePathKey_: _dockerfilePath_
+          registryUrl: docker.io
+          registryUsername: ${{ secrets.TRADINGBOT_REGISTRY_USERNAME }}
+          registryPassword: ${{ secrets.TRADINGBOT_REGISTRY_PASSWORD }}
+          containerAppName: tradingbot
+          resourceGroup: DefaultResourceGroup-CCAN
+          imageToBuild: naegerr/tradingbot:${{ github.sha }}
+          _buildArgumentsKey_: |
+            _buildArgumentsValues_
+
+
