@@ -30,11 +30,6 @@ ktor {
         )
     }
 }
-sourceSets {
-    main {
-        resources.srcDirs("src/main/resources")
-    }
-}
 
 application {
     mainClass.set("io.ktor.server.netty.EngineMain")
