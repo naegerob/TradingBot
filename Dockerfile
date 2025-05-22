@@ -33,7 +33,7 @@ COPY --chown=gradle:gradle .. /home/gradle/app
 WORKDIR /home/gradle/app
 
 # NOTE: assumes you have a `buildFatJar` task (custom or from shadow plugin)
-RUN gradle buildFatJar --no-daemon
+RUN gradle clean buildFatJar --no-daemon
 
 
 # Stage 4: Runtime image
