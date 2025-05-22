@@ -8,7 +8,6 @@ plugins {
 group = "com.example"
 version = "0.0.1"
 ktor {
-
     docker {
         jreVersion.set(JavaVersion.VERSION_21)
         localImageName.set("tradingbot-docker-image")
@@ -16,7 +15,7 @@ ktor {
 
         portMappings.set(listOf(
             io.ktor.plugin.features.DockerPortMapping(
-                8081,
+                8080,
                 8080,
                 io.ktor.plugin.features.DockerPortMappingProtocol.TCP
             )
@@ -29,6 +28,11 @@ ktor {
                 password = providers.environmentVariable("DOCKER_HUB_PASSWORD")
             )
         )
+    }
+}
+sourceSets {
+    main {
+        resources.srcDirs("src/main/resources")
     }
 }
 
