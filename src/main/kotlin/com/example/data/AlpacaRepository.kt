@@ -48,10 +48,10 @@ class AlpacaRepository() : TradingRepository, KoinComponent {
         private const val PAPERHOST = "paper-api.alpaca.markets"
         private const val PAPERMARKETHOST = "data.alpaca.markets"
         private const val BASEURLAPPENDIX = "v2"
-        val PAPERAPIKEY = System.getenv("PAPERAPIKEY")
-        val PAPERSECRET = System.getenv("PAPERSECRET")
-        private val APIKEY = System.getenv("APIKEY")
-        private val SECRET = System.getenv("SECRET")
+        val PAPERAPIKEY = System.getenv("PAPERAPIKEY") ?: System.getenv("paperapikey")
+        val PAPERSECRET = System.getenv("PAPERSECRET") ?: System.getenv("papersecret")
+        private val APIKEY = System.getenv("APIKEY") ?: System.getenv("apikey")
+        private val SECRET = System.getenv("SECRET") ?: System.getenv("secret")
     }
 
     private fun createPaperBaseUrl(): Url {
