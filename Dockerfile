@@ -13,7 +13,6 @@ WORKDIR /home/gradle/app
 # Only download dependencies here
 RUN gradle dependencies --no-daemon || true
 
-
 # Stage 2: Test
 FROM gradle:8.13.0-jdk17-corretto-al2023  AS test
 
@@ -46,3 +45,5 @@ WORKDIR /app
 COPY --from=build /home/gradle/app/build/libs/*.jar /app/app.jar
 
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
+# CMD [ "/bin/bash" ] # TODO: we need to have 2 pipelines for production and developoment

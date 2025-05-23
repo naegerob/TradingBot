@@ -1,8 +1,7 @@
-package com.example
+package com.example.di
 
 import io.ktor.client.engine.cio.*
 import io.ktor.server.application.*
-import org.koin.core.context.startKoin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 

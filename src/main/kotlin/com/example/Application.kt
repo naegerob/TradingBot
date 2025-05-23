@@ -1,8 +1,8 @@
 package com.example
 
+import com.example.di.configureDependencies
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
-import org.koin.core.context.startKoin
 
 fun main(args: Array<String>) {
     EngineMain.main(args)
