@@ -4,7 +4,6 @@ import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.BacktestConfig
 import com.example.tradingLogic.TradingController
-import io.ktor.client.engine.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -16,7 +15,13 @@ fun Application.configureRouting() {
     val tradingController = TradingController()
     routing {
         get("/") {
-            call.respondText("I think it worked!")
+            val paperapikey = System.getenv("PAPERAPIKEY") ?: System.getenv("paperapikey")
+            val papersecret = System.getenv("PAPERSECRET") ?: System.getenv("papersecret")
+            if (paperapikey != null) {
+                call.respondText("Here is the key Paper api key: $paperapikey and paper secret key: $papersecret")
+            } else {
+                call.respondText("Keys not found")
+            }
         }
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()
