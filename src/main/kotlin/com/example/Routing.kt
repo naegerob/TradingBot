@@ -15,13 +15,7 @@ fun Application.configureRouting() {
     val tradingController = TradingController()
     routing {
         get("/") {
-            val paperapikey = System.getenv("PAPERAPIKEY") ?: System.getenv("paperapikey")
-            val papersecret = System.getenv("PAPERSECRET") ?: System.getenv("papersecret")
-            if (paperapikey != null) {
-                call.respondText("Here is the key Paper api key: $paperapikey and paper secret key: $papersecret")
-            } else {
-                call.respondText("Keys not found")
-            }
+            call.respondText("Hi")
         }
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()
