@@ -7,6 +7,7 @@ variables:
   group: AlpacaAccess
   dockerImage: naegerr/tradingbot:latest
 
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -62,10 +63,15 @@ steps:
         az containerapp secret set \
           --name tradingbot \
           --resource-group TradingBot \
-          --secrets PAPERSECRET=$PAPERSECRET \
-                    PAPERAPIKEY=$PAPERAPIKEY \
-                    APIKEY=$APIKEY \
-                    SECRET=$SECRET
+          --secrets PAPERSECRET=$(PAPERSECRET) \
+                    PAPERAPIKEY=$(PAPERAPIKEY) \
+                    APIKEY=$(APIKEY) \
+                    SECRET=$(SECRET)
+    env:
+     PAPERSECRET: $PAPERSECRET
+     PAPERAPIKEY: $PAPERAPIKEY
+     SECRET: $SECRET
+     APIKEY: $APIKEY
   - task: AzureCLI@2
     name: 'UpdateSecrets'
     inputs:
