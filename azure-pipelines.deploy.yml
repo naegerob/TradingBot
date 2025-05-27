@@ -83,10 +83,10 @@ steps:
           --name tradingbot \
           --resource-group TradingBot \
           --set-env-vars \
-          paperapikey=secretref:PAPERAPIKEY \
-          papersecret=secretref:PAPERSECRET \
-          apikey=secretref:APIKEY \
-          secret=secretref:SECRET
+          paperapikey=secretref:paperapikey \
+          papersecret=secretref:papersecret \
+          apikey=$(apikey) \
+          secret=secretref:secret
 
 
   - task: AzureCLI@2
