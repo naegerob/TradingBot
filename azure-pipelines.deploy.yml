@@ -63,10 +63,10 @@ steps:
         az containerapp secret set \
           --name tradingbot \
           --resource-group TradingBot \
-          --secrets PAPERSECRET=$(PAPERSECRET) \
-                    PAPERAPIKEY=$(PAPERAPIKEY) \
-                    APIKEY=$(APIKEY) \
-                    SECRET=$(SECRET)
+          --secrets papersecret=$(PAPERSECRET) \
+                    paperapikey=$(PAPERAPIKEY) \
+                    apikey=$(APIKEY) \
+                    secret=$(SECRET)
     env:
      PAPERSECRET: $PAPERSECRET
      PAPERAPIKEY: $PAPERAPIKEY
@@ -83,10 +83,10 @@ steps:
           --name tradingbot \
           --resource-group TradingBot \
           --set-env-vars \
-          PAPERAPIKEY=secretref:PAPERAPIKEY \
-          PAPERSECRET=secretref:PAPERSECRET \
-          APIKEY=secretref:APIKEY \
-          SECRET=secretref:SECRET
+          paperapikey=secretref:PAPERAPIKEY \
+          papersecret=secretref:PAPERSECRET \
+          apikey=secretref:APIKEY \
+          secret=secretref:SECRET
 
 
   - task: AzureCLI@2
