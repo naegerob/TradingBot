@@ -83,4 +83,13 @@ steps:
           SECRET=secretref:SECRET
 
 
-
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp show \
+          --name tradingbot \
+          --resource-group TradingBot \
+          --query properties.configuration.ingress.fqdn
