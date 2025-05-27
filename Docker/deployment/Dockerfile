@@ -7,7 +7,7 @@ ENV GRADLE_USER_HOME=/home/gradle/.gradle
 RUN mkdir -p $GRADLE_USER_HOME
 
 COPY build.gradle.* gradle.properties settings.gradle.kts /home/gradle/app/
-COPY ../../gradle /home/gradle/app/gradle
+COPY ../../../gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app
 
 # Only download dependencies here
