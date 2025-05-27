@@ -45,7 +45,7 @@ steps:
           --name tradingbot \
           --resource-group TradingBot \
           --environment tradingbot-env \
-          --image naegerr/tradingbot:latest \
+          --image naegerr/tradingbot:108 \
           --target-port 8080 \
           --ingress external \
           --cpu 0.5 \
