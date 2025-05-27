@@ -4,7 +4,7 @@ services:
   deploy:
     build:
       context: ..
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.deployment
     container_name: deploy-container
     ports:
       - "8080:8080"
@@ -13,7 +13,7 @@ services:
   test:
     build:
       context: ..
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.deployment
     depends_on:
       - deploy
 

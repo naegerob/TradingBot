@@ -7,7 +7,7 @@ ENV GRADLE_USER_HOME=/home/gradle/.gradle
 RUN mkdir -p $GRADLE_USER_HOME
 
 COPY build.gradle.* gradle.properties settings.gradle.kts /home/gradle/app/
-COPY gradle /home/gradle/app/gradle
+COPY ../../gradle /home/gradle/app/gradle
 WORKDIR /home/gradle/app
 
 # Only download dependencies here
@@ -18,7 +18,7 @@ FROM gradle:8.13.0-jdk17-corretto-al2023  AS test
 
 ENV REPORT_DIR=/app/reports
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
-COPY --chown=gradle:gradle .. /home/gradle/app
+COPY --chown=gradle:gradle ../../.. /home/gradle/app
 WORKDIR /home/gradle/app
 
 RUN gradle test --no-daemon
@@ -28,7 +28,7 @@ RUN gradle koverHtmlReport --no-daemon
 FROM gradle:8.13.0-jdk17-corretto-al2023 AS build
 
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
-COPY --chown=gradle:gradle .. /home/gradle/app
+COPY --chown=gradle:gradle ../../.. /home/gradle/app
 WORKDIR /home/gradle/app
 
 # NOTE: assumes you have a `buildFatJar` task (custom or from shadow plugin)
@@ -44,6 +44,4 @@ WORKDIR /app
 # Use COPY with exact file name or wildcard if fatJar is consistent
 COPY --from=build /home/gradle/app/build/libs/*.jar /app/app.jar
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
-
-# CMD [ "/bin/bash" ] # TODO: we need to have 2 pipelines for production and developoment
+CMD [ "/bin/bash" ]
