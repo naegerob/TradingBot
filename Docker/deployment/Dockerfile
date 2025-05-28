@@ -7,7 +7,7 @@ ENV GRADLE_USER_HOME=/home/gradle/.gradle
 RUN mkdir -p $GRADLE_USER_HOME
 
 COPY build.gradle.* gradle.properties settings.gradle.kts /home/gradle/app/
-COPY ./gradle  /home/gradle/app/gradle
+COPY gradle  /home/gradle/app/gradle
 WORKDIR /home/gradle/app
 
 # Only download dependencies here
@@ -16,7 +16,7 @@ RUN gradle dependencies --no-daemon || true
 # Stage 2: Build Application (fatJar)
 FROM gradle:8.13.0-jdk17-corretto-al2023 AS build
 
-COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
+COPY --from=cache $GRADLE_USER_HOME_CACHE $$GRADLE_USER_HOME
 COPY --chown=gradle:gradle ../../.. /home/gradle/app
 WORKDIR /home/gradle/app
 
