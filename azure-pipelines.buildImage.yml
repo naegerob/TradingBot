@@ -15,6 +15,7 @@ steps:
     inputs:
       command: 'buildAndPush'
       Dockerfile: '**/deployment/Dockerfile'
+      buildContext: '$(Build.SourcesDirectory)'
       repository: 'naegerr/tradingbot'
       containerRegistry: 'Tradingbot'
       tags: |
