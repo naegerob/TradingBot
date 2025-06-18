@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UnitTestsDocker" type="docker-deploy" factoryName="dockerfile" server-name="Docker_Podman">
+  <configuration default="false" name="UnitTestsDocker" type="docker-deploy" factoryName="dockerfile">
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="testbot" />
