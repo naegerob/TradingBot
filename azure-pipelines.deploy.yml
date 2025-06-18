@@ -19,12 +19,10 @@ steps:
       scriptLocation: 'inlineScript'
       inlineScript: |
         echo "Logged in to Azure"
- 
-
 
   # Deploy container image to Azure Web App
   - task: AzureContainerApps@1
     inputs:
       azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
-      imageToDeploy: 'naegerr/tradingbot:82'
+      imageToDeploy: 'naegerr/tradingbot:120'
       containerAppName: 'tradingbotcontainer'

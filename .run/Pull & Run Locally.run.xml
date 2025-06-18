@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Deploy Run" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+  <configuration default="false" name="Pull &amp; Run Locally" type="docker-deploy" factoryName="docker-image" server-name="Docker">
     <deployment type="docker-image">
       <settings>
-        <option name="imageTag" value="naegerr/tradingbot:82" />
+        <option name="imageTag" value="naegerr/tradingbot:120" />
         <option name="containerName" value="bot" />
         <option name="portBindings">
           <list>
