@@ -3,6 +3,10 @@
     <deployment type="docker-image">
       <settings>
         <option name="imageTag" value="naegerr/tradingbot:120" />
+  <configuration default="false" name="Deploy Run" type="docker-deploy" factoryName="docker-image" server-name="Docker_Podman">
+    <deployment type="docker-image">
+      <settings>
+        <option name="imageTag" value="naegerr/tradingbot:108" />
         <option name="containerName" value="bot" />
         <option name="portBindings">
           <list>

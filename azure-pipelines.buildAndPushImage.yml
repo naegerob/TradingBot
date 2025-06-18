@@ -14,7 +14,8 @@ steps:
   - task: Docker@2
     inputs:
       command: 'buildAndPush'
-      Dockerfile: '**/Dockerfile'
+      Dockerfile: '**/deployment/Dockerfile'
+      buildContext: '$(Build.SourcesDirectory)'
       repository: 'naegerr/tradingbot'
       containerRegistry: 'Tradingbot'
       tags: |
