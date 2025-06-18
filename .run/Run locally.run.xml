@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run locally" type="docker-deploy" factoryName="docker-image" server-name="Docker">
+  <configuration default="false" name="Run locally" type="docker-deploy" factoryName="docker-image" server-name="Docker_Podman">
     <deployment type="docker-image">
       <settings>
         <option name="imageTag" value="tradingbot" />
@@ -15,6 +15,15 @@
         </option>
         <option name="pullImage" value="NEVER" />
         <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET" />
+        <option name="showCommandPreview" value="true" />
+        <option name="volumeBindings">
+          <list>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/app" />
+              <option name="hostPath" value="C:\Users\RO112201\sanbox\git\TradingBot" />
+            </DockerVolumeBindingImpl>
+          </list>
+        </option>
       </settings>
     </deployment>
     <method v="2" />
