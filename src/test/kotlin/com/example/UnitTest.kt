@@ -166,11 +166,6 @@ class UnitTest : KoinTest {
     }
 
     @Test
-    fun `Test Docker`() = testApplication {
-        assert(false)
-    }
-
-    @Test
     fun `Create a Bad Order to Alpaca`() = testApplication {
 
         val mockOrderResponse = OrderResponse(

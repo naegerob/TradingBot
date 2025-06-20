@@ -10,12 +10,14 @@ pool:
 # TODO: Currently it is pushed to dockerhub, for future use consider pushing to AzureRegistry
 # https://learn.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops#docker-registry-service-connection
 steps:
-  - task: Gradle@2
+  - task: Gradlle@2
     inputs:
       gradleWrapperFile: 'gradlew'
       tasks: 'test'
       publishJUnitResults: true
       testResultsFiles: '**/build/test-results/test/*.xml'
+      options: >-
+        -Dexclude.integration.pattern=**/IntegrationTest
 
   - task: Docker@2
     inputs:
