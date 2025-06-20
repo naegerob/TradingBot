@@ -5,10 +5,6 @@ trigger: none  # no automatic trigger
 pool:
   vmImage: 'ubuntu-latest'
 
-# This pipeline is needed when the Dockerfile is changed
-# and the image on Dockerhub should be updated
-# TODO: Currently it is pushed to dockerhub, for future use consider pushing to AzureRegistry
-# https://learn.microsoft.com/en-us/azure/devops/pipelines/library/service-endpoints?view=azure-devops#docker-registry-service-connection
 steps:
   - task: Gradle@4
     inputs:
