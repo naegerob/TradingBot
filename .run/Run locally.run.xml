@@ -3,7 +3,8 @@
     <deployment type="docker-image">
       <settings>
         <option name="imageTag" value="tradingbot" />
-        <option name="containerName" value="botLocal" />
+        <option name="command" value="bash -c &quot;gradle build java -jar /home/gradle/app/build/libs/trading_bot-all.jar&quot;" />
+        <option name="containerName" value="tradingbot" />
         <option name="portBindings">
           <list>
             <DockerPortBindingImpl>
@@ -20,7 +21,7 @@
           <list>
             <DockerVolumeBindingImpl>
               <option name="containerPath" value="/home/gradle/app" />
-              <option name="hostPath" value="C:\Github\TradingBot\src\main" />
+              <option name="hostPath" value="C:\Users\41786\Documents\GitHub\TradingBot" />
             </DockerVolumeBindingImpl>
           </list>
         </option>

@@ -13,8 +13,8 @@ WORKDIR /home/gradle/app
 # Only download dependencies here
 RUN gradle dependencies --no-daemon || true
 
-# Stage 2: Test
-FROM gradle:8.13.0-jdk17-corretto-al2023  AS test
+# Stage 2:
+FROM gradle:8.13.0-jdk17-corretto-al2023  AS runner
 
 ENV REPORT_DIR=/app/reports
 COPY --chown=gradle:gradle . /home/gradle/app

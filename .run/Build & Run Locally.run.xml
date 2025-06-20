@@ -21,7 +21,7 @@
           <list>
             <DockerVolumeBindingImpl>
               <option name="containerPath" value="/home/gradle/app" />
-              <option name="hostPath" value="C:\Github\TradingBot\src\main\kotlin" />
+              <option name="hostPath" value="C:\Users\41786\Documents\GitHub\TradingBot" />
             </DockerVolumeBindingImpl>
           </list>
         </option>
