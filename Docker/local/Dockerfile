@@ -17,6 +17,7 @@ RUN gradle dependencies --no-daemon || true
 FROM gradle:8.13.0-jdk17-corretto-al2023  AS test
 
 ENV REPORT_DIR=/app/reports
+COPY --chown=gradle:gradle . /home/gradle/app
 COPY --from=cache /home/gradle/cache_home /home/gradle/.gradle
 WORKDIR /home/gradle/app
 

@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="UnitTestsDocker" type="docker-deploy" factoryName="dockerfile">
+  <configuration default="false" name="UnitTestsDocker" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="testbot" />
@@ -7,12 +7,13 @@
         <option name="containerName" value="testcontainer" />
         <option name="contextFolderPath" value="." />
         <option name="entrypoint" value="gradle test --tests &quot;*UnitTest&quot; --no-daemon" />
+        <option name="commandLineOptions" value="" />
         <option name="sourceFilePath" value="Docker/local/Dockerfile" />
         <option name="volumeBindings">
           <list>
             <DockerVolumeBindingImpl>
-              <option name="containerPath" value="/home/gradle/app" />
-              <option name="hostPath" value="../../.." />
+              <option name="containerPath" value="/root/.gradle" />
+              <option name="hostPath" value="C:\Github\TradingBot\src\test\kotlin" />
             </DockerVolumeBindingImpl>
           </list>
         </option>
