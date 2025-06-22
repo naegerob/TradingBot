@@ -1,6 +1,6 @@
-<mxfile host="Electron" modified="2025-02-22T16:13:08.521Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.2.8 Chrome/112.0.5615.165 Electron/24.2.0 Safari/537.36" etag="FMsUGiEvgoraMVgnBsRT" version="21.2.8" type="device" pages="2">
+<mxfile host="Electron" modified="2025-05-04T17:33:17.980Z" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/21.5.0 Chrome/112.0.5615.204 Electron/24.5.1 Safari/537.36" etag="B8HKNghmq9c-PA2vGaod" version="21.5.0" type="device" pages="3">
   <diagram name="Architecture" id="uDRo8drKF1JdW04llBPA">
-    <mxGraphModel dx="941" dy="704" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1050" dy="619" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -77,7 +77,7 @@
     </mxGraphModel>
   </diagram>
   <diagram id="MXUJdKmrGlDk99uZBIL1" name="Class Overview">
-    <mxGraphModel dx="2275" dy="2252" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="2327" dy="2053" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -177,6 +177,52 @@
         </mxCell>
         <mxCell id="YCY6Y0AmkPTsAsJ50fIO-22" value="TradingBot" style="rounded=0;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" parent="1" vertex="1">
           <mxGeometry x="600" y="110" width="200" height="60" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="5UKJKARpR0QsQ_FVK2eQ" name="Deployment">
+    <mxGraphModel dx="1050" dy="619" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-1" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=none;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="390" y="165" width="220" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-2" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=none;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="150" y="420" width="450" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-3" value="Dockerhub" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="390" y="135" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-4" value="Locally" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="150" y="390" width="60" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-7" value="Image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="450" y="195" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-8" value="Keys" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="190" y="460" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-9" value="" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;dashPattern=8 8;fillColor=none;strokeWidth=2;" vertex="1" parent="1">
+          <mxGeometry x="70" y="165" width="220" height="140" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-10" value="Microsoft Server" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="70" y="135" width="130" height="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="e8ap8BUFyB7vrtlW0o5c-11" target="e8ap8BUFyB7vrtlW0o5c-7">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-13" value="Pushed" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="e8ap8BUFyB7vrtlW0o5c-12">
+          <mxGeometry x="0.2465" y="1" relative="1" as="geometry">
+            <mxPoint x="-35" y="1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-11" value="Image" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="130" y="195" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="e8ap8BUFyB7vrtlW0o5c-14" value="Image is built here" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="130" y="260" width="60" height="30" as="geometry" />
         </mxCell>
       </root>
     </mxGraphModel>

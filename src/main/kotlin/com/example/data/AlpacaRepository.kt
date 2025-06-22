@@ -3,27 +3,24 @@ package com.example.data
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.plugins.DefaultRequest
-import io.ktor.client.plugins.contentnegotiation.ContentNegotiation
-import io.ktor.client.plugins.logging.LogLevel
-import io.ktor.client.plugins.logging.Logger
-import io.ktor.client.plugins.logging.Logging
-import io.ktor.client.plugins.logging.SIMPLE
-import io.ktor.client.request.get
-import io.ktor.client.request.header
-import io.ktor.client.request.post
-import io.ktor.client.request.setBody
+import io.ktor.client.engine.*
+import io.ktor.client.plugins.*
+import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
+import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.json
+import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-// TODO: Consider passing client and Dispatcher for DI
-class AlpacaRepository {
-    private val client = HttpClient(CIO) {
+class AlpacaRepository() : TradingRepository, KoinComponent {
+
+    private val mEngine by inject<HttpClientEngine>()
+    private val mClient = HttpClient(mEngine) {
         install(ContentNegotiation) {
             json(Json {
                 prettyPrint = true
@@ -31,9 +28,6 @@ class AlpacaRepository {
                 ignoreUnknownKeys = true
                 encodeDefaults = true
             })
-        }
-        engine {
-            requestTimeout = 0 // 0 to disable, or a millisecond value to fit your needs
         }
         install(Logging) {
             logger = Logger.SIMPLE
@@ -54,10 +48,10 @@ class AlpacaRepository {
         private const val PAPERHOST = "paper-api.alpaca.markets"
         private const val PAPERMARKETHOST = "data.alpaca.markets"
         private const val BASEURLAPPENDIX = "v2"
-        private const val PAPERAPIKEY = "PK5TLV8XYYKYCDRLO27S"
-        private const val PAPERSECRET = "8m0gXDS87YwZfhUiXrSMCWElFagoqwgGHUbfAbmy"
-        private const val APIKEY = "AKFKVCZGHSW6OHQQS4K0"
-        private const val SECRET = "Pu5t7eaRNqxdcmLgjwlm8ohsdW5Kz0leaSfw14EU"
+        val PAPERAPIKEY = System.getenv("PAPERAPIKEY") ?: System.getenv("paperapikey")
+        val PAPERSECRET = System.getenv("PAPERSECRET") ?: System.getenv("papersecret")
+        private val APIKEY = System.getenv("APIKEY") ?: System.getenv("apikey")
+        private val SECRET = System.getenv("SECRET") ?: System.getenv("secret")
     }
 
     private fun createPaperBaseUrl(): Url {
@@ -76,27 +70,27 @@ class AlpacaRepository {
         }.build()
 
 
-    suspend fun getAccountDetails(): HttpResponse =
+    override suspend fun getAccountDetails(): HttpResponse =
         withContext(Dispatchers.IO) {
-            client.get(paperBaseUrl) {
+            mClient.get(paperBaseUrl) {
                 url {
                     appendPathSegments("account")
                 }
             }
         }
 
-    suspend fun getOpenPositions(): HttpResponse =
+    override suspend fun getOpenPositions(): HttpResponse =
         withContext(Dispatchers.IO) {
-            client.get(paperBaseUrl) {
+            mClient.get(paperBaseUrl) {
                 url {
                     appendPathSegments("positions")
                 }
             }
         }
 
-    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
+    override suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
         withContext(Dispatchers.IO) {
-            client.post(paperBaseUrl) {
+            mClient.post(paperBaseUrl) {
                 url {
                     appendPathSegments("orders")
                 }
@@ -104,10 +98,10 @@ class AlpacaRepository {
             }
         }
 
-    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
+    override suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
             : HttpResponse =
         withContext(Dispatchers.IO) {
-            client.get(paperBaseMarketUrl) {
+            mClient.get(paperBaseMarketUrl) {
                 url {
                     appendPathSegments("stocks", "bars")
                     parameters.append("symbols", historicalRequest.symbols)

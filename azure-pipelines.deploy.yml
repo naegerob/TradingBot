@@ -1,0 +1,109 @@
+name: '$(Build.DefinitionName)_$(Build.BuildId)'
+
+trigger:
+  - main
+
+variables:
+  group: AlpacaAccess
+  dockerImage: naegerr/tradingbot:latest
+
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+
+steps:
+  - task: AzureCLI@2
+    name: 'Login'
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        echo "Logged in to Azure"
+
+  # Deploy container image to Azure Web App
+  - task: AzureContainerApps@1
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      imageToDeploy: 'naegerr/tradingbot:120'
+      containerAppName: 'tradingbotcontainer'
+        echo "Logged in to Azure"   
+
+  - task: AzureCLI@2
+    name: 'CreateContainerEnvironment'
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp env create \
+          --name tradingbot-env \
+          --resource-group TradingBot \
+          --location westeurope
+
+  - task: AzureCLI@2
+    name: 'ContainerCreation'
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp create \
+          --name tradingbot \
+          --resource-group TradingBot \
+          --environment tradingbot-env \
+          --image naegerr/tradingbot:120 \
+          --target-port 8080 \
+          --ingress external \
+          --cpu 0.5 \
+          --memory 1.0Gi
+
+
+  # Store the secrets
+  - task: AzureCLI@2
+    name: 'SecretsGeneration'
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp secret set \
+          --name tradingbot \
+          --resource-group TradingBot \
+          --secrets papersecret=$(PAPERSECRET) \
+                    paperapikey=$(PAPERAPIKEY) \
+                    apikey=$(APIKEY) \
+                    secret=$(SECRET)
+    env:
+     PAPERSECRET: $PAPERSECRET
+     PAPERAPIKEY: $PAPERAPIKEY
+     SECRET: $SECRET
+     APIKEY: $APIKEY
+  - task: AzureCLI@2
+    name: 'UpdateSecrets'
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp update \
+          --name tradingbot \
+          --resource-group TradingBot \
+          --set-env-vars \
+          paperapikey=secretref:paperapikey \
+          papersecret=secretref:papersecret \
+          apikey=$(apikey) \
+          secret=secretref:secret
+
+
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az containerapp show \
+          --name tradingbot \
+          --resource-group TradingBot \
+          --query properties.configuration.ingress.fqdn

@@ -1,0 +1,151 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > ApplicationKt</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example</a>
+</div>
+
+<h1>Coverage Summary for Class: ApplicationKt (com.example)</h1>
+
+<table class="coverageStats">
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Class, %
+</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">ApplicationKt</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    12.5%
+  </span>
+  <span class="absValue">
+    (1/8)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    18.2%
+  </span>
+  <span class="absValue">
+    (4/22)
+  </span>
+</td>
+</tr>
+
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example
+&nbsp;
+&nbsp;import com.example.data.AlpacaRepository.Companion.PAPERAPIKEY
+&nbsp;import com.example.data.AlpacaRepository.Companion.PAPERSECRET
+&nbsp;import com.example.tradingLogic.TradingController
+&nbsp;import io.ktor.client.*
+&nbsp;import io.ktor.client.engine.cio.*
+&nbsp;import io.ktor.client.plugins.*
+&nbsp;import io.ktor.client.plugins.contentnegotiation.*
+&nbsp;import io.ktor.client.plugins.logging.*
+&nbsp;import io.ktor.client.request.*
+&nbsp;import io.ktor.serialization.kotlinx.json.*
+&nbsp;import io.ktor.server.application.*
+&nbsp;import kotlinx.serialization.json.Json
+&nbsp;
+&nbsp;fun main(args: Array&lt;String&gt;) {
+<b class="nc">&nbsp;    io.ktor.server.netty.EngineMain.main(args)</b>
+&nbsp;}
+&nbsp;
+<b class="nc">&nbsp;fun Application.module(alpacaClient: HttpClient = HttpClient(CIO) {</b>
+<b class="nc">&nbsp;    install(ContentNegotiation) {</b>
+<b class="nc">&nbsp;        json(Json {</b>
+<b class="nc">&nbsp;            prettyPrint = true</b>
+<b class="nc">&nbsp;            isLenient = false</b>
+<b class="nc">&nbsp;            ignoreUnknownKeys = true</b>
+<b class="nc">&nbsp;            encodeDefaults = true</b>
+&nbsp;        })
+&nbsp;    }
+<b class="nc">&nbsp;    engine {</b>
+<b class="nc">&nbsp;        requestTimeout = 0 // 0 to disable, or a millisecond value to fit your needs</b>
+&nbsp;    }
+<b class="nc">&nbsp;    install(Logging) {</b>
+<b class="nc">&nbsp;        logger = Logger.SIMPLE</b>
+<b class="nc">&nbsp;        level = LogLevel.ALL</b>
+&nbsp;    }
+<b class="nc">&nbsp;    install(DefaultRequest) {</b>
+<b class="nc">&nbsp;        header(&quot;APCA-API-KEY-ID&quot;, PAPERAPIKEY)</b>
+<b class="nc">&nbsp;        header(&quot;APCA-API-SECRET-KEY&quot;, PAPERSECRET)</b>
+<b class="nc">&nbsp;        header(&quot;content-type&quot;, &quot;application/json&quot;)</b>
+<b class="nc">&nbsp;        header(&quot;accept&quot;, &quot;application/json&quot;)</b>
+&nbsp;    }
+&nbsp;}){
+<b class="fc">&nbsp;    configureSerialization() // Configures the contentNegotiation (XML,JSON,...)</b>
+<b class="fc">&nbsp;    configureDatabases()</b>
+<b class="fc">&nbsp;    configureMonitoring()</b>
+<b class="fc">&nbsp;    configureRouting(TradingController(alpacaClient)) // The routes itself</b>
+&nbsp;}
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-03-24 07:17</div>
+</div>
+</body>
+</html>

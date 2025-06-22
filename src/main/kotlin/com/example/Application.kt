@@ -1,15 +1,17 @@
 package com.example
 
-import com.example.tradingLogic.TradingController
+import com.example.di.configureDependencies
 import io.ktor.server.application.*
+import io.ktor.server.netty.*
 
 fun main(args: Array<String>) {
-    io.ktor.server.netty.EngineMain.main(args)
+    EngineMain.main(args)
 }
 
-fun Application.module() {
+fun Application.module(){
+    configureDependencies()
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
     configureDatabases()
     configureMonitoring()
-    configureRouting(TradingController()) // The routes itself
+    configureRouting() // The routes itself
 }

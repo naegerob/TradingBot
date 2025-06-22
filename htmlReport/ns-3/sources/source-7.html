@@ -1,0 +1,213 @@
+
+
+
+<!DOCTYPE html>
+<html id="htmlId">
+<head>
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8"> 
+  <title>Coverage Report > StockAggregationResponse</title>
+  <style type="text/css">
+    @import "../../css/coverage.css";
+    @import "../../css/idea.min.css";
+  </style>
+  <script type="text/javascript" src="../../js/highlight.min.js"></script>
+  <script type="text/javascript" src="../../js/highlightjs-line-numbers.min.js"></script>
+</head>
+
+<body>
+<div class="content">
+<div class="breadCrumbs">
+Current scope:     <a href="../../index.html">all classes</a>
+    <span class="separator">|</span>
+    <a href="../index.html">com.example.data.singleModels</a>
+</div>
+
+<h1>Coverage Summary for Class: StockAggregationResponse (com.example.data.singleModels)</h1>
+
+<table class="coverageStats">
+
+<tr>
+  <th class="name">Class</th>
+<th class="coverageStat 
+">
+  Method, %
+</th>
+<th class="coverageStat 
+">
+  Branch, %
+</th>
+<th class="coverageStat 
+">
+  Line, %
+</th>
+</tr>
+<tr>
+  <td class="name">StockAggregationResponse</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (2/2)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (5/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (4/4)
+  </span>
+</td>
+</tr>
+  <tr>
+    <td class="name">StockAggregationResponse$Companion</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (1/1)
+  </span>
+</td>
+  </tr>
+<tr>
+  <td class="name"><strong>Total</strong></td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (3/3)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    50%
+  </span>
+  <span class="absValue">
+    (5/10)
+  </span>
+</td>
+<td class="coverageStat">
+  <span class="percent">
+    100%
+  </span>
+  <span class="absValue">
+    (5/5)
+  </span>
+</td>
+</tr>
+</table>
+
+<br/>
+<br/>
+
+
+<pre>
+<code class="sourceCode" id="sourceCode">&nbsp;package com.example.data.singleModels
+&nbsp;
+&nbsp;import com.example.data.ApiResponse
+&nbsp;import kotlinx.serialization.SerialName
+&nbsp;import kotlinx.serialization.Serializable
+&nbsp;
+&nbsp;@Serializable
+&nbsp;data class StockAggregationRequest(
+&nbsp;    @SerialName(&quot;symbols&quot;)
+&nbsp;    var symbols: String = &quot;AAPL&quot;, // Comma-separated list of stock symbols (e.g., &quot;TSLA,AMZN&quot;)
+&nbsp;    @SerialName(&quot;timeframe&quot;)
+&nbsp;    val timeframe: String = &quot;5Min&quot;, // Timeframe for aggregation (e.g., &quot;5Min&quot;, &quot;1D&quot;, &quot;3M&quot;)
+&nbsp;    @SerialName(&quot;start&quot;)
+&nbsp;    val startDateTime: String? = null, // Inclusive start date-time (RFC-3339 or &quot;YYYY-MM-DD&quot;)
+&nbsp;    @SerialName(&quot;end&quot;)
+&nbsp;    val endDateTime: String? = null, // Inclusive end date-time (RFC-3339 or &quot;YYYY-MM-DD&quot;)
+&nbsp;    @SerialName(&quot;limit&quot;)
+&nbsp;    val limit: Int = 1000, // Maximum number of data points to return (default: 1000)
+&nbsp;    @SerialName(&quot;adjustment&quot;)
+&nbsp;    val adjustment: String = &quot;raw&quot;, // Corporate action adjustment (default: &quot;raw&quot;)
+&nbsp;    @SerialName(&quot;asof&quot;)
+&nbsp;    val asOfDate: String? = null, // As-of date to identify the underlying entity (format: &quot;YYYY-MM-DD&quot;)
+&nbsp;    @SerialName(&quot;feed&quot;)
+&nbsp;    val feed: String = &quot;sip&quot;, // Data feed source (default: &quot;sip&quot;)
+&nbsp;    @SerialName(&quot;currency&quot;)
+&nbsp;    val currency: String = &quot;USD&quot;, // Currency of prices (default: &quot;USD&quot;)
+&nbsp;    @SerialName(&quot;page_token&quot;)
+&nbsp;    val pageToken: String? = null, // Pagination token for continuing a request
+&nbsp;    @SerialName(&quot;sort&quot;)
+&nbsp;    val sort: String = &quot;asc&quot; // Sort order: Newest at end
+&nbsp;): ApiResponse()
+&nbsp;
+<b class="pc">&nbsp;@Serializable</b>
+&nbsp;data class StockAggregationResponse(
+<b class="fc">&nbsp;    val bars: Map&lt;String, List&lt;StockBar&gt;&gt;, // Dynamic key for each stock symbol</b>
+<b class="fc">&nbsp;    @SerialName(&quot;next_page_token&quot;) val nextPageToken: String? = null</b>
+<b class="fc">&nbsp;): ApiResponse()</b>
+&nbsp;
+&nbsp;@Serializable
+&nbsp;data class StockBar(
+&nbsp;    @SerialName(&quot;c&quot;) val close: Double,      // Closing price
+&nbsp;    @SerialName(&quot;h&quot;) val high: Double,       // Highest price
+&nbsp;    @SerialName(&quot;l&quot;) val low: Double,        // Lowest price
+&nbsp;    @SerialName(&quot;n&quot;) val trades: Int,        // Number of trades
+&nbsp;    @SerialName(&quot;o&quot;) val open: Double,       // Opening price
+&nbsp;    @SerialName(&quot;t&quot;) val timestamp: String,  // Timestamp (ISO 8601)
+&nbsp;    @SerialName(&quot;v&quot;) val volume: Int,        // Volume
+&nbsp;    @SerialName(&quot;vw&quot;) val vwap: Double       // Volume-weighted average price
+&nbsp;): ApiResponse()
+&nbsp;
+&nbsp;
+&nbsp;val sort = listOf(
+&nbsp;    &quot;asc&quot;, &quot;desc&quot;
+&nbsp;)
+&nbsp;
+&nbsp;val timeframes = listOf(
+&nbsp;    &quot;Min&quot;, &quot;T&quot;, &quot;Hours&quot;, &quot;H&quot;, &quot;Day&quot;, &quot;D&quot;, &quot;Week&quot;, &quot;W&quot;, &quot;Month&quot;, &quot;M&quot;,
+&nbsp;)
+&nbsp;
+&nbsp;val feeds = listOf(
+&nbsp;    &quot;&quot;, &quot;iex&quot;, &quot;otc&quot;, &quot;sip&quot;
+&nbsp;)
+&nbsp;
+</code>
+</pre>
+</div>
+
+<script type="text/javascript">
+(function() {
+    var msie = false, msie9 = false;
+    /*@cc_on
+      msie = true;
+      @if (@_jscript_version >= 9)
+        msie9 = true;
+      @end
+    @*/
+
+    if (!msie || msie && msie9) {
+      hljs.highlightAll()
+      hljs.initLineNumbersOnLoad();
+    }
+})();
+</script>
+
+<div class="footer">
+    
+    <div style="float:right;">generated on 2025-03-24 07:17</div>
+</div>
+</body>
+</html>

@@ -1,0 +1,26 @@
+name: '$(Build.DefinitionName)_$(Build.BuildId)'
+
+trigger: none  # no automatic trigger
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Gradle@4
+    inputs:
+      gradleWrapperFile: 'gradlew'
+      tasks: 'test'
+      publishJUnitResults: true
+      testResultsFiles: '**/build/test-results/test/*.xml'
+      options: >-
+        -Dexclude.integration.pattern=**/IntegrationTest
+
+  - task: Docker@2
+    inputs:
+      command: 'buildAndPush'
+      Dockerfile: '**/deployment/Dockerfile'
+      buildContext: '$(Build.SourcesDirectory)'
+      repository: 'naegerr/tradingbot'
+      containerRegistry: 'Tradingbot'
+      tags: |
+        $(Build.BuildId)
