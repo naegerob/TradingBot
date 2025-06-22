@@ -18,6 +18,7 @@ fun Application.configureSerialization() {
             isLenient = true
             ignoreUnknownKeys = false
             encodeDefaults = true
+            explicitNulls = false
         })
     }
     install(DefaultHeaders) {
@@ -35,6 +36,5 @@ fun Application.configureSerialization() {
                 call.respondText(text = "Everything else which I had no idea about: $cause" , status = HttpStatusCode.InternalServerError)
             }
         }
-
     }
 }

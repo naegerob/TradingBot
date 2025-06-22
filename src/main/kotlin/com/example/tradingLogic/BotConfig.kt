@@ -2,27 +2,28 @@ package com.example.tradingLogic
 
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.strategies.Strategies
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
 data class BotConfig(
-    val symbols: String = "",
-    val positionSize: Double = 0.0,
-    val timeFrame: String = "",
-    val startDate: String = "",
-    val strategySelection: Strategies = Strategies.None,
+    @SerialName("symbols") val symbols: String = "",
+    @SerialName("position_size") val positionSize: Double = 0.0,
+    @SerialName("time_frame") val timeFrame: String = "",
+    @SerialName("start_date") val startDate: String = "",
+    @SerialName("strategy_selection") val strategySelection: Strategies = Strategies.None,
 )
 
 @Serializable
 data class BacktestConfig(
-    val strategySelector: Strategies = Strategies.MovingAverage,
-    val stockAggregationRequest: StockAggregationRequest = StockAggregationRequest()
+    @SerialName("strategy_selector") val strategySelector: Strategies = Strategies.MovingAverage,
+    @SerialName("stock_aggregation_request") val stockAggregationRequest: StockAggregationRequest = StockAggregationRequest()
 )
 
 @Serializable
 data class BacktestResult(
-    val strategyName: Strategies = Strategies.None,
-    val finalBalance: Double = 0.0,
-    val winRate: Double = 0.0,
-    val positions: Int = 0
+    @SerialName("strategy_name") val strategyName: Strategies = Strategies.None,
+    @SerialName("final_balance") val finalBalance: Double = 0.0,
+    @SerialName("win_rate") val winRate: Double = 0.0,
+    @SerialName("positions") val positions: Int = 0
 )

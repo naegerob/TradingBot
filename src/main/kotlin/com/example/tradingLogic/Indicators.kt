@@ -45,6 +45,7 @@ class Indicators {
 
     fun updateIndicators(historicalBars: List<StockBar>) {
         val closingPrices: List<Double> = historicalBars.map { it.close }
+
         mOriginalPrices = closingPrices.toMutableList()
         // TODO: refactoring
         calculateSupportLevels(closingPrices)

@@ -80,6 +80,9 @@ class TradingBot(
 
         val job = CoroutineScope(Dispatchers.IO).async {
             val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)
+            if (historicalBars.isEmpty()) {
+                return@async BacktestResult(Strategies.None, 0.0, 0.0, 0)
+            }
             mBacktestIndicators.updateIndicators(historicalBars)
 
             mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
@@ -115,8 +118,11 @@ class TradingBot(
 
         mJob = CoroutineScope(Dispatchers.IO).launch {
             while(mIsRunning) {
-                val accountBalance = getAccountBalance().getOrNull() // TODO: implement
+                val accountBalance = getAccountBalance().getOrNull()
                 val historicalBars = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)
+                if (historicalBars.isEmpty()) {
+                    return@launch
+                }
                 mIndicators.updateIndicators(historicalBars)
                 val latestIndicators = mIndicators.getIndicatorPoints()
                 val signal = mStrategy.executeAlgorithm(latestIndicators)
@@ -132,7 +138,6 @@ class TradingBot(
                     TradingSignal.Hold -> { /* Do nothing */ }
                 }
                 delay(delayInMs)
-
             }
         }
     }

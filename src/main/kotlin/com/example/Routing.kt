@@ -135,7 +135,7 @@ fun Application.configureRouting() {
         route("/Bot") {
             post("/Backtesting") {
                 val backtestConfig = call.receive<BacktestConfig>()
-
+                println(backtestConfig)
                 val backtestResult = backtestConfig.let {
                     tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
                 }
@@ -162,7 +162,7 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
         HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)
         HttpStatusCode.NotFound             -> call.respond(HttpStatusCode.NotFound)
         HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient. Or proxy blocks API call.")
-        HttpStatusCode.UnprocessableEntity  -> call.respond(HttpStatusCode.UnprocessableEntity, "Input parameters are not recognized.")
+        HttpStatusCode.UnprocessableEntity  -> call.respond(HttpStatusCode.UnprocessableEntity, "Input parameters are not recognized. Or Alpaca has closed")
         else                                -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
     }
 }
