@@ -11,7 +11,6 @@ fun main(args: Array<String>) {
 fun Application.module(){
     configureDependencies()
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
-    configureDatabases()
     configureMonitoring()
     configureRouting() // The routes itself
 }

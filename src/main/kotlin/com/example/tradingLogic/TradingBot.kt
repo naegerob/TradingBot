@@ -1,6 +1,6 @@
 package com.example.tradingLogic
 
-import com.example.data.AlpacaRepository
+import com.example.Error
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.*
@@ -69,7 +69,7 @@ class TradingBot(
         mOrderRequest = orderRequest
     }
 
-    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): BacktestResult {
+    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): com.example.Result<BacktestResult, TradingBotError> {
         val strategy = StrategyFactory().createStrategy(strategySelector)
         mBacktestIndicators.mStock = stockAggregationRequest.symbols
 
@@ -107,7 +107,7 @@ class TradingBot(
             val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
             BacktestResult(strategySelector, finalBalance, winRateInPercent, positions)
         }
-        return job.await()
+        return com.example.Result.Success(job.await())
     }
 
     fun run() {
@@ -159,6 +159,10 @@ class TradingBot(
         }
     }
 
+    enum class TradingBotError : Error {
+        // TODO: check error messages from alpaca / or codes
+        NO_DATA_FROMALPACA
+    }
     fun stop() {
         mJob?.cancel()
         mIsRunning = false

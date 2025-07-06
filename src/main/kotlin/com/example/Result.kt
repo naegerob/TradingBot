@@ -1,6 +1,4 @@
-package com.example.utility
-
-sealed interface Error
+package com.example
 
 typealias RootError = Error
 
