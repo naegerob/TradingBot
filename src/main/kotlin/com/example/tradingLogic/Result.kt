@@ -1,4 +1,4 @@
-package com.example
+package com.example.tradingLogic
 
 typealias RootError = Error
 

@@ -79,6 +79,7 @@ class AlpacaRepository() : TradingRepository, KoinComponent {
             }
         }
 
+
     override suspend fun getOpenPositions(): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseUrl) {

@@ -1,13 +1,11 @@
 package com.example.tradingLogic
 
-import com.example.Error
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.*
 import io.ktor.client.call.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
-import kotlinx.serialization.SerializationException
 
 
 class TradingBot(
@@ -27,32 +25,36 @@ class TradingBot(
     private var mTimeframe = StockAggregationRequest().timeframe
 
     // TODO: Consider changing to handling errors similar to getAccountBalance
-    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators): List<StockBar> {
+    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators): Result<List<StockBar>, TradingLogicError> {
         try {
             val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
             when (httpResponse.status) {
                 HttpStatusCode.OK -> {
                     val stockResponse = httpResponse.body<StockAggregationResponse>()
-                    return stockResponse.bars[indicators.mStock]!!
+                    if (stockResponse.bars[indicators.mStock] == null) {
+                        return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                    }
+                    return Result.Success(stockResponse.bars[indicators.mStock]!!)
                 }
-                else -> return emptyList() // TODO: is just bad
+                else -> {
+                    return Result.Error(TradingLogicError.DataError.MISC_ERROR)
+                }
             }
         } catch (e: Exception) {
             println(e)
-            return emptyList()
+            return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_EXCEPTION)
         }
     }
 
-    private suspend fun getAccountBalance(): Result<Double> {
-        return runCatching {
-            val httpResponse = mAlpacaRepository.getAccountDetails()
-            when (httpResponse.status) {
-                HttpStatusCode.OK -> {
-                    httpResponse.body<Account>().buyingPower.toDouble()
-                }
-                else -> {
-                    throw SerializationException("Serialization or API request did not work")
-                }
+    private suspend fun getAccountBalance(): Result<Double, TradingLogicError> {
+
+        val httpResponse = mAlpacaRepository.getAccountDetails()
+        return when (httpResponse.status) {
+            HttpStatusCode.OK -> {
+                Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
+            }
+            else -> { // should never be called
+                Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
             }
         }
     }
@@ -69,7 +71,7 @@ class TradingBot(
         mOrderRequest = orderRequest
     }
 
-    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): com.example.Result<BacktestResult, TradingBotError> {
+    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): Result<Any, TradingLogicError> {
         val strategy = StrategyFactory().createStrategy(strategySelector)
         mBacktestIndicators.mStock = stockAggregationRequest.symbols
 
@@ -78,12 +80,15 @@ class TradingBot(
         val positionSize = 10 // Money per trade
         var positions = 0
 
-        val job = CoroutineScope(Dispatchers.IO).async {
-            val historicalBars = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)
-            if (historicalBars.isEmpty()) {
-                return@async BacktestResult(Strategies.None, 0.0, 0.0, 0)
+        val job : Deferred<Result<Any, TradingLogicError>> = CoroutineScope(Dispatchers.IO).async {
+            when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
+                is Result.Error -> {
+                    println(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE.toString())
+                    return@async Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                }
+                is Result.Success -> mBacktestIndicators.updateIndicators(result.data)
             }
-            mBacktestIndicators.updateIndicators(historicalBars)
+
 
             mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
                 val indicatorSnapshot = mBacktestIndicators.getIndicatorPoints(index)
@@ -105,9 +110,9 @@ class TradingBot(
             println("Final position: $positions")
             val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
             val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
-            BacktestResult(strategySelector, finalBalance, winRateInPercent, positions)
+            Result.Success(BacktestResult(strategySelector, finalBalance, winRateInPercent, positions))
         }
-        return com.example.Result.Success(job.await())
+        return Result.Success(job.await())
     }
 
     fun run() {
@@ -118,12 +123,15 @@ class TradingBot(
 
         mJob = CoroutineScope(Dispatchers.IO).launch {
             while(mIsRunning) {
-                val accountBalance = getAccountBalance().getOrNull()
-                val historicalBars = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)
-                if (historicalBars.isEmpty()) {
-                    return@launch
+                when (val result = getAccountBalance()) {
+                    is Result.Error -> TODO()
+                    is Result.Success -> TODO()
                 }
-                mIndicators.updateIndicators(historicalBars)
+                when(val result = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)) {
+                    is Result.Error -> TODO()
+                    is Result.Success -> mIndicators.updateIndicators(result.data)
+                }
+
                 val latestIndicators = mIndicators.getIndicatorPoints()
                 val signal = mStrategy.executeAlgorithm(latestIndicators)
                 when(signal) {
@@ -159,10 +167,6 @@ class TradingBot(
         }
     }
 
-    enum class TradingBotError : Error {
-        // TODO: check error messages from alpaca / or codes
-        NO_DATA_FROMALPACA
-    }
     fun stop() {
         mJob?.cancel()
         mIsRunning = false

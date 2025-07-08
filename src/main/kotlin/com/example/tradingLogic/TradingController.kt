@@ -4,8 +4,6 @@ import com.example.data.AlpacaRepository
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
-import io.ktor.client.*
-import io.ktor.client.engine.*
 import io.ktor.client.statement.*
 
 class TradingController() {
@@ -49,7 +47,7 @@ class TradingController() {
         return mAlpacaRepo.getAccountDetails()
     }
 
-    suspend fun doBacktesting(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): com.example.Result<BacktestResult, TradingBot.TradingBotError> {
+    suspend fun doBacktesting(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): Result<Any, TradingLogicError> {
         return mTradingBot.backtest(strategySelector, stockAggregationRequest)
     }
     fun startBot() {
