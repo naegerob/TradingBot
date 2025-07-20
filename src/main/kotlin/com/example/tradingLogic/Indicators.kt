@@ -219,7 +219,7 @@ class Indicators {
         return if (list.isNotEmpty()) {
             index?.takeIf { it in list.indices }?.let { list[it] } ?: list.last()
         } else {
-            0.0
+            0.0 // TODO: replace with proper error handling
         }
     }
 

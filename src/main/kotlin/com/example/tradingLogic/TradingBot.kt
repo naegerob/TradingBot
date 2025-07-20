@@ -24,38 +24,28 @@ class TradingBot(
     private var mStockAggregationRequest = StockAggregationRequest()
     private var mTimeframe = StockAggregationRequest().timeframe
 
-    // TODO: Consider changing to handling errors similar to getAccountBalance
-    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators): Result<List<StockBar>, TradingLogicError> {
-        try {
-            val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
-            when (httpResponse.status) {
-                HttpStatusCode.OK -> {
-                    val stockResponse = httpResponse.body<StockAggregationResponse>()
-                    if (stockResponse.bars[indicators.mStock] == null) {
-                        return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
-                    }
-                    return Result.Success(stockResponse.bars[indicators.mStock]!!)
+    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators) : Result<List<StockBar>, TradingLogicError> {
+        val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
+        when (httpResponse.status) {
+            HttpStatusCode.OK -> {
+                val stockResponse = httpResponse.body<StockAggregationResponse>()
+                if (stockResponse.bars[indicators.mStock] == null) {
+                    return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
                 }
-                else -> {
-                    return Result.Error(TradingLogicError.DataError.MISC_ERROR)
-                }
+                return Result.Success(stockResponse.bars[indicators.mStock]!!)
             }
-        } catch (e: Exception) {
-            println(e)
-            return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_EXCEPTION)
+            HttpStatusCode.TooManyRequests  -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
+            HttpStatusCode.BadRequest       -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            HttpStatusCode.Unauthorized     -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            else                            -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
         }
     }
 
-    private suspend fun getAccountBalance(): Result<Double, TradingLogicError> {
-
+    private suspend fun getAccountBalance() : Result<Double, TradingLogicError> {
         val httpResponse = mAlpacaRepository.getAccountDetails()
         return when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
-            }
-            else -> { // should never be called
-                Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
-            }
+            HttpStatusCode.OK   -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
+            else                -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
         }
     }
 
@@ -71,9 +61,15 @@ class TradingBot(
         mOrderRequest = orderRequest
     }
 
-    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): Result<Any, TradingLogicError> {
+    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest) : Result<Any, TradingLogicError> {
+        if(strategySelector == Strategies.None) {
+            return Result.Error(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED)
+        }
         val strategy = StrategyFactory().createStrategy(strategySelector)
         mBacktestIndicators.mStock = stockAggregationRequest.symbols
+        if(mBacktestIndicators.mStock.isEmpty()) {
+            return Result.Error(TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED)
+        }
 
         val initialBalance = 10000.0 // Starting capital
         var balance = initialBalance
@@ -81,30 +77,39 @@ class TradingBot(
         var positions = 0
 
         val job : Deferred<Result<Any, TradingLogicError>> = CoroutineScope(Dispatchers.IO).async {
-            when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
-                is Result.Error -> {
-                    println(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE.toString())
-                    return@async Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
-                }
-                is Result.Success -> mBacktestIndicators.updateIndicators(result.data)
-            }
 
+            when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
+                is Result.Error -> return@async Result.Error(result.error)
+                is Result.Success -> {
+                    if(result.data.isEmpty()) {
+                        return@async Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                    }
+                    mBacktestIndicators.updateIndicators(result.data)
+                }
+            }
 
             mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
                 val indicatorSnapshot = mBacktestIndicators.getIndicatorPoints(index)
                 val tradingSignal = strategy.executeAlgorithm(indicatorSnapshot)
-                if (tradingSignal == TradingSignal.Buy && positions == 0) {
-                    println("BUY at $originalPrice")
-                    positions = positionSize
-                    balance -= positionSize * originalPrice
 
-                } else if (tradingSignal == TradingSignal.Sell && positions == positionSize) {
-                    println("SELL at $originalPrice")
-                    positions = 0
-                    balance += positionSize * originalPrice
-
-                } else {
-                    println("Hold Position at $originalPrice")
+                when (tradingSignal) {
+                    TradingSignal.Buy -> {
+                        if (positions == 0) {
+                            println("BUY at $originalPrice")
+                            positions = positionSize
+                            balance -= positionSize * originalPrice
+                        }
+                    }
+                    TradingSignal.Sell -> {
+                        if (positions == positionSize) {
+                            println("SELL at $originalPrice")
+                            positions = 0
+                            balance += positionSize * originalPrice
+                        }
+                    }
+                    TradingSignal.Hold -> {
+                        println("Hold Position at $originalPrice")
+                    }
                 }
             }
             println("Final position: $positions")
@@ -115,38 +120,62 @@ class TradingBot(
         return Result.Success(job.await())
     }
 
-    fun run() {
-        if (mIsRunning) return
-        val delayInMs = parseTimeframeToMillis(mTimeframe) ?: return
-
+    fun run() : Result<Unit, TradingLogicError> {
+        if (mIsRunning) {
+            return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
+        }
+        val delayInMs = parseTimeframeToMillis(mTimeframe)
+            ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
         mIsRunning = true
-
-        mJob = CoroutineScope(Dispatchers.IO).launch {
+        mJob = CoroutineScope(Dispatchers.IO).async<Result<Unit, TradingLogicError>> {
             while(mIsRunning) {
                 when (val result = getAccountBalance()) {
-                    is Result.Error -> TODO()
-                    is Result.Success -> TODO()
+                    is Result.Error ->  return@async Result.Error(result.error)
+                    is Result.Success -> {
+                        // TODO: Set here balance to quantity of mOrderRequest
+                    }
                 }
                 when(val result = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)) {
-                    is Result.Error -> TODO()
-                    is Result.Success -> mIndicators.updateIndicators(result.data)
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> mIndicators.updateIndicators(result.data)
                 }
 
-                val latestIndicators = mIndicators.getIndicatorPoints()
+                val latestIndicators = mIndicators.getIndicatorPoints() // TODO: error handling needed
+
                 val signal = mStrategy.executeAlgorithm(latestIndicators)
                 when(signal) {
                     TradingSignal.Buy -> {
-                        mOrderRequest.side = "buy"
-                        mAlpacaRepository.createOrder(mOrderRequest)
+                        when (val handledOrder = createHandledOrder("buy")) {
+                            is Result.Success   -> { /* Do Nothing */ }
+                            is Result.Error     -> return@async Result.Error(handledOrder.error)
+                        }
                     }
                     TradingSignal.Sell -> {
-                        mOrderRequest.side = "sell"
-                        mAlpacaRepository.createOrder(mOrderRequest)
+                        when (val handledOrder = createHandledOrder("sell")) { // TODO: check mOrderRequest
+                            is Result.Success   -> { /* Do Nothing */ }
+                            is Result.Error     -> return@async Result.Error(handledOrder.error)
+                        }
                     }
                     TradingSignal.Hold -> { /* Do nothing */ }
                 }
                 delay(delayInMs)
             }
+            return@async Result.Success(Unit)
+        }
+        return Result.Success(Unit)
+    }
+
+    private suspend fun createHandledOrder(side: String) : Result<Unit, TradingLogicError> {
+        if (side != "sell" && side != "buy") {
+            return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+        }
+        mOrderRequest.side = side
+        val httpResponse = mAlpacaRepository.createOrder(mOrderRequest) // TODO: check mOrderRequest
+        return when (httpResponse.status) {
+            HttpStatusCode.OK                   -> Result.Success(Unit)
+            HttpStatusCode.Forbidden            -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
+            HttpStatusCode.UnprocessableEntity  -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            else                                -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
         }
     }
 
