@@ -215,25 +215,56 @@ class Indicators {
         }
     }
 
-    private fun getValue(list: List<Double>, index: Int?): Double {
+    private fun getValueFromList(list: List<Double>, index: Int): Result<Double, TradingLogicError> {
         return if (list.isNotEmpty()) {
-            index?.takeIf { it in list.indices }?.let { list[it] } ?: list.last()
+            Result.Success(index.takeIf { it in list.indices }?.let { list[it] } ?: list.last())
         } else {
-            0.0 // TODO: replace with proper error handling
+            Result.Error(TradingLogicError.DataError.LIST_IS_EMPTY)
         }
     }
 
-    fun getIndicatorPoints(index: Int? = null): IndicatorSnapshot {
-        return IndicatorSnapshot(
-            originalPrice = getValue(mOriginalPrices, index),
-            resistance = getValue(mResistances, index),
-            support = getValue(mSupports, index),
-            averageBollingerBand = getValue(mAverageBollingerBand, index),
-            lowerBollingerBand = getValue(mLowerBollingerBand, index),
-            upperBollingerBand = getValue(mUpperBollingerBand, index),
-            shortSMA = getValue(mShortSMA, index),
-            longSMA = getValue(mLongSMA, index),
-            rsi = getValue(mRsi, index)
+    fun getIndicatorPoints(index: Int): Result<IndicatorSnapshot, TradingLogicError> {
+        val originalPriceResult = getValueFromList(mOriginalPrices, index)
+        val resistanceResult = getValueFromList(mResistances, index)
+        val supportResult = getValueFromList(mSupports, index)
+        val avgBBResult = getValueFromList(mAverageBollingerBand, index)
+        val lowerBBResult = getValueFromList(mLowerBollingerBand, index)
+        val upperBBResult = getValueFromList(mUpperBollingerBand, index)
+        val shortSMAResult = getValueFromList(mShortSMA, index)
+        val longSMAResult = getValueFromList(mLongSMA, index)
+        val rsiResult = getValueFromList(mRsi, index)
+
+        // Collect all in a list and return first error if any
+        val results = listOf(
+            originalPriceResult,
+            resistanceResult,
+            supportResult,
+            avgBBResult,
+            lowerBBResult,
+            upperBBResult,
+            shortSMAResult,
+            longSMAResult,
+            rsiResult
+        )
+
+        results.forEach { result ->
+            if (result is Result.Error) {
+                return Result.Error(result.error)
+            }
+        }
+
+        return Result.Success(
+            IndicatorSnapshot(
+                originalPrice = (originalPriceResult as Result.Success).data,
+                resistance = (resistanceResult as Result.Success).data,
+                support = (supportResult as Result.Success).data,
+                averageBollingerBand = (avgBBResult as Result.Success).data,
+                lowerBollingerBand = (lowerBBResult as Result.Success).data,
+                upperBollingerBand = (upperBBResult as Result.Success).data,
+                shortSMA = (shortSMAResult as Result.Success).data,
+                longSMA = (longSMAResult as Result.Success).data,
+                rsi = (rsiResult as Result.Success).data
+            )
         )
     }
 

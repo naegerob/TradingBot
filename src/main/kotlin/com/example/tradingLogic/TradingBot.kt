@@ -89,9 +89,10 @@ class TradingBot(
             }
 
             mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
-                val indicatorSnapshot = mBacktestIndicators.getIndicatorPoints(index)
-                val tradingSignal = strategy.executeAlgorithm(indicatorSnapshot)
-
+                val tradingSignal = when(val result = mBacktestIndicators.getIndicatorPoints(index)) {
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> mStrategy.executeAlgorithm(result.data)
+                }
                 when (tradingSignal) {
                     TradingSignal.Buy -> {
                         if (positions == 0) {
@@ -131,29 +132,28 @@ class TradingBot(
             while(mIsRunning) {
                 when (val result = getAccountBalance()) {
                     is Result.Error ->  return@async Result.Error(result.error)
-                    is Result.Success -> {
-                        // TODO: Set here balance to quantity of mOrderRequest
-                    }
+                    is Result.Success -> mOrderRequest.quantity = result.data.toInt().toString() // TODO: check here the ratio how much it hsould be transferred
                 }
                 when(val result = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)) {
                     is Result.Error     -> return@async Result.Error(result.error)
                     is Result.Success   -> mIndicators.updateIndicators(result.data)
                 }
 
-                val latestIndicators = mIndicators.getIndicatorPoints() // TODO: error handling needed
-
-                val signal = mStrategy.executeAlgorithm(latestIndicators)
-                when(signal) {
+                val tradingSignal = when(val result = mIndicators.getIndicatorPoints(-1)) {
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> mStrategy.executeAlgorithm(result.data)
+                }
+                when(tradingSignal) {
                     TradingSignal.Buy -> {
-                        when (val handledOrder = createHandledOrder("buy")) {
+                        when (val result = createHandledOrder("buy")) {
                             is Result.Success   -> { /* Do Nothing */ }
-                            is Result.Error     -> return@async Result.Error(handledOrder.error)
+                            is Result.Error     -> return@async Result.Error(result.error)
                         }
                     }
                     TradingSignal.Sell -> {
-                        when (val handledOrder = createHandledOrder("sell")) { // TODO: check mOrderRequest
+                        when (val result = createHandledOrder("sell")) { // TODO: check mOrderRequest
                             is Result.Success   -> { /* Do Nothing */ }
-                            is Result.Error     -> return@async Result.Error(handledOrder.error)
+                            is Result.Error     -> return@async Result.Error(result.error)
                         }
                     }
                     TradingSignal.Hold -> { /* Do nothing */ }

@@ -6,8 +6,9 @@ sealed interface TradingLogicError : Error {
     enum class DataError : TradingLogicError {
         NO_SUFFICIENT_ACCOUNT_BALANCE,
         NO_HISTORICAL_DATA_AVAILABLE,
-        INVALID_PARAMETER_FORMAT,
         HISTORICAL_DATA_TOO_MANY_REQUESTS,
+        INVALID_PARAMETER_FORMAT,
+        LIST_IS_EMPTY,
         UNAUTHORIZED,
         MISC_ERROR
     }
