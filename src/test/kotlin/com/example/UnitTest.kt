@@ -2,6 +2,12 @@ package com.example
 
 
 import com.example.data.singleModels.*
+import com.example.tradingLogic.IndicatorSnapshot
+import com.example.tradingLogic.TradingBot
+import com.example.tradingLogic.strategies.Strategies
+import com.example.tradingLogic.strategies.StrategyFactory
+import com.example.tradingLogic.strategies.TradingSignal
+import com.example.tradingLogic.strategies.TradingStrategy
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -18,6 +24,7 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.jetbrains.exposed.sql.Op
 import org.koin.ktor.plugin.Koin
 import org.koin.test.KoinTest
 import kotlin.test.*
@@ -129,10 +136,10 @@ class UnitTest : KoinTest {
         }
 
         application {
-            install(Koin){
-                modules (org.koin.dsl.module {
-                        single<HttpClientEngine> { mockEngine }
-                    }
+            install(Koin) {
+                modules(org.koin.dsl.module {
+                    single<HttpClientEngine> { mockEngine }
+                }
                 )
             }
             configureSerialization()
@@ -214,10 +221,10 @@ class UnitTest : KoinTest {
             )
         }
         application {
-            install(Koin){
-                modules (org.koin.dsl.module {
-                        single<HttpClientEngine> { mockEngine }
-                    }
+            install(Koin) {
+                modules(org.koin.dsl.module {
+                    single<HttpClientEngine> { mockEngine }
+                }
                 )
             }
             configureSerialization()
@@ -302,10 +309,10 @@ class UnitTest : KoinTest {
         }
 
         application {
-            install(Koin){
-                modules (org.koin.dsl.module {
-                        single<HttpClientEngine> { mockEngine }
-                    }
+            install(Koin) {
+                modules(org.koin.dsl.module {
+                    single<HttpClientEngine> { mockEngine }
+                }
                 )
             }
             configureSerialization()
@@ -342,12 +349,66 @@ class UnitTest : KoinTest {
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
                 "AAPL" to listOf(
-                    StockBar(close = 185.31, high = 185.31, low = 185.31, trades = 28, open = 185.31, timestamp = "2024-01-03T00:00:00Z", volume = 1045, vwap = 185.31),
-                    StockBar(close = 185.29, high = 185.29, low = 185.29, trades = 36, open = 185.29, timestamp = "2024-01-03T00:01:00Z", volume = 283, vwap = 185.29),
-                    StockBar(close = 185.29, high = 185.29, low = 185.29, trades = 26, open = 185.29, timestamp = "2024-01-03T00:02:00Z", volume = 381, vwap = 185.29),
-                    StockBar(close = 185.26, high = 185.26, low = 185.26, trades = 30, open = 185.26, timestamp = "2024-01-03T00:04:00Z", volume = 650, vwap = 185.26),
-                    StockBar(close = 185.24, high = 185.24, low = 185.24, trades = 40, open = 185.24, timestamp = "2024-01-03T00:06:00Z", volume = 982, vwap = 185.24),
-                    StockBar(close = 185.24, high = 185.24, low = 185.24, trades = 30, open = 185.24, timestamp = "2024-01-03T00:07:00Z", volume = 2718, vwap = 185.24)
+                    StockBar(
+                        close = 185.31,
+                        high = 185.31,
+                        low = 185.31,
+                        trades = 28,
+                        open = 185.31,
+                        timestamp = "2024-01-03T00:00:00Z",
+                        volume = 1045,
+                        vwap = 185.31
+                    ),
+                    StockBar(
+                        close = 185.29,
+                        high = 185.29,
+                        low = 185.29,
+                        trades = 36,
+                        open = 185.29,
+                        timestamp = "2024-01-03T00:01:00Z",
+                        volume = 283,
+                        vwap = 185.29
+                    ),
+                    StockBar(
+                        close = 185.29,
+                        high = 185.29,
+                        low = 185.29,
+                        trades = 26,
+                        open = 185.29,
+                        timestamp = "2024-01-03T00:02:00Z",
+                        volume = 381,
+                        vwap = 185.29
+                    ),
+                    StockBar(
+                        close = 185.26,
+                        high = 185.26,
+                        low = 185.26,
+                        trades = 30,
+                        open = 185.26,
+                        timestamp = "2024-01-03T00:04:00Z",
+                        volume = 650,
+                        vwap = 185.26
+                    ),
+                    StockBar(
+                        close = 185.24,
+                        high = 185.24,
+                        low = 185.24,
+                        trades = 40,
+                        open = 185.24,
+                        timestamp = "2024-01-03T00:06:00Z",
+                        volume = 982,
+                        vwap = 185.24
+                    ),
+                    StockBar(
+                        close = 185.24,
+                        high = 185.24,
+                        low = 185.24,
+                        trades = 30,
+                        open = 185.24,
+                        timestamp = "2024-01-03T00:07:00Z",
+                        volume = 2718,
+                        vwap = 185.24
+                    )
                 )
             ),
             nextPageToken = null
@@ -360,10 +421,10 @@ class UnitTest : KoinTest {
         }
 
         application {
-            install(Koin){
-                modules (org.koin.dsl.module {
-                        single<HttpClientEngine> { mockEngine }
-                    }
+            install(Koin) {
+                modules(org.koin.dsl.module {
+                    single<HttpClientEngine> { mockEngine }
+                }
                 )
             }
             configureSerialization()
@@ -400,15 +461,15 @@ class UnitTest : KoinTest {
     fun `Get Historical Bars Request with bad parameter`() = testApplication {
         val mockEngine = MockEngine { _ ->
             respond(
-                content =  mapOf("message" to "Invalid format for parameter symbols: query parameter 'symbols' is required").toString(),
+                content = mapOf("message" to "Invalid format for parameter symbols: query parameter 'symbols' is required").toString(),
                 status = HttpStatusCode.BadRequest
             )
         }
         application {
-            install(Koin){
-                modules (org.koin.dsl.module {
-                        single<HttpClientEngine> { mockEngine }
-                    }
+            install(Koin) {
+                modules(org.koin.dsl.module {
+                    single<HttpClientEngine> { mockEngine }
+                }
                 )
             }
             configureSerialization()
@@ -434,7 +495,66 @@ class UnitTest : KoinTest {
         val httpResponse = mockClient.post("/HistoricalBars/Request") {
             setBody(stockAggregationRequest)
         }
-
         assertEquals(BadRequest, httpResponse.status)
+    }
+
+    @Test
+    fun `Strategy Execution Tests`() = testApplication {
+        val strategy: TradingStrategy = StrategyFactory().createStrategy(Strategies.MovingAverage)
+        val indicatorSnapshot = IndicatorSnapshot(
+            originalPrice = 101.5,
+            resistance = 105.0,
+            support = 98.0,
+            averageBollingerBand = 100.0,
+            lowerBollingerBand = 95.0,
+            upperBollingerBand = 105.0,
+            shortSMA = 102.0,
+            longSMA = 99.5,
+            rsi = 55.0
+        )
+        val tradingSignal = strategy.executeAlgorithm(indicatorSnapshot)
+        assertEquals(TradingSignal.Buy, tradingSignal)
+
+        val indicatorSnapshot2 = IndicatorSnapshot(
+            originalPrice = 101.5,
+            resistance = 105.0,
+            support = 98.0,
+            averageBollingerBand = 100.0,
+            lowerBollingerBand = 95.0,
+            upperBollingerBand = 105.0,
+            shortSMA = 102.0,
+            longSMA = 103.5,
+            rsi = 55.0
+        )
+        val tradingSignal2 = strategy.executeAlgorithm(indicatorSnapshot2)
+        assertEquals(TradingSignal.Sell, tradingSignal2)
+
+        val indicatorSnapshot3 = IndicatorSnapshot(
+            originalPrice = 101.5,
+            resistance = 105.0,
+            support = 98.0,
+            averageBollingerBand = 100.0,
+            lowerBollingerBand = 95.0,
+            upperBollingerBand = 105.0,
+            shortSMA = 104.5,
+            longSMA = 104.5,
+            rsi = 55.0
+        )
+        val tradingSignal3 = strategy.executeAlgorithm(indicatorSnapshot3)
+        assertEquals(TradingSignal.Hold, tradingSignal3)
+
+        val indicatorSnapshot4 = IndicatorSnapshot(
+            originalPrice = 101.5,
+            resistance = 105.0,
+            support = 98.0,
+            averageBollingerBand = 100.0,
+            lowerBollingerBand = 95.0,
+            upperBollingerBand = 105.0,
+            shortSMA = 2373.54,
+            longSMA = 2373.54,
+            rsi = 55.0
+        )
+        val tradingSignal4 = strategy.executeAlgorithm(indicatorSnapshot4)
+        assertEquals(TradingSignal.Hold, tradingSignal4)
     }
 }

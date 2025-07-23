@@ -24,35 +24,6 @@ class TradingBot(
     private var mStockAggregationRequest = StockAggregationRequest()
     private var mTimeframe = StockAggregationRequest().timeframe
 
-    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators) : Result<List<StockBar>, TradingLogicError> {
-        val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
-        when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                val stockResponse = httpResponse.body<StockAggregationResponse>()
-                if (stockResponse.bars[indicators.mStock] == null) {
-                    return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
-                }
-                return Result.Success(stockResponse.bars[indicators.mStock]!!)
-            }
-            HttpStatusCode.TooManyRequests  -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
-            HttpStatusCode.BadRequest       -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            HttpStatusCode.Unauthorized     -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            else                            -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
-        }
-    }
-
-    private suspend fun getAccountBalance() : Result<Double, TradingLogicError> {
-        val httpResponse = mAlpacaRepository.getAccountDetails()
-        return when (httpResponse.status) {
-            HttpStatusCode.OK   -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
-            else                -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
-        }
-    }
-
-    fun setStrategy(strategySelector: Strategies) {
-        mStrategy = StrategyFactory().createStrategy(strategySelector)
-    }
-
     fun setStockAggregationRequest(stockAggregationRequest: StockAggregationRequest) {
         mStockAggregationRequest = stockAggregationRequest
     }
@@ -65,7 +36,7 @@ class TradingBot(
         if(strategySelector == Strategies.None) {
             return Result.Error(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED)
         }
-        val strategy = StrategyFactory().createStrategy(strategySelector)
+        setStrategy(strategySelector)
         mBacktestIndicators.mStock = stockAggregationRequest.symbols
         if(mBacktestIndicators.mStock.isEmpty()) {
             return Result.Error(TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED)
@@ -165,6 +136,11 @@ class TradingBot(
         return Result.Success(Unit)
     }
 
+    fun stop() {
+        mJob?.cancel()
+        mIsRunning = false
+    }
+
     private suspend fun createHandledOrder(side: String) : Result<Unit, TradingLogicError> {
         if (side != "sell" && side != "buy") {
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
@@ -196,9 +172,34 @@ class TradingBot(
         }
     }
 
-    fun stop() {
-        mJob?.cancel()
-        mIsRunning = false
+    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators) : Result<List<StockBar>, TradingLogicError> {
+        val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
+        when (httpResponse.status) {
+            HttpStatusCode.OK -> {
+                val stockResponse = httpResponse.body<StockAggregationResponse>()
+                if (stockResponse.bars[indicators.mStock] == null) {
+                    return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                }
+                return Result.Success(stockResponse.bars[indicators.mStock]!!)
+            }
+            HttpStatusCode.TooManyRequests  -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
+            HttpStatusCode.BadRequest       -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            HttpStatusCode.Unauthorized     -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            else                            -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
+        }
     }
+
+    private suspend fun getAccountBalance() : Result<Double, TradingLogicError> {
+        val httpResponse = mAlpacaRepository.getAccountDetails()
+        return when (httpResponse.status) {
+            HttpStatusCode.OK   -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
+            else                -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
+        }
+    }
+
+    private fun setStrategy(strategySelector: Strategies) {
+        mStrategy = StrategyFactory().createStrategy(strategySelector)
+    }
+
 }
 
