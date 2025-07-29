@@ -1,9 +1,13 @@
 package com.example
 
 
+import com.example.data.AlpacaRepository
+import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.IndicatorSnapshot
+import com.example.tradingLogic.Result
 import com.example.tradingLogic.TradingBot
+import com.example.tradingLogic.TradingLogicError
 import com.example.tradingLogic.strategies.Strategies
 import com.example.tradingLogic.strategies.StrategyFactory
 import com.example.tradingLogic.strategies.TradingSignal
@@ -499,7 +503,7 @@ class UnitTest : KoinTest {
     }
 
     @Test
-    fun `Strategy Execution Tests`() = testApplication {
+    fun `Strategy Execution Algorithm`() = testApplication {
         val strategy: TradingStrategy = StrategyFactory().createStrategy(Strategies.MovingAverage)
         val indicatorSnapshot = IndicatorSnapshot(
             originalPrice = 101.5,
@@ -556,5 +560,34 @@ class UnitTest : KoinTest {
         )
         val tradingSignal4 = strategy.executeAlgorithm(indicatorSnapshot4)
         assertEquals(TradingSignal.Hold, tradingSignal4)
+    }
+
+    @Test
+    fun `Backtesting without API Access`() = testApplication {
+        val repository: TradingRepository = AlpacaRepository()
+        val tradingBot = TradingBot(repository)
+
+        val strategy = Strategies.MovingAverage
+        val stockAggregationRequest = StockAggregationRequest()
+        when (val result = tradingBot.backtest(strategy, stockAggregationRequest)) {
+            is Result.Error<*, *>   -> {
+                when(result.error) {
+                    TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE      -> TODO()
+                    TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE       -> TODO()
+                    TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS  -> TODO()
+                    TradingLogicError.DataError.INVALID_PARAMETER_FORMAT           -> TODO()
+                    TradingLogicError.DataError.LIST_IS_EMPTY                      -> TODO()
+                    TradingLogicError.DataError.UNAUTHORIZED                       -> TODO()
+                    TradingLogicError.DataError.MISC_ERROR                         -> TODO()
+                    TradingLogicError.RunError.ALREADY_RUNNING                     -> TODO()
+                    TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED         -> TODO()
+                    TradingLogicError.StrategyError.NO_STRATEGY_SELECTED           -> TODO()
+                    TradingLogicError.StrategyError.WRONG_SYMBOLS_PROVIDED         -> TODO()
+                    TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED            -> TODO()
+
+                }
+            }
+            is Result.Success<*, *> -> TODO()
+        }
     }
 }

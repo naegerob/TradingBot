@@ -9,7 +9,7 @@ import kotlinx.coroutines.*
 
 
 class TradingBot(
-    private val mAlpacaRepository: TradingRepository
+    private val mRepository: TradingRepository
 ) {
 
     @Volatile
@@ -146,7 +146,7 @@ class TradingBot(
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
         }
         mOrderRequest.side = side
-        val httpResponse = mAlpacaRepository.createOrder(mOrderRequest) // TODO: check mOrderRequest
+        val httpResponse = mRepository.createOrder(mOrderRequest) // TODO: check mOrderRequest
         return when (httpResponse.status) {
             HttpStatusCode.OK                   -> Result.Success(Unit)
             HttpStatusCode.Forbidden            -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
@@ -173,7 +173,7 @@ class TradingBot(
     }
 
     private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators) : Result<List<StockBar>, TradingLogicError> {
-        val httpResponse = mAlpacaRepository.getHistoricalData(stockAggregationRequest)
+        val httpResponse = mRepository.getHistoricalData(stockAggregationRequest)
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val stockResponse = httpResponse.body<StockAggregationResponse>()
@@ -190,7 +190,7 @@ class TradingBot(
     }
 
     private suspend fun getAccountBalance() : Result<Double, TradingLogicError> {
-        val httpResponse = mAlpacaRepository.getAccountDetails()
+        val httpResponse = mRepository.getAccountDetails()
         return when (httpResponse.status) {
             HttpStatusCode.OK   -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
             else                -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
