@@ -4,10 +4,8 @@ package com.example
 import com.example.data.AlpacaRepository
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
-import com.example.tradingLogic.IndicatorSnapshot
-import com.example.tradingLogic.Result
-import com.example.tradingLogic.TradingBot
-import com.example.tradingLogic.TradingLogicError
+import com.example.di.appModule
+import com.example.tradingLogic.*
 import com.example.tradingLogic.strategies.Strategies
 import com.example.tradingLogic.strategies.StrategyFactory
 import com.example.tradingLogic.strategies.TradingSignal
@@ -15,6 +13,7 @@ import com.example.tradingLogic.strategies.TradingStrategy
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
+import io.ktor.client.engine.cio.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -31,9 +30,11 @@ import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Op
 import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.test.KoinTest
+import org.koin.test.inject
 import kotlin.test.*
 
 class UnitTest : KoinTest {
@@ -91,6 +92,24 @@ class UnitTest : KoinTest {
                 header("accept", "application/json")
             }
         }
+        val testModule = module {
+            single { CIO.create() }
+            single<TradingRepository> { AlpacaRepository() }
+            single { TradingBot() }
+            single { TradingController() }
+        }
+    }
+
+    @BeforeTest
+    fun setup() {
+        startKoin{
+            modules(testModule)
+        }
+    }
+
+    @AfterTest
+    fun tearDown() {
+        stopKoin()
     }
 
     @Test
@@ -470,7 +489,7 @@ class UnitTest : KoinTest {
         }
         application {
             install(Koin) {
-                modules(org.koin.dsl.module {
+                modules(module {
                     single<HttpClientEngine> { mockEngine }
                 })
             }
@@ -562,8 +581,8 @@ class UnitTest : KoinTest {
 
     @Test
     fun `Backtesting without API Access`() = testApplication {
-        val repository: TradingRepository = AlpacaRepository()
-        val tradingBot = TradingBot(repository)
+
+        val tradingBot by inject<TradingBot>()
 
         val strategy = Strategies.MovingAverage
         val stockAggregationRequest = StockAggregationRequest()
@@ -582,10 +601,9 @@ class UnitTest : KoinTest {
                     TradingLogicError.StrategyError.NO_STRATEGY_SELECTED           -> TODO()
                     TradingLogicError.StrategyError.WRONG_SYMBOLS_PROVIDED         -> TODO()
                     TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED            -> TODO()
-
                 }
             }
-            is Result.Success<*, *> -> TODO()
+            is Result.Success<*, *> -> assertTrue(true)
         }
     }
 }

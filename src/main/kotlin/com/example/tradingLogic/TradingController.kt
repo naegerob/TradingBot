@@ -1,21 +1,22 @@
 package com.example.tradingLogic
 
-import com.example.data.AlpacaRepository
+
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.statement.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
-class TradingController() {
+class TradingController : KoinComponent {
 
-    private val mAlpacaRepo: TradingRepository = AlpacaRepository()
+    private val mAlpacaRepo by inject<TradingRepository>()
 
     var mIndicators = Indicators()
         private set
 
     // TODO: Consider using builder pattern
-    var mTradingBot = TradingBot(mAlpacaRepo)
-        private set
+    val mTradingBot by inject<TradingBot>()
 
     /************************************************************
     Methods

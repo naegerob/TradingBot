@@ -17,7 +17,7 @@ import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class AlpacaRepository() : TradingRepository, KoinComponent {
+class AlpacaRepository : TradingRepository, KoinComponent {
 
     private val mEngine by inject<HttpClientEngine>()
     private val mClient = HttpClient(mEngine) {

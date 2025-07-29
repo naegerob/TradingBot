@@ -9,7 +9,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module(){
-    configureDependencies()
+    configureDependencies() // installs Koin
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
     configureMonitoring()
     configureRouting() // The routes itself

@@ -6,12 +6,13 @@ import com.example.tradingLogic.strategies.*
 import io.ktor.client.call.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
 
 
-class TradingBot(
-    private val mRepository: TradingRepository
-) {
+class TradingBot : KoinComponent {
 
+    private val mRepository by inject<TradingRepository>()
     @Volatile
     private var mIsRunning = false
     private var mJob: Job? = null
