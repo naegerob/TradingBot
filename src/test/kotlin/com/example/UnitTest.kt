@@ -29,6 +29,9 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.jetbrains.exposed.sql.Op
+import org.koin.core.component.inject
+import org.koin.core.context.GlobalContext.startKoin
+import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
 import org.koin.test.KoinTest
 import kotlin.test.*
@@ -69,7 +72,7 @@ class UnitTest : KoinTest {
         )
 
         private fun getMockAlpacaClient(mockEngine: MockEngine) = HttpClient(mockEngine) {
-            install(io.ktor.client.plugins.contentnegotiation.ContentNegotiation) {
+            install(ContentNegotiation) {
                 json(Json {
                     prettyPrint = true
                     isLenient = false
@@ -82,8 +85,8 @@ class UnitTest : KoinTest {
                 level = LogLevel.ALL
             }
             install(DefaultRequest) {
-                header("APCA-API-KEY-ID", com.example.data.AlpacaRepository.PAPERAPIKEY)
-                header("APCA-API-SECRET-KEY", com.example.data.AlpacaRepository.PAPERSECRET)
+                header("APCA-API-KEY-ID", AlpacaRepository.PAPERAPIKEY)
+                header("APCA-API-SECRET-KEY", AlpacaRepository.PAPERSECRET)
                 header("content-type", "application/json")
                 header("accept", "application/json")
             }
@@ -143,8 +146,7 @@ class UnitTest : KoinTest {
             install(Koin) {
                 modules(org.koin.dsl.module {
                     single<HttpClientEngine> { mockEngine }
-                }
-                )
+                })
             }
             configureSerialization()
             configureRouting()
@@ -228,8 +230,7 @@ class UnitTest : KoinTest {
             install(Koin) {
                 modules(org.koin.dsl.module {
                     single<HttpClientEngine> { mockEngine }
-                }
-                )
+                })
             }
             configureSerialization()
             configureRouting()
@@ -316,8 +317,7 @@ class UnitTest : KoinTest {
             install(Koin) {
                 modules(org.koin.dsl.module {
                     single<HttpClientEngine> { mockEngine }
-                }
-                )
+                })
             }
             configureSerialization()
             configureRouting()
@@ -428,8 +428,7 @@ class UnitTest : KoinTest {
             install(Koin) {
                 modules(org.koin.dsl.module {
                     single<HttpClientEngine> { mockEngine }
-                }
-                )
+                })
             }
             configureSerialization()
             configureRouting()
@@ -466,15 +465,14 @@ class UnitTest : KoinTest {
         val mockEngine = MockEngine { _ ->
             respond(
                 content = mapOf("message" to "Invalid format for parameter symbols: query parameter 'symbols' is required").toString(),
-                status = HttpStatusCode.BadRequest
+                status = BadRequest
             )
         }
         application {
             install(Koin) {
                 modules(org.koin.dsl.module {
                     single<HttpClientEngine> { mockEngine }
-                }
-                )
+                })
             }
             configureSerialization()
             configureRouting()
