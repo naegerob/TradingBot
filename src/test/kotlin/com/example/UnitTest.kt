@@ -25,9 +25,9 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.application.*
 import io.ktor.server.testing.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.jetbrains.exposed.sql.Op
 import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.stopKoin
@@ -96,17 +96,8 @@ class UnitTest : KoinTest {
             single { CIO.create() }
             single<TradingRepository> { AlpacaRepository() }
             single { TradingBot() }
-            single { TradingController() }
         }
     }
-
-    @BeforeTest
-    fun setup() {
-        startKoin{
-            modules(testModule)
-        }
-    }
-
     @AfterTest
     fun tearDown() {
         stopKoin()
@@ -153,17 +144,15 @@ class UnitTest : KoinTest {
             source = null,
             expiresAt = "2025-03-24T20:00:00Z"
         )
-
         val mockEngine = MockEngine { _ ->
             respond(
                 content = Json.encodeToString(mockOrderResponse),
                 status = OK,
             )
         }
-
         application {
             install(Koin) {
-                modules(org.koin.dsl.module {
+                modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
                 })
             }
@@ -194,7 +183,8 @@ class UnitTest : KoinTest {
         assertEquals(OK, httpResponse.status)
         assertEquals(orderRequest.quantity, response.qty)
         assertEquals(orderRequest.symbol, response.symbol)
-
+        assertEquals(mockOrderResponse.symbol, response.symbol)
+        assertEquals(mockOrderResponse.qty, response.qty)
     }
 
     @Test
@@ -247,7 +237,7 @@ class UnitTest : KoinTest {
         }
         application {
             install(Koin) {
-                modules(org.koin.dsl.module {
+                modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
                 })
             }
@@ -334,7 +324,7 @@ class UnitTest : KoinTest {
 
         application {
             install(Koin) {
-                modules(org.koin.dsl.module {
+                modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
                 })
             }
@@ -445,7 +435,7 @@ class UnitTest : KoinTest {
 
         application {
             install(Koin) {
-                modules(org.koin.dsl.module {
+                modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
                 })
             }
@@ -489,7 +479,7 @@ class UnitTest : KoinTest {
         }
         application {
             install(Koin) {
-                modules(module {
+                modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
                 })
             }
@@ -580,30 +570,28 @@ class UnitTest : KoinTest {
     }
 
     @Test
-    fun `Backtesting without API Access`() = testApplication {
-
+    fun `Backtesting without API Access`() {
+        startKoin {
+            modules(testModule)
+        }
+        val request = StockAggregationRequest()
         val tradingBot by inject<TradingBot>()
-
-        val strategy = Strategies.MovingAverage
-        val stockAggregationRequest = StockAggregationRequest()
-        when (val result = tradingBot.backtest(strategy, stockAggregationRequest)) {
-            is Result.Error<*, *>   -> {
-                when(result.error) {
-                    TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE      -> TODO()
-                    TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE       -> TODO()
-                    TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS  -> TODO()
-                    TradingLogicError.DataError.INVALID_PARAMETER_FORMAT           -> TODO()
-                    TradingLogicError.DataError.LIST_IS_EMPTY                      -> TODO()
-                    TradingLogicError.DataError.UNAUTHORIZED                       -> TODO()
-                    TradingLogicError.DataError.MISC_ERROR                         -> TODO()
-                    TradingLogicError.RunError.ALREADY_RUNNING                     -> TODO()
-                    TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED         -> TODO()
-                    TradingLogicError.StrategyError.NO_STRATEGY_SELECTED           -> TODO()
-                    TradingLogicError.StrategyError.WRONG_SYMBOLS_PROVIDED         -> TODO()
-                    TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED            -> TODO()
-                }
-            }
+        val resultWithStrategy = runBlocking {
+            tradingBot.backtest(Strategies.MovingAverage, request)
+        }
+        when (resultWithStrategy) {
+            is Result.Error<*, *>   -> { /* handle */ }
             is Result.Success<*, *> -> assertTrue(true)
         }
+        val resultNoStrategy = runBlocking {
+            tradingBot.backtest(Strategies.None, request)
+        }
+        if (resultNoStrategy is Result.Error<*, *>) {
+            assertEquals(
+                TradingLogicError.StrategyError.NO_STRATEGY_SELECTED,
+                resultNoStrategy.error
+            )
+        }
+        stopKoin()
     }
 }

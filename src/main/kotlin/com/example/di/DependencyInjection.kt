@@ -13,7 +13,6 @@ val appModule = module {
     single { CIO.create() }
     single<TradingRepository> { AlpacaRepository() }
     single { TradingBot() }
-    single { TradingController() }
 }
 
 fun Application.configureDependencies() {
