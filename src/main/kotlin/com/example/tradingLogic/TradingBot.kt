@@ -90,7 +90,10 @@ class TradingBot : KoinComponent {
             val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
             Result.Success(BacktestResult(strategySelector, finalBalance, winRateInPercent, positions))
         }
-        return Result.Success(job.await())
+        return when (val result = job.await()) {
+            is Result.Error<*, *> -> Result.Error(result.error as TradingLogicError)
+            is Result.Success<*, *> -> Result.Success(result.data!!)
+        }
     }
 
     fun run() : Result<Unit, TradingLogicError> {

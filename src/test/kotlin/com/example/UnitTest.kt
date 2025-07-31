@@ -4,7 +4,6 @@ package com.example
 import com.example.data.AlpacaRepository
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
-import com.example.di.appModule
 import com.example.tradingLogic.*
 import com.example.tradingLogic.strategies.Strategies
 import com.example.tradingLogic.strategies.StrategyFactory
@@ -28,7 +27,6 @@ import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.koin.core.component.inject
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -510,7 +508,7 @@ class UnitTest : KoinTest {
     }
 
     @Test
-    fun `Strategy Execution Algorithm`() = testApplication {
+    fun `Strategy Execution Algorithm`() {
         val strategy: TradingStrategy = StrategyFactory().createStrategy(Strategies.MovingAverage)
         val indicatorSnapshot = IndicatorSnapshot(
             originalPrice = 101.5,
@@ -570,27 +568,152 @@ class UnitTest : KoinTest {
     }
 
     @Test
-    fun `Backtesting without API Access`() {
+    fun `Backtesting with default stockAggregation`() = testApplication {
+        val mockStockAggregationResponse = StockAggregationResponse(
+            bars = mapOf(
+                "AAPL" to listOf(
+                    StockBar(
+                        close = 185.31,
+                        high = 185.31,
+                        low = 185.31,
+                        trades = 28,
+                        open = 185.31,
+                        timestamp = "2024-01-03T00:00:00Z",
+                        volume = 1045,
+                        vwap = 185.31
+                    ),
+                    StockBar(
+                        close = 185.29,
+                        high = 185.29,
+                        low = 185.29,
+                        trades = 36,
+                        open = 185.29,
+                        timestamp = "2024-01-03T00:01:00Z",
+                        volume = 283,
+                        vwap = 185.29
+                    ),
+                    StockBar(
+                        close = 185.29,
+                        high = 185.29,
+                        low = 185.29,
+                        trades = 26,
+                        open = 185.29,
+                        timestamp = "2024-01-03T00:02:00Z",
+                        volume = 381,
+                        vwap = 185.29
+                    ),
+                    StockBar(
+                        close = 185.26,
+                        high = 185.26,
+                        low = 185.26,
+                        trades = 30,
+                        open = 185.26,
+                        timestamp = "2024-01-03T00:04:00Z",
+                        volume = 650,
+                        vwap = 185.26
+                    ),
+                    StockBar(
+                        close = 185.24,
+                        high = 185.24,
+                        low = 185.24,
+                        trades = 40,
+                        open = 185.24,
+                        timestamp = "2024-01-03T00:06:00Z",
+                        volume = 982,
+                        vwap = 185.24
+                    ),
+                    StockBar(
+                        close = 185.24,
+                        high = 185.24,
+                        low = 185.24,
+                        trades = 30,
+                        open = 185.24,
+                        timestamp = "2024-01-03T00:07:00Z",
+                        volume = 2718,
+                        vwap = 185.24
+                    )
+                )
+            ),
+            nextPageToken = null
+        )
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockStockAggregationResponse),
+                status = OK,
+            )
+        }
+
+        application {
+            install(Koin) {
+                modules(testModule, module {
+                    single<HttpClientEngine> { mockEngine }
+                })
+            }
+            configureSerialization()
+            configureRouting()
+        }
+        startKoin {
+            modules(testModule)
+        }
+        // Preconditions
+        val stockAggregationRequest = defaultStockAggregationRequest.copy()
+        val tradingBot by inject<TradingBot>()
+
+        val resultWithDefault = runBlocking {
+            tradingBot.backtest(Strategies.MovingAverage, stockAggregationRequest)
+        }
+        val defaultBackTestResult = BacktestResult()
+        when (resultWithDefault) {
+            is Result.Success<*, *> -> {
+                val resultValue = resultWithDefault.data
+                if (resultValue is BacktestResult) {
+                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.winRate, resultValue.winRate)
+                    assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
+                } else {
+                    fail("resultValue could not be casted")
+                }
+            }
+            is Result.Error<*, *>   -> fail("Expected success but got Error: ${resultWithDefault.error}")
+        }
+        stopKoin()
+    }
+
+    @Test
+    fun `Backtesting without valid Indicators`()  {
+        startKoin {
+            modules(testModule)
+        }
+
+        val request = StockAggregationRequest()
+        request.symbols = ""
+        val tradingBot by inject<TradingBot>()
+        val resultWithEmptySymbol = runBlocking {
+            tradingBot.backtest(Strategies.MovingAverage, request)
+        }
+        when (resultWithEmptySymbol) {
+            is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultWithEmptySymbol.data}")
+            is Result.Error<*, *>   -> assertEquals(TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED, resultWithEmptySymbol.error)
+        }
+        stopKoin()
+    }
+
+    @Test
+    fun `Backtesting no Strategy Selected`() {
         startKoin {
             modules(testModule)
         }
         val request = StockAggregationRequest()
         val tradingBot by inject<TradingBot>()
-        val resultWithStrategy = runBlocking {
-            tradingBot.backtest(Strategies.MovingAverage, request)
-        }
-        when (resultWithStrategy) {
-            is Result.Error<*, *>   -> { /* handle */ }
-            is Result.Success<*, *> -> assertTrue(true)
-        }
+
         val resultNoStrategy = runBlocking {
             tradingBot.backtest(Strategies.None, request)
         }
-        if (resultNoStrategy is Result.Error<*, *>) {
-            assertEquals(
-                TradingLogicError.StrategyError.NO_STRATEGY_SELECTED,
-                resultNoStrategy.error
-            )
+
+        when (resultNoStrategy) {
+            is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultNoStrategy.data}")
+            is Result.Error<*, *>   -> assertEquals(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED, resultNoStrategy.error)
         }
         stopKoin()
     }
