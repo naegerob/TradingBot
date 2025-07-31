@@ -572,70 +572,37 @@ class UnitTest : KoinTest {
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
                 "AAPL" to listOf(
-                    StockBar(
-                        close = 185.31,
-                        high = 185.31,
-                        low = 185.31,
-                        trades = 28,
-                        open = 185.31,
-                        timestamp = "2024-01-03T00:00:00Z",
-                        volume = 1045,
-                        vwap = 185.31
-                    ),
-                    StockBar(
-                        close = 185.29,
-                        high = 185.29,
-                        low = 185.29,
-                        trades = 36,
-                        open = 185.29,
-                        timestamp = "2024-01-03T00:01:00Z",
-                        volume = 283,
-                        vwap = 185.29
-                    ),
-                    StockBar(
-                        close = 185.29,
-                        high = 185.29,
-                        low = 185.29,
-                        trades = 26,
-                        open = 185.29,
-                        timestamp = "2024-01-03T00:02:00Z",
-                        volume = 381,
-                        vwap = 185.29
-                    ),
-                    StockBar(
-                        close = 185.26,
-                        high = 185.26,
-                        low = 185.26,
-                        trades = 30,
-                        open = 185.26,
-                        timestamp = "2024-01-03T00:04:00Z",
-                        volume = 650,
-                        vwap = 185.26
-                    ),
-                    StockBar(
-                        close = 185.24,
-                        high = 185.24,
-                        low = 185.24,
-                        trades = 40,
-                        open = 185.24,
-                        timestamp = "2024-01-03T00:06:00Z",
-                        volume = 982,
-                        vwap = 185.24
-                    ),
-                    StockBar(
-                        close = 185.24,
-                        high = 185.24,
-                        low = 185.24,
-                        trades = 30,
-                        open = 185.24,
-                        timestamp = "2024-01-03T00:07:00Z",
-                        volume = 2718,
-                        vwap = 185.24
-                    )
+                    StockBar(close = 185.31, high = 185.31, low = 185.31, trades = 28, open = 185.31, timestamp = "2024-01-03T00:00:00Z", volume = 1045, vwap = 185.31),
+                    StockBar(close = 185.29, high = 185.29, low = 185.29, trades = 36, open = 185.29, timestamp = "2024-01-03T00:01:00Z", volume = 283, vwap = 185.29),
+                    StockBar(close = 185.29, high = 185.29, low = 185.29, trades = 26, open = 185.29, timestamp = "2024-01-03T00:02:00Z", volume = 381, vwap = 185.29),
+                    StockBar(close = 185.26, high = 185.26, low = 185.26, trades = 30, open = 185.26, timestamp = "2024-01-03T00:04:00Z", volume = 650, vwap = 185.26),
+                    StockBar(close = 185.24, high = 185.24, low = 185.24, trades = 40, open = 185.24, timestamp = "2024-01-03T00:06:00Z", volume = 982, vwap = 185.24),
+                    StockBar(close = 185.24, high = 185.24, low = 185.24, trades = 30, open = 185.24, timestamp = "2024-01-03T00:07:00Z", volume = 2718, vwap = 185.24),
+                    StockBar(close = 185.30, high = 185.35, low = 185.25, trades = 50, open = 185.27, timestamp = "2024-01-03T00:08:00Z", volume = 1200, vwap = 185.29),
+                    StockBar(close = 185.32, high = 185.38, low = 185.28, trades = 45, open = 185.30, timestamp = "2024-01-03T00:09:00Z", volume = 1100, vwap = 185.32),
+                    StockBar(close = 185.33, high = 185.40, low = 185.30, trades = 42, open = 185.31, timestamp = "2024-01-03T00:10:00Z", volume = 1300, vwap = 185.34),
+                    StockBar(close = 185.35, high = 185.45, low = 185.33, trades = 48, open = 185.32, timestamp = "2024-01-03T00:11:00Z", volume = 1400, vwap = 185.36),
+                    StockBar(close = 185.34, high = 185.46, low = 185.31, trades = 39, open = 185.33, timestamp = "2024-01-03T00:12:00Z", volume = 1250, vwap = 185.35),
+                    StockBar(close = 185.36, high = 185.48, low = 185.34, trades = 55, open = 185.34, timestamp = "2024-01-03T00:13:00Z", volume = 1600, vwap = 185.38),
+                    StockBar(close = 185.37, high = 185.50, low = 185.36, trades = 60, open = 185.35, timestamp = "2024-01-03T00:14:00Z", volume = 1700, vwap = 185.39),
+                    StockBar(close = 185.39, high = 185.52, low = 185.37, trades = 62, open = 185.37, timestamp = "2024-01-03T00:15:00Z", volume = 1800, vwap = 185.41),
+                    StockBar(close = 185.38, high = 185.51, low = 185.36, trades = 57, open = 185.38, timestamp = "2024-01-03T00:16:00Z", volume = 1500, vwap = 185.40),
+                    StockBar(close = 185.40, high = 185.53, low = 185.39, trades = 58, open = 185.38, timestamp = "2024-01-03T00:17:00Z", volume = 1550, vwap = 185.42),
+                    StockBar(close = 185.41, high = 185.55, low = 185.40, trades = 54, open = 185.40, timestamp = "2024-01-03T00:18:00Z", volume = 1650, vwap = 185.43),
+                    StockBar(close = 185.43, high = 185.57, low = 185.41, trades = 53, open = 185.42, timestamp = "2024-01-03T00:19:00Z", volume = 1750, vwap = 185.45),
+                    StockBar(close = 185.42, high = 185.56, low = 185.40, trades = 59, open = 185.43, timestamp = "2024-01-03T00:20:00Z", volume = 1600, vwap = 185.44),
+                    StockBar(close = 185.44, high = 185.58, low = 185.42, trades = 61, open = 185.44, timestamp = "2024-01-03T00:21:00Z", volume = 1700, vwap = 185.46),
+                    StockBar(close = 185.45, high = 185.60, low = 185.44, trades = 63, open = 185.45, timestamp = "2024-01-03T00:22:00Z", volume = 1800, vwap = 185.47),
+                    StockBar(close = 185.47, high = 185.62, low = 185.45, trades = 65, open = 185.46, timestamp = "2024-01-03T00:23:00Z", volume = 1900, vwap = 185.49),
+                    StockBar(close = 185.46, high = 185.61, low = 185.44, trades = 64, open = 185.47, timestamp = "2024-01-03T00:24:00Z", volume = 1850, vwap = 185.48),
+                    StockBar(close = 185.48, high = 185.63, low = 185.46, trades = 66, open = 185.48, timestamp = "2024-01-03T00:25:00Z", volume = 1950, vwap = 185.50),
+                    StockBar(close = 185.49, high = 185.65, low = 185.47, trades = 68, open = 185.49, timestamp = "2024-01-03T00:26:00Z", volume = 2000, vwap = 185.51),
+                    StockBar(close = 185.50, high = 185.66, low = 185.48, trades = 70, open = 185.50, timestamp = "2024-01-03T00:27:00Z", volume = 2100, vwap = 185.52)
                 )
             ),
             nextPageToken = null
         )
+
         val mockEngine = MockEngine { _ ->
             respond(
                 content = Json.encodeToString(mockStockAggregationResponse),
@@ -671,6 +638,10 @@ class UnitTest : KoinTest {
                     assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
                     assertNotEquals(defaultBackTestResult.winRate, resultValue.winRate)
                     assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
+                    println("Strategy: ${resultValue.strategyName}")
+                    println("Final Balance: ${resultValue.finalBalance}")
+                    println("Win Rate: ${resultValue.winRate}")
+                    println("Positions: ${resultValue.positions}")
                 } else {
                     fail("resultValue could not be casted")
                 }
