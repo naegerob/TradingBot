@@ -23,7 +23,7 @@ val appModule = module {
     single<HttpClientEngine> { CIO.create() }
     single<TradingRepository> { AlpacaRepository() }
     single<TradingBot> { TradingBot() }
-    single<HttpClient> {
+    single<HttpClient> { // Alpaca API
         HttpClient(get()) {
             install(ContentNegotiation) {
                 json(Json {

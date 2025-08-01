@@ -19,7 +19,6 @@ import org.koin.core.component.inject
 
 class AlpacaRepository : TradingRepository, KoinComponent {
 
-    private val mEngine by inject<HttpClientEngine>()
     private val mClient by inject<HttpClient>()
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()

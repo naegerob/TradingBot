@@ -43,7 +43,7 @@ class Indicators {
     var mRsi = mutableListOf<Double>()
         private set
 
-    fun updateIndicators(historicalBars: List<StockBar>) {
+    fun updateIndicators(historicalBars: List<StockBar>) : Result<Any, TradingLogicError> {
         val closingPrices: List<Double> = historicalBars.map { it.close }
 
         mOriginalPrices = closingPrices.toMutableList()
@@ -55,7 +55,11 @@ class Indicators {
         calculateShortSMA(closingPrices)
         calculateLongSMA(closingPrices)
         // trim all to shortest
-        trimListsToShortest()
+        when (val result = trimListsToShortest()) {
+            is Result.Error -> return Result.Error(result.error)
+            is Result.Success -> { }
+        }
+
         println(mStock)
         println(mOriginalPrices)
         println(mOriginalPrices.size)
@@ -77,6 +81,7 @@ class Indicators {
         println(mRsi.size)
         println("H")
         // TODO: Check calculation properly
+        return Result.Success(Unit)
     }
 
     private fun calculateSupportLevels(prices: List<Double>) {
@@ -102,12 +107,16 @@ class Indicators {
     }
 
     private fun calculateRsi(prices: List<Double>, period: Int = 14) {
+        var tempPeriod = period
         mRsi.clear()
         val gains = mutableListOf<Double>()
         val losses = mutableListOf<Double>()
+        if (prices.size < tempPeriod) {
+            tempPeriod = prices.size
+        }
 
         // Calculate initial gains and losses
-        for (i in 1 until period) {
+        for (i in 1 until tempPeriod) {
             val delta = prices[i] - prices[i - 1]
             if (delta > 0) {
                 gains.add(delta)
@@ -121,14 +130,14 @@ class Indicators {
         var averageLoss = losses.average()
 
         // Compute RSI using exponential smoothing
-        for (i in period until prices.size) {
+        for (i in tempPeriod until prices.size) {
             val delta = prices[i] - prices[i - 1]
             val gain = if (delta > 0) delta else 0.0
             val loss = if (delta < 0) -delta else 0.0
 
             // Smoothed averages
-            averageGain = ((averageGain * (period - 1)) + gain) / period
-            averageLoss = ((averageLoss * (period - 1)) + loss) / period
+            averageGain = ((averageGain * (tempPeriod - 1)) + gain) / tempPeriod
+            averageLoss = ((averageLoss * (tempPeriod - 1)) + loss) / tempPeriod
 
             val rs = if (averageLoss == 0.0) Double.POSITIVE_INFINITY else averageGain / averageLoss
             val rsi = 100 - (100 / (1 + rs))
@@ -165,7 +174,7 @@ class Indicators {
         }
     }
 
-    private fun trimListsToShortest() {
+    private fun trimListsToShortest() : Result<Any, TradingLogicError> {
         val allLists = listOf(
             mLowerBollingerBand,
             mUpperBollingerBand,
@@ -178,11 +187,15 @@ class Indicators {
             mLongSMA
         )
         val minSize = allLists.minOf { it.size }
+        if (minSize == 0) {
+            return Result.Error(TradingLogicError.DataError.TOO_LESS_DATA_SAMPLES)
+        }
         allLists.forEach { list ->
             while (list.size > minSize) {
                 list.subList(0, list.size - minSize).clear() // Remove from the front
             }
         }
+        return Result.Success(Unit)
     }
 
     private fun calculateShortSMA(prices: List<Double>, period: Int = 20) {

@@ -50,15 +50,22 @@ class TradingBot : KoinComponent {
 
         val job : Deferred<Result<Any, TradingLogicError>> = CoroutineScope(Dispatchers.IO).async {
 
-            when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
+            val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
                 is Result.Error -> return@async Result.Error(result.error)
                 is Result.Success -> {
                     if(result.data.isEmpty()) {
                         return@async Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                    } else {
+                        result.data
                     }
-                    mBacktestIndicators.updateIndicators(result.data)
                 }
             }
+
+            when (val result = mBacktestIndicators.updateIndicators(bars)) {
+                is Result.Error         -> return@async Result.Error(result.error)
+                is Result.Success       -> { }
+            }
+
 
             mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
                 val tradingSignal = when(val result = mBacktestIndicators.getIndicatorPoints(index)) {

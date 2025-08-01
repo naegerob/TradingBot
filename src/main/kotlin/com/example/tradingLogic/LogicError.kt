@@ -8,6 +8,7 @@ sealed interface TradingLogicError : Error {
         NO_HISTORICAL_DATA_AVAILABLE,
         HISTORICAL_DATA_TOO_MANY_REQUESTS,
         INVALID_PARAMETER_FORMAT,
+        TOO_LESS_DATA_SAMPLES,
         LIST_IS_EMPTY,
         UNAUTHORIZED,
         MISC_ERROR
