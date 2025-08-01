@@ -12,7 +12,6 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
@@ -249,7 +248,6 @@ class APITests {
         val httpResponse = client.post("/Order/Create") {
             setBody(orderRequest)
         }
-
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
     }
 
@@ -442,7 +440,6 @@ class APITests {
             setBody(stockAggregationRequest)
         }
 
-        println(httpResponse.bodyAsText())
         val response = httpResponse.body<StockAggregationResponse>()
         assertEquals(OK, httpResponse.status)
         assertNotEquals(emptyMap(), response.bars)
