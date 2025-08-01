@@ -20,8 +20,10 @@ import io.ktor.server.application.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.koin.core.context.stopKoin
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -83,6 +85,100 @@ class APITests {
             }
             }
         }
+    }
+    @AfterTest
+    fun tearDown() {
+        stopKoin()
+    }
+
+    @Test
+    fun `All Backtest Indicators`() = testApplication {
+        application {
+            install(Koin) {
+                modules(testModule)
+            }
+            configureSerialization()
+            configureRouting()
+        }
+
+        // Precondition
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        var httpResponse = client.get("/BacktestIndicators/Original")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/Support")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/Resistance")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/Sma/Short")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/Sma/Long")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/BollingerBands/Middle")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/BollingerBands/Upper")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/BollingerBands/Lower")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/BacktestIndicators/Rsi")
+        assertEquals(OK, httpResponse.status)
+    }
+
+    @Test
+    fun `All Normal Indicators`() = testApplication {
+        application {
+            install(Koin) {
+                modules(testModule)
+            }
+            configureSerialization()
+            configureRouting()
+        }
+
+        // Precondition
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        var httpResponse = client.get("/Indicators/Original")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/Support")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/Resistance")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/Sma/Short")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/Sma/Long")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/BollingerBands/Middle")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/BollingerBands/Upper")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/BollingerBands/Lower")
+        assertEquals(OK, httpResponse.status)
+        httpResponse = client.get("/Indicators/Rsi")
+        assertEquals(OK, httpResponse.status)
     }
 
     @Test

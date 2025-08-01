@@ -47,7 +47,6 @@ class Indicators {
         val closingPrices: List<Double> = historicalBars.map { it.close }
 
         mOriginalPrices = closingPrices.toMutableList()
-        // TODO: refactoring
         calculateSupportLevels(closingPrices)
         calculateResistanceLevels(closingPrices)
         calculateBollingerBands(closingPrices)
@@ -60,26 +59,6 @@ class Indicators {
             is Result.Success -> { }
         }
 
-        println(mStock)
-        println(mOriginalPrices)
-        println(mOriginalPrices.size)
-        println(mResistances)
-        println(mResistances.size)
-        println(mSupports)
-        println(mSupports.size)
-        println(mShortSMA)
-        println(mShortSMA.size)
-        println(mLongSMA)
-        println(mLongSMA.size)
-        println(mAverageBollingerBand)
-        println(mAverageBollingerBand.size)
-        println(mLowerBollingerBand)
-        println(mLowerBollingerBand.size)
-        println(mUpperBollingerBand)
-        println(mUpperBollingerBand.size)
-        println(mRsi)
-        println(mRsi.size)
-        println("H")
         // TODO: Check calculation properly
         return Result.Success(Unit)
     }

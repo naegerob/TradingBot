@@ -53,10 +53,8 @@ class TradingBot : KoinComponent {
             val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
                 is Result.Error -> return@async Result.Error(result.error)
                 is Result.Success -> {
-                    if(result.data.isEmpty()) {
+                    result.data.ifEmpty {
                         return@async Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
-                    } else {
-                        result.data
                     }
                 }
             }
