@@ -3,11 +3,10 @@ package com.example
 import com.example.data.AlpacaRepository
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
-import com.example.tradingLogic.*
+import com.example.tradingLogic.TradingBot
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
-import io.ktor.client.engine.cio.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
@@ -23,10 +22,10 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.dsl.module
-import org.koin.java.KoinJavaComponent.inject
 import org.koin.ktor.plugin.Koin
-import org.koin.test.inject
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 
 class APITests {
     companion object {
@@ -65,7 +64,25 @@ class APITests {
         val testModule = module {
             single<TradingRepository> { AlpacaRepository() }
             single { TradingBot() }
-
+            single<HttpClient> { HttpClient(get()) {
+                install(ContentNegotiation) {
+                    json(Json {
+                        prettyPrint = true
+                        isLenient = false
+                        ignoreUnknownKeys = true
+                        encodeDefaults = true
+                    })
+                }
+                install(Logging) {
+                    logger = Logger.SIMPLE
+                    level = LogLevel.ALL
+                }
+                install(DefaultRequest) {
+                    header("content-type", "application/json")
+                    header("accept", "application/json")
+                }
+            }
+            }
         }
     }
 
@@ -120,26 +137,6 @@ class APITests {
             install(Koin) {
                 modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
-                    single<HttpClient> { HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.SIMPLE
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                    }
-
                 })
             }
             configureSerialization()
@@ -226,25 +223,6 @@ class APITests {
             install(Koin) {
                 modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
-                    single<HttpClient> { HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.SIMPLE
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                    }
                 })
             }
             configureSerialization()
@@ -333,25 +311,6 @@ class APITests {
             install(Koin) {
                 modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
-                    single<HttpClient> { HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.SIMPLE
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                    }
                 })
             }
             configureSerialization()
@@ -458,25 +417,6 @@ class APITests {
             install(Koin) {
                 modules(testModule, module {
                     single<HttpClientEngine> { mockEngine }
-                    single<HttpClient> { HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.SIMPLE
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                    }
                 })
             }
             configureSerialization()
