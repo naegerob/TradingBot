@@ -20,26 +20,7 @@ import org.koin.core.component.inject
 class AlpacaRepository : TradingRepository, KoinComponent {
 
     private val mEngine by inject<HttpClientEngine>()
-    private val mClient = HttpClient(mEngine) {
-        install(ContentNegotiation) {
-            json(Json {
-                prettyPrint = true
-                isLenient = false
-                ignoreUnknownKeys = true
-                encodeDefaults = true
-            })
-        }
-        install(Logging) {
-            logger = Logger.SIMPLE
-            level = LogLevel.ALL
-        }
-        install(DefaultRequest) {
-            header("APCA-API-KEY-ID", PAPERAPIKEY)
-            header("APCA-API-SECRET-KEY", PAPERSECRET)
-            header("content-type", "application/json")
-            header("accept", "application/json")
-        }
-    }
+    private val mClient by inject<HttpClient>()
     private val paperBaseUrl = createPaperBaseUrl()
     private val paperBaseMarketUrl = createPaperMarketBaseUrl()
 

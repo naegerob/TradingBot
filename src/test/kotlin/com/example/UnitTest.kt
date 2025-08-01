@@ -568,6 +568,72 @@ class UnitTest : KoinTest {
     }
 
     @Test
+    fun `Backtesting with default stockAggregation, bad history`() = testApplication {
+        val mockStockAggregationResponse = StockAggregationResponse(
+            bars = mapOf(
+                "AAPL" to listOf(
+                    StockBar(close = 150.25, high = 151.00, low = 149.80, trades = 40, open = 150.80, timestamp = "2024-02-05T09:30:00Z", volume = 2000, vwap = 150.50),
+                    StockBar(close = 162.80, high = 163.20, low = 160.50, trades = 55, open = 151.00, timestamp = "2024-02-05T09:31:00Z", volume = 2500, vwap = 162.00),
+                    StockBar(close = 140.10, high = 142.00, low = 138.00, trades = 60, open = 162.70, timestamp = "2024-02-05T09:32:00Z", volume = 3000, vwap = 140.90),
+                    StockBar(close = 175.60, high = 176.00, low = 172.50, trades = 70, open = 140.20, timestamp = "2024-02-05T09:33:00Z", volume = 2800, vwap = 174.00),
+                    StockBar(close = 132.40, high = 135.00, low = 130.00, trades = 65, open = 175.50, timestamp = "2024-02-05T09:34:00Z", volume = 3200, vwap = 133.20),
+                    StockBar(close = 180.90, high = 182.00, low = 179.00, trades = 75, open = 132.50, timestamp = "2024-02-05T09:35:00Z", volume = 3500, vwap = 181.20),
+                    StockBar(close = 125.30, high = 128.00, low = 124.50, trades = 68, open = 180.50, timestamp = "2024-02-05T09:36:00Z", volume = 3100, vwap = 126.70),
+                    StockBar(close = 190.15, high = 191.00, low = 188.00, trades = 80, open = 125.80, timestamp = "2024-02-05T09:37:00Z", volume = 4000, vwap = 189.20)
+                )
+            ),
+            nextPageToken = null
+        )
+
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockStockAggregationResponse),
+                status = OK,
+            )
+        }
+
+        application {
+            install(Koin) {
+                modules(testModule, module {
+                    single<HttpClientEngine> { mockEngine }
+                })
+            }
+            configureSerialization()
+            configureRouting()
+        }
+        startKoin {
+            modules(testModule)
+        }
+        // Preconditions
+        val stockAggregationRequest = defaultStockAggregationRequest.copy()
+        val tradingBot by inject<TradingBot>()
+
+        val resultWithDefault = runBlocking {
+            tradingBot.backtest(Strategies.MovingAverage, stockAggregationRequest)
+        }
+        val defaultBackTestResult = BacktestResult()
+        when (resultWithDefault) {
+            is Result.Success<*, *> -> {
+                val resultValue = resultWithDefault.data
+                if (resultValue is BacktestResult) {
+                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.winRate, resultValue.winRate)
+                    assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
+                    println("Strategy: ${resultValue.strategyName}")
+                    println("Final Balance: ${resultValue.finalBalance}")
+                    println("Win Rate: ${resultValue.winRate}")
+                    println("Positions: ${resultValue.positions}")
+                } else {
+                    fail("resultValue could not be casted")
+                }
+            }
+            is Result.Error<*, *>   -> fail("Expected success but got Error: ${resultWithDefault.error}")
+        }
+        stopKoin()
+    }
+
+    @Test
     fun `Backtesting with default stockAggregation`() = testApplication {
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
