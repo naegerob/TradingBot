@@ -28,6 +28,7 @@ koin-bom = { module = "io.insert-koin:koin-bom", version.ref = "koin-version" }
 koin-core = { module = "io.insert-koin:koin-core" }
 koin-ktor = { module = "io.insert-koin:koin-ktor", version.ref = "koin-version" }
 koin-test = { module = "io.insert-koin:koin-test-junit4", version.ref = "koin-version" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor-version" }
 
 # Ktor client
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor-version" }
