@@ -2,11 +2,12 @@ ktor:
     deployment:
         port: 8080
         sslPort: 8080
-        ssl:
-            keyStore: "${KEYSTORE}/tls.p12"
-            keyAlias: "myCert"
-            keyStorePassword: "changeit"
-            privateKeyPassword: "changeit"
+        security:
+            ssl:
+                keyStore: keystore.jks
+                keyAlias: sampleAlias
+                keyStorePassword: foobar
+                privateKeyPassword: foobar
 
     application:
         modules:
