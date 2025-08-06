@@ -1,7 +1,12 @@
 ktor:
     deployment:
         port: 8080
-        host: 0.0.0.0
+        sslPort: 8080
+        ssl:
+            keyStore: "${KEYSTORE}/tls.p12"
+            keyAlias: "myCert"
+            keyStorePassword: "changeit"
+            privateKeyPassword: "changeit"
 
     application:
         modules:
