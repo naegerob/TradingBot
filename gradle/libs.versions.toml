@@ -31,6 +31,7 @@ koin-test = { module = "io.insert-koin:koin-test-junit4", version.ref = "koin-ve
 ktor-server-cors = { module = "io.ktor:ktor-server-cors-jvm", version.ref = "ktor-version" }
 ktor-server-auth = { module = "io.ktor:ktor-server-auth", version.ref = "ktor-version" }
 ktor-server-auth-jwt = { module = "io.ktor:ktor-server-auth-jwt", version.ref = "ktor-version" }
+ktor-network-tls-certificates = { module = "io.ktor:ktor-network-tls-certificates", version.ref = "ktor-version" }
 
 # Ktor client
 ktor-client-cio = { module = "io.ktor:ktor-client-cio", version.ref = "ktor-version" }
