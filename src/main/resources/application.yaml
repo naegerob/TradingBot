@@ -5,8 +5,8 @@ ktor:
         ssl:
             keyStore: security/keystore.jks
             keyAlias: myAlias
-            keyStorePassword: password
-            privateKeyPassword: password
+            keyStorePassword: ${KEYSTORE_PASSWORD}
+            privateKeyPassword: ${PRIVATEKEY_PASSWORD}
 
     application:
         modules:
