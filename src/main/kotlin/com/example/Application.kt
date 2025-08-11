@@ -11,6 +11,7 @@ fun main(args: Array<String>) {
 fun Application.module(){
     configureDependencies() // installs Koin
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
+    configureAuthentification()
     configureMonitoring()
     configureRouting() // The routes itself
 }

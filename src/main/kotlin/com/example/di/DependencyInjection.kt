@@ -5,7 +5,6 @@ import com.example.data.AlpacaRepository.Companion.PAPERAPIKEY
 import com.example.data.AlpacaRepository.Companion.PAPERSECRET
 import com.example.data.TradingRepository
 import com.example.tradingLogic.TradingBot
-import com.example.tradingLogic.TradingController
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.cio.*

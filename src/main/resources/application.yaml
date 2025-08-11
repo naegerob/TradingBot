@@ -3,10 +3,18 @@ ktor:
         sslPort: 8081
     security:
         ssl:
-            keyStore: security/keystore.jks
+            keyStore: security/tls/keystore.jks
             keyAlias: myKeyStore
             keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
             privateKeyPassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
+jwt:
+    algorithm: RS256
+    privateKeyPath: security/Authentification/private.pem
+    publicKeyPath: security/Authentification/public.pem
+    issuer: "http://0.0.0.0:8080/"
+    audience: "http://0.0.0.0:8080/"
+    realm: "Access to Bot"
+
 
     application:
         modules:
