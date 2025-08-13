@@ -4,9 +4,11 @@ ktor:
     security:
         ssl:
             keyStore: security/tls/keystore.jks
-            keyAlias: myKeyStore
+            keyAlias: myKeystore
             keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
             privateKeyPassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
+            clientAuth: none
+
 jwt:
     algorithm: RS256
     privateKeyPath: security/Authentification/private.pem
