@@ -8,8 +8,8 @@ import kotlinx.serialization.Serializable
 data class StockAggregationRequest(
     @SerialName("symbols")      var symbols: String = "AAPL", // Comma-separated list of stock symbols (e.g., "TSLA,AMZN")
     @SerialName("timeframe")    val timeframe: String = "5Min", // Timeframe for aggregation (e.g., "5Min", "1D", "3M")
-    @SerialName("start")        val startDateTime: String? = null, // Inclusive start date-time (RFC-3339 or "YYYY-MM-DD")
-    @SerialName("end")          val endDateTime: String? = null, // Inclusive end date-time (RFC-3339 or "YYYY-MM-DD")
+    @SerialName("start")        val startDateTime: String? = "2024-01-03T00:00:00Z", // Inclusive start date-time (RFC-3339 or "YYYY-MM-DD")
+    @SerialName("end")          val endDateTime: String? = "2024-01-04T00:00:00Z", // Inclusive end date-time (RFC-3339 or "YYYY-MM-DD")
     @SerialName("limit")        val limit: Int = 1000, // Maximum number of data points to return (default: 1000)
     @SerialName("adjustment")   val adjustment: String = "raw", // Corporate action adjustment (default: "raw")
     @SerialName("asof")         val asOfDate: String? = null, // As-of date to identify the underlying entity (format: "YYYY-MM-DD")

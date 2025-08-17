@@ -120,6 +120,18 @@ fun Application.configureRouting() {
             }
         }
         route("/HistoricalBars") {
+            get("/Get") {
+                val stockRequest = StockAggregationRequest()
+                println(stockRequest)
+                val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
+                if(isSuccessfulSet) {
+                    val stockResponse = tradingController.getStockData(stockRequest)
+                    respondToClient(stockResponse, call)
+                    call.respond(stockResponse)
+                    return@get
+                }
+                call.respond(HttpStatusCode.BadRequest)
+            }
             post("/Request") {
                 val stockRequest = call.receive<StockAggregationRequest>()
                 println(stockRequest)
