@@ -1,5 +1,7 @@
 package com.example
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.BacktestConfig
@@ -10,6 +12,8 @@ import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import kotlinx.serialization.Serializable
+import java.util.*
 
 
 fun Application.configureRouting() {
@@ -18,6 +22,33 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText("Hi")
         }
+
+        // 🔑 Login route
+        post("/login") {
+            val loginRequest = call.receive<LoginRequest>()
+            val jwtConfig = environment.config.config("jwt")
+
+            val issuer = jwtConfig.property("issuer").getString()
+            val audience = jwtConfig.property("audience").getString()
+
+            val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
+            val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
+
+            if (loginRequest.username == "admin" && loginRequest.password == "password") {
+                val token = JWT.create()
+                    .withAudience(audience)
+                    .withIssuer(issuer)
+                    .withClaim("username", loginRequest.username)
+                    .withExpiresAt(Date(System.currentTimeMillis() + 60000)) // 1 min expiry
+                    .sign(Algorithm.RSA256(publicKeyPath, privateKeyPath))
+
+
+                call.respond(mapOf("token" to token))
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
+            }
+        }
+
         get("/AccountDetails") {
             val accountResponse = tradingController.fetchAccountDetails()
             respondToClient(accountResponse, call)
@@ -166,6 +197,9 @@ fun Application.configureRouting() {
         }
     }
 }
+
+@Serializable
+data class LoginRequest(val username: String, val password: String)
 
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
