@@ -14,7 +14,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import java.util.*
-
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.security.KeyFactory
+import java.security.interfaces.RSAPrivateKey
+import java.security.interfaces.RSAPublicKey
+import java.security.spec.PKCS8EncodedKeySpec
+import java.security.spec.X509EncodedKeySpec
+import java.util.Base64
 
 fun Application.configureRouting() {
     val tradingController = TradingController()
@@ -24,8 +31,14 @@ fun Application.configureRouting() {
         }
 
         // 🔑 Login route
-        post("/login") {
-            val loginRequest = call.receive<LoginRequest>()
+        get("/login") {
+
+            val tempLoginRequest = LoginRequest(
+                username = "admin",
+                password = "password"
+            )
+            val loginRequest = tempLoginRequest.copy()
+
             val jwtConfig = environment.config.config("jwt")
 
             val issuer = jwtConfig.property("issuer").getString()
@@ -34,13 +47,19 @@ fun Application.configureRouting() {
             val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
             val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
 
+            val privateKey = loadRSAPrivateKey(privateKeyPath)
+            val publicKey = loadRSAPublicKey(publicKeyPath)
+
+            val password = System.getenv("AUTHENTIFICATION_PASSWORD")
+
             if (loginRequest.username == "admin" && loginRequest.password == "password") {
+                println("We're in!")
                 val token = JWT.create()
                     .withAudience(audience)
                     .withIssuer(issuer)
                     .withClaim("username", loginRequest.username)
-                    .withExpiresAt(Date(System.currentTimeMillis() + 60000)) // 1 min expiry
-                    .sign(Algorithm.RSA256(publicKeyPath, privateKeyPath))
+                    .withExpiresAt(Date(System.currentTimeMillis() + 120000)) // 2 min expiry
+                    .sign(Algorithm.RSA256(publicKey, privateKey))
 
 
                 call.respond(mapOf("token" to token))
@@ -198,8 +217,30 @@ fun Application.configureRouting() {
     }
 }
 
+fun loadRSAPrivateKey(path: String): RSAPrivateKey {
+    val keyBytes = Files.readAllBytes(Paths.get(path))
+    val keyPem = String(keyBytes)
+        .replace("-----BEGIN PRIVATE KEY-----", "")
+        .replace("-----END PRIVATE KEY-----", "")
+        .replace("\\s".toRegex(), "")
+    val decoded = Base64.getDecoder().decode(keyPem)
+    val spec = PKCS8EncodedKeySpec(decoded)
+    return KeyFactory.getInstance("RSA").generatePrivate(spec) as RSAPrivateKey
+}
+
+fun loadRSAPublicKey(path: String): RSAPublicKey {
+    val keyBytes = Files.readAllBytes(Paths.get(path))
+    val keyPem = String(keyBytes)
+        .replace("-----BEGIN PUBLIC KEY-----", "")
+        .replace("-----END PUBLIC KEY-----", "")
+        .replace("\\s".toRegex(), "")
+    val decoded = Base64.getDecoder().decode(keyPem)
+    val spec = X509EncodedKeySpec(decoded)
+    return KeyFactory.getInstance("RSA").generatePublic(spec) as RSAPublicKey
+}
+
 @Serializable
-data class LoginRequest(val username: String, val password: String)
+data class LoginRequest(var username: String, var password: String)
 
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
