@@ -9,6 +9,7 @@ import com.example.tradingLogic.TradingController
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
@@ -26,8 +27,10 @@ import java.util.Base64
 fun Application.configureRouting() {
     val tradingController = TradingController()
     routing {
-        get("/") {
-            call.respondText("Hi")
+        authenticate("auth-jwt") {
+            get("/") {
+                call.respondText("Hi")
+            }
         }
 
         // 🔑 Login route
@@ -58,7 +61,7 @@ fun Application.configureRouting() {
                     .withAudience(audience)
                     .withIssuer(issuer)
                     .withClaim("username", loginRequest.username)
-                    .withExpiresAt(Date(System.currentTimeMillis() + 120000)) // 2 min expiry
+                    .withExpiresAt(Date(System.currentTimeMillis() + 1200000)) // 20 min expiry
                     .sign(Algorithm.RSA256(publicKey, privateKey))
 
 

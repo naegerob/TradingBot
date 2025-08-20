@@ -1,4 +1,8 @@
 import com.auth0.jwk.JwkProviderBuilder
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
+import com.example.loadRSAPrivateKey
+import com.example.loadRSAPublicKey
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -12,17 +16,20 @@ fun Application.configureAuthentication() {
     val issuer = jwtConfig.property("issuer").getString()
     val audience = jwtConfig.property("audience").getString()
     val myRealm = jwtConfig.property("realm").getString()
+    val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
 
-    val jwkProvider = JwkProviderBuilder(issuer)    // fetches public key dynamically
-        .cached(10, 24, TimeUnit.HOURS)
-        .rateLimited(10, 1, TimeUnit.MINUTES)
-        .build()
+    val publicKey = loadRSAPublicKey(publicKeyPath)
     install(Authentication) {
         jwt("auth-jwt") {
             realm = myRealm
-            verifier(jwkProvider, issuer) {
-                acceptLeeway(3) // allow 3 seconds clock skew
-            }
+            verifier(
+                //acceptLeeway(3), // allow 3 seconds clock skew
+                JWT
+                    .require(Algorithm.RSA256(publicKey, null)) // only public key needed for verification
+                    .withAudience(audience)
+                    .withIssuer(issuer)
+                    .build()
+            )
             validate { credential ->
                 if (credential.payload.audience.contains(audience))
                     JWTPrincipal(credential.payload)
@@ -30,7 +37,7 @@ fun Application.configureAuthentication() {
                     null
             }
             challenge { _,_ ->
-                call.respondText("Token is not valid or has expired", status = HttpStatusCode.Unauthorized)
+                call.respondText("Token is not valid or has expired, you need to login first.", status = HttpStatusCode.Unauthorized)
             }
         }
     }
