@@ -47,13 +47,23 @@ fun Application.configureRouting() {
                 val username = System.getenv("AUTHENTIFICATION_USERNAME")
 
                 if (loginRequest.username == username && loginRequest.password == password) {
-                    val token = JWT.create()
+                    val accessToken = JWT.create()
                         .withAudience(audience)
                         .withIssuer(issuer)
                         .withClaim("username", loginRequest.username)
-                        .withExpiresAt(Date(System.currentTimeMillis() + 120000)) // 2 min expiry
+                        .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
                         .sign(Algorithm.RSA256(publicKey, privateKey))
-                    call.respond(mapOf("token" to token))
+                    val refreshToken = JWT.create()
+                        .withAudience(audience)
+                        .withIssuer(issuer)
+                        .withClaim("username", loginRequest.username)
+                        .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
+                        .sign(Algorithm.RSA256(publicKey, privateKey))
+                    /* The backend sends two tokens, which have differente xpirationj times.
+                    *   The backend has a route with auth/refresh which is also https (auth("jwt_auth"))
+                    *   The forntend does automatically detect 401 (authroized) when the accessToken expires and does get a new oine with the refresh token
+                    */
+                    call.respond(mapOf("accessToken" to accessToken,"refreshToken" to refreshToken))
                 } else {
                     call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
                 }
