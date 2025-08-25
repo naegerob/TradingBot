@@ -1,7 +1,6 @@
 package com.example
 
 import com.example.di.configureDependencies
-import configureAuthentication
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
 
@@ -11,6 +10,7 @@ fun main(args: Array<String>) {
 
 fun Application.module(){
     configureDependencies() // installs Koin
+    configureCORS()
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
     configureAuthentication()
     configureMonitoring()

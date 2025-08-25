@@ -1,18 +1,16 @@
-import com.auth0.jwk.JwkProviderBuilder
+package com.example
+
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.example.loadRSAPrivateKey
 import com.example.loadRSAPublicKey
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
 import io.ktor.server.auth.jwt.*
 import io.ktor.server.response.*
-import java.util.concurrent.TimeUnit
 
 fun Application.configureAuthentication() {
     val jwtConfig = environment.config.config("jwt")
-
     val issuer = jwtConfig.property("issuer").getString()
     val audience = jwtConfig.property("audience").getString()
     val myRealm = jwtConfig.property("realm").getString()
@@ -23,7 +21,6 @@ fun Application.configureAuthentication() {
         jwt("auth-jwt") {
             realm = myRealm
             verifier(
-                //acceptLeeway(3), // allow 3 seconds clock skew
                 JWT
                     .require(Algorithm.RSA256(publicKey, null)) // only public key needed for verification
                     .withAudience(audience)

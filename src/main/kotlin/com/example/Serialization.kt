@@ -13,13 +13,6 @@ import io.ktor.server.response.*
 import kotlinx.serialization.SerializationException
 
 fun Application.configureSerialization() {
-    install(CORS) {
-        allowMethod(HttpMethod.Post)
-        allowMethod(HttpMethod.Get)
-        allowHeader(HttpHeaders.ContentType)
-        allowCredentials = true
-        allowHost("localhost:5173") // your frontend origin
-    }
     install(ContentNegotiation) {
         json(Json {
             prettyPrint = true

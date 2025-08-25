@@ -8,9 +8,14 @@ data class RefreshRequest(
     val refreshToken: String
 )
 
-
 @Serializable
 data class LoginRequest(
     val username: String,
     val password: String
+)
+
+@Serializable
+data class LoginResponse(
+    val accessToken:    String,
+    val refreshToken:   String
 )
