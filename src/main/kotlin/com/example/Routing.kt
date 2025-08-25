@@ -2,6 +2,8 @@ package com.example
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.example.data.token.LoginRequest
+import com.example.data.token.RefreshRequest
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.BacktestConfig
@@ -13,7 +15,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.serialization.Serializable
 import java.util.*
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -50,19 +51,17 @@ fun Application.configureRouting() {
                     val accessToken = JWT.create()
                         .withAudience(audience)
                         .withIssuer(issuer)
+                        .withSubject(loginRequest.username)
                         .withClaim("username", loginRequest.username)
                         .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
                         .sign(Algorithm.RSA256(publicKey, privateKey))
                     val refreshToken = JWT.create()
                         .withAudience(audience)
                         .withIssuer(issuer)
+                        .withSubject(loginRequest.username)
                         .withClaim("username", loginRequest.username)
                         .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
                         .sign(Algorithm.RSA256(publicKey, privateKey))
-                    /* The backend sends two tokens, which have differente xpirationj times.
-                    *   The backend has a route with auth/refresh which is also https (auth("jwt_auth"))
-                    *   The forntend does automatically detect 401 (authroized) when the accessToken expires and does get a new oine with the refresh token
-                    */
                     call.respond(mapOf("accessToken" to accessToken,"refreshToken" to refreshToken))
                 } else {
                     call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
@@ -70,6 +69,39 @@ fun Application.configureRouting() {
             }
         }
         authenticate("auth-jwt") {
+
+            post("/auth/refresh") {
+                val jwtConfig = environment.config.config("jwt")
+                val issuer = jwtConfig.property("issuer").getString()
+
+                val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
+                val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
+
+                val privateKey = loadRSAPrivateKey(privateKeyPath)
+                val publicKey = loadRSAPublicKey(publicKeyPath)
+
+                val refreshTokenRequest = call.receive<RefreshRequest>()
+                val verifier = JWT
+                    .require(Algorithm.RSA256(publicKey, privateKey))
+                    .withIssuer(issuer)
+                    .build()
+
+                try {
+                    val decoded = verifier.verify(refreshTokenRequest.refreshToken)
+                    val username = decoded.subject
+
+                    // issue new access token
+                    val newAccessToken = JWT.create()
+                        .withSubject(username)
+                        .withIssuer(issuer)
+                        .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
+                        .sign(Algorithm.RSA256(publicKey, privateKey))
+
+                    call.respond(mapOf("accessToken" to newAccessToken))
+                } catch (e: Exception) {
+                    call.respond(HttpStatusCode.Unauthorized, "Invalid refresh token")
+                }
+            }
             get("/AccountDetails") {
                 val accountResponse = tradingController.fetchAccountDetails()
                 respondToClient(accountResponse, call)
@@ -241,9 +273,6 @@ fun loadRSAPublicKey(path: String): RSAPublicKey {
     val spec = X509EncodedKeySpec(decoded)
     return KeyFactory.getInstance("RSA").generatePublic(spec) as RSAPublicKey
 }
-
-@Serializable
-data class LoginRequest(var username: String, var password: String)
 
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
