@@ -1,5 +1,7 @@
 package com.example
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.token.LoginRequest
 import com.example.data.token.LoginResponse
 import io.ktor.client.call.*
@@ -14,10 +16,7 @@ import io.ktor.server.config.*
 import io.ktor.server.config.yaml.*
 import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
-import kotlin.test.AfterTest
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNotNull
+import kotlin.test.*
 
 class SecurityTests {
 
@@ -28,16 +27,10 @@ class SecurityTests {
 
     @Test
     fun `Login should return access and refresh Token`() = testApplication {
-
-
         environment {
             config = ApplicationConfig("application.yaml")
         }
-        application {
-            configureSerialization()
-            //configureAuthentication()
-            configureRouting()
-        }
+        // calling modules and configuration is not needed, since it is automatically installed from yaml
 
         // Precondition
         val client = createClient {
@@ -64,16 +57,18 @@ class SecurityTests {
         listOf("/login", "/").forEach { path ->
             val httpResponse = client.post(path) {
                 setBody(loginRequest)
-//                url {
-//                    protocol = URLProtocol.HTTPS
-//                }
             }
             assertEquals(OK, httpResponse.status)
             val loginResponse = httpResponse.body<LoginResponse>()
-            assertEquals(loginResponse.refreshToken, "refreshToken")
-            assertEquals(loginResponse.accessToken, "accessToken")
             assertNotNull(loginResponse.accessToken)
             assertNotNull(loginResponse.refreshToken)
+            assertTrue(isJwtFormat(loginResponse.accessToken))
+            assertTrue(isJwtFormat(loginResponse.refreshToken))
         }
     }
+}
+
+private fun isJwtFormat(token: String): Boolean {
+    val parts = token.split(".")
+    return parts.size == 3 && parts.all { it.isNotBlank() }
 }
