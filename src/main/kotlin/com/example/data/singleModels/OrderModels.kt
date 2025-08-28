@@ -24,7 +24,7 @@ data class OrderRequest(
     @SerialName("take_profit") val takeProfit: TakeProfit? = null,
     @SerialName("stop_loss") val stopLoss: StopLoss? = null,
     @SerialName("position_intent") val positionIntent: String? = null
-)
+): ApiResponse()
 
 @Serializable
 data class OrderResponse(
@@ -69,12 +69,12 @@ data class OrderResponse(
 @Serializable
 data class TakeProfit(
     @SerialName("limit_price") val limitPrice: String
-)
+): ApiResponse()
 
 @Serializable
 data class StopLoss(
     @SerialName("stop_price") val stopPrice: String
-)
+): ApiResponse()
 
 @Serializable
 data class OrderLeg(
@@ -95,8 +95,3 @@ val sides = listOf(
 val timeInForces = listOf(
     "day", "gtc", "opg", "cls", "ioc", "fok"
 )
-
-val sorts = listOf(
-    "", "asc", "desc"
-)
-

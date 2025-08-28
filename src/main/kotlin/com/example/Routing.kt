@@ -7,7 +7,9 @@ import com.example.data.token.RefreshRequest
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.BacktestConfig
+import com.example.tradingLogic.Result
 import com.example.tradingLogic.TradingController
+import com.example.tradingLogic.TradingLogicError
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -236,7 +238,10 @@ fun Application.configureRouting() {
                     val backtestResult = backtestConfig.let {
                         tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
                     }
-                    call.respond(HttpStatusCode.OK, backtestResult)
+                    when (backtestResult) {
+                        is Result.Error -> return@post call.respond(HttpStatusCode.BadRequest, "something went wrong in backTesting, check your config")
+                        is Result.Success -> return@post call.respond(HttpStatusCode.OK, backtestResult.data)
+                    }
                 }
 
                 get("/Start") {

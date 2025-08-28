@@ -12,7 +12,6 @@ import io.ktor.client.engine.*
 import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
@@ -26,12 +25,13 @@ import kotlinx.serialization.json.Json
 import org.koin.core.context.GlobalContext.loadKoinModules
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
+import org.koin.test.KoinTest
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
 
-class APITests {
+class APITests : KoinTest {
     companion object {
         private val defaultOrderRequest = OrderRequest(
             side = "buy",
@@ -64,31 +64,8 @@ class APITests {
             pageToken = null,
             sort = "asc"
         )
-
-        val testModule = module {
-            single<TradingRepository> { AlpacaRepository() }
-            single { TradingBot() }
-            single<HttpClient> { HttpClient(get()) {
-                install(ContentNegotiation) {
-                    json(Json {
-                        prettyPrint = true
-                        isLenient = false
-                        ignoreUnknownKeys = true
-                        encodeDefaults = true
-                    })
-                }
-                install(Logging) {
-                    logger = Logger.SIMPLE
-                    level = LogLevel.ALL
-                }
-                install(DefaultRequest) {
-                    header("content-type", "application/json")
-                    header("accept", "application/json")
-                }
-            }
-            }
-        }
     }
+
     @AfterTest
     fun tearDown() {
         stopKoin()
@@ -123,42 +100,24 @@ class APITests {
             }
         }
         val accessToken = runBlocking { loginAndGetToken(client) }
-        var httpResponse = client.get("/BacktestIndicators/Original") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        val endpoints = listOf(
+            "/BacktestIndicators/Original",
+            "/BacktestIndicators/Support",
+            "/BacktestIndicators/Resistance",
+            "/BacktestIndicators/Sma/Short",
+            "/BacktestIndicators/Sma/Long",
+            "/BacktestIndicators/BollingerBands/Middle",
+            "/BacktestIndicators/BollingerBands/Upper",
+            "/BacktestIndicators/BollingerBands/Lower",
+            "/BacktestIndicators/Rsi"
+        )
+
+        endpoints.forEach { endpoint ->
+            val httpResponse = client.get(endpoint) {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+            assertEquals(OK, httpResponse.status)
         }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Support") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Resistance") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Sma/Short") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Sma/Long") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/BollingerBands/Middle") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/BollingerBands/Upper") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/BollingerBands/Lower") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Rsi") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
     }
 
     @Test
@@ -180,42 +139,24 @@ class APITests {
             }
         }
         val accessToken = runBlocking { loginAndGetToken(client) }
-        var httpResponse = client.get("/Indicators/Original") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        val endpoints = listOf(
+            "/Indicators/Original",
+            "/Indicators/Support",
+            "/Indicators/Resistance",
+            "/Indicators/Sma/Short",
+            "/Indicators/Sma/Long",
+            "/Indicators/BollingerBands/Middle",
+            "/Indicators/BollingerBands/Upper",
+            "/Indicators/BollingerBands/Lower",
+            "/Indicators/Rsi"
+        )
+
+        endpoints.forEach { endpoint ->
+            val httpResponse = client.get(endpoint) {
+                header(HttpHeaders.Authorization, "Bearer $accessToken")
+            }
+            assertEquals(OK, httpResponse.status)
         }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Support") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Resistance") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Sma/Short") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Sma/Long") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/BollingerBands/Middle") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/BollingerBands/Upper") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/BollingerBands/Lower") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Rsi") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
     }
 
     @Test
@@ -303,6 +244,8 @@ class APITests {
         assertEquals(orderRequest.symbol, response.symbol)
         assertEquals(mockOrderResponse.symbol, response.symbol)
         assertEquals(mockOrderResponse.qty, response.qty)
+
+        stopKoin()
     }
 
     @Test
@@ -387,6 +330,7 @@ class APITests {
             setBody(orderRequest)
         }
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
+        stopKoin()
     }
 
     @Test
@@ -479,6 +423,7 @@ class APITests {
         val accountDetails = httpResponse.body<Account>()
         assertEquals(accountId, accountDetails.accountNumber)
         assertEquals(state, accountDetails.status)
+        stopKoin()
     }
 
     @Test
@@ -588,6 +533,7 @@ class APITests {
         val response = httpResponse.body<StockAggregationResponse>()
         assertEquals(OK, httpResponse.status)
         assertNotEquals(emptyMap(), response.bars)
+        stopKoin()
     }
 
     @Test
@@ -633,5 +579,6 @@ class APITests {
             setBody(stockAggregationRequest)
         }
         assertEquals(BadRequest, httpResponse.status)
+        stopKoin()
     }
 }

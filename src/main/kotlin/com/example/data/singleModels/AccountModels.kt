@@ -1,5 +1,6 @@
 package com.example.data.singleModels
 
+import com.example.data.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
@@ -46,4 +47,4 @@ data class Account(
     @SerialName("crypto_tier") val cryptoTier: Int = 0,
     @SerialName("intraday_adjustments") val intradayAdjustments: String,
     @SerialName("pending_reg_taf_fees") val pendingRegTafFees: String
-)
+): ApiResponse()

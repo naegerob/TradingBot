@@ -15,19 +15,9 @@ import io.ktor.server.config.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
-import org.koin.core.context.stopKoin
 import kotlin.test.*
 
 class SecurityTests {
-
-    @AfterTest
-    fun tearDown() {
-        try {
-            stopKoin()
-        } catch (e: Exception) {
-            // Koin might not be started, ignore
-        }
-    }
 
     @Test
     fun `Login should return access and refresh Token`() = testApplication {

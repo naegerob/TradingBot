@@ -38,8 +38,8 @@ data class StockBar(
 ): ApiResponse()
 
 
-val sort = listOf(
-    "asc", "desc"
+val sorts = listOf(
+    "asc", "desc"  // Remove empty string since it causes validation issues
 )
 
 val timeframes = listOf(

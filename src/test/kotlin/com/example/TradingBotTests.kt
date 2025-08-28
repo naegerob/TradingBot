@@ -19,7 +19,6 @@ import io.ktor.client.request.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.testing.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -144,31 +143,30 @@ class TradingBotTests : KoinTest {
         }
 
         startKoin {
-            modules(testModule,
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                    single<HttpClient> { HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.SIMPLE
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
+            modules(testModule, module {
+                single<HttpClientEngine> { mockEngine }
+                single<HttpClient> { HttpClient(get()) {
+                    install(ContentNegotiation) {
+                        json(Json {
+                            prettyPrint = true
+                            isLenient = false
+                            ignoreUnknownKeys = true
+                            encodeDefaults = true
+                        })
                     }
+                    install(Logging) {
+                        logger = Logger.SIMPLE
+                        level = LogLevel.ALL
                     }
-                },
-            )
+                    install(DefaultRequest) {
+                        header("content-type", "application/json")
+                        header("accept", "application/json")
+                    }
+                }
+                }
+            })
         }
+
 
         // Preconditions
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
@@ -181,11 +179,11 @@ class TradingBotTests : KoinTest {
             is Result.Success<*, *> -> fail("resultValue could not be casted $resultWithLessData")
             is Result.Error<*, *>   -> assertEquals(TradingLogicError.DataError.TOO_LESS_DATA_SAMPLES, resultWithLessData.error)
         }
-        stopKoin()
     }
 
     @Test
-    fun `Backtesting with default stockAggregation`() = testApplication {
+    fun `Backtesting with default stockAggregation`() {
+
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
                 "AAPL" to listOf(
@@ -264,32 +262,30 @@ class TradingBotTests : KoinTest {
         }
 
         startKoin {
-            modules(testModule,
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                    single<HttpClient> { HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.SIMPLE
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
+            modules(testModule, module {
+                single<HttpClientEngine> { mockEngine }
+                single<HttpClient> { HttpClient(get()) {
+                    install(ContentNegotiation) {
+                        json(Json {
+                            prettyPrint = true
+                            isLenient = false
+                            ignoreUnknownKeys = true
+                            encodeDefaults = true
+                        })
                     }
+                    install(Logging) {
+                        logger = Logger.SIMPLE
+                        level = LogLevel.ALL
                     }
-                },
-            )
+                    install(DefaultRequest) {
+                        header("content-type", "application/json")
+                        header("accept", "application/json")
+                    }
+                }
+                }
+            })
         }
-        // Preconditions
+
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         val tradingBot by inject<TradingBot>()
 
@@ -305,23 +301,38 @@ class TradingBotTests : KoinTest {
                     assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
                     assertNotEquals(defaultBackTestResult.winRate, resultValue.winRate)
                     assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
-                    println("Strategy: ${resultValue.strategyName}")
-                    println("Final Balance: ${resultValue.finalBalance}")
-                    println("Win Rate: ${resultValue.winRate}")
-                    println("Positions: ${resultValue.positions}")
                 } else {
                     fail("resultValue could not be casted")
                 }
             }
             is Result.Error<*, *>   -> fail("Expected success but got Error: ${resultWithDefault.error}")
         }
-        stopKoin()
     }
 
     @Test
     fun `Backtesting without valid Indicators`()  {
         startKoin {
-            modules(testModule)
+            modules(testModule, module {
+                single<HttpClient> { HttpClient(get()) {
+                    install(ContentNegotiation) {
+                        json(Json {
+                            prettyPrint = true
+                            isLenient = false
+                            ignoreUnknownKeys = true
+                            encodeDefaults = true
+                        })
+                    }
+                    install(Logging) {
+                        logger = Logger.SIMPLE
+                        level = LogLevel.ALL
+                    }
+                    install(DefaultRequest) {
+                        header("content-type", "application/json")
+                        header("accept", "application/json")
+                    }
+                }
+                }
+            })
         }
 
         val request = StockAggregationRequest()
@@ -334,14 +345,34 @@ class TradingBotTests : KoinTest {
             is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultWithEmptySymbol.data}")
             is Result.Error<*, *>   -> assertEquals(TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED, resultWithEmptySymbol.error)
         }
-        stopKoin()
     }
 
     @Test
     fun `Backtesting no Strategy Selected`() {
         startKoin {
-            modules(testModule)
+            modules(testModule, module {
+                single<HttpClient> { HttpClient(get()) {
+                    install(ContentNegotiation) {
+                        json(Json {
+                            prettyPrint = true
+                            isLenient = false
+                            ignoreUnknownKeys = true
+                            encodeDefaults = true
+                        })
+                    }
+                    install(Logging) {
+                        logger = Logger.SIMPLE
+                        level = LogLevel.ALL
+                    }
+                    install(DefaultRequest) {
+                        header("content-type", "application/json")
+                        header("accept", "application/json")
+                    }
+                }
+                }
+            })
         }
+
         val request = StockAggregationRequest()
         val tradingBot by inject<TradingBot>()
 
@@ -353,6 +384,5 @@ class TradingBotTests : KoinTest {
             is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultNoStrategy.data}")
             is Result.Error<*, *>   -> assertEquals(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED, resultNoStrategy.error)
         }
-        stopKoin()
     }
 }
