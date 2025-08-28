@@ -2,7 +2,6 @@ package com.example
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.example.loadRSAPublicKey
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -39,5 +38,3 @@ fun Application.configureAuthentication() {
         }
     }
 }
-
-

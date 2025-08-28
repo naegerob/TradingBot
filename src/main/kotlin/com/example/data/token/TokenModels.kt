@@ -9,6 +9,11 @@ data class RefreshRequest(
 )
 
 @Serializable
+data class RefreshResponse(
+    val accessToken: String
+)
+
+@Serializable
 data class LoginRequest(
     val username: String,
     val password: String

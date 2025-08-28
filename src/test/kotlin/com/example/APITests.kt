@@ -3,6 +3,8 @@ package com.example
 import com.example.data.AlpacaRepository
 import com.example.data.TradingRepository
 import com.example.data.singleModels.*
+import com.example.data.token.LoginRequest
+import com.example.data.token.LoginResponse
 import com.example.tradingLogic.TradingBot
 import io.ktor.client.*
 import io.ktor.client.call.*
@@ -16,13 +18,14 @@ import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
-import io.ktor.server.application.*
+import io.ktor.server.config.*
 import io.ktor.server.testing.*
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.koin.core.context.GlobalContext.loadKoinModules
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
-import org.koin.ktor.plugin.Koin
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -91,17 +94,20 @@ class APITests {
         stopKoin()
     }
 
+    private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
+        val username = System.getenv("AUTHENTIFICATION_USERNAME")
+        val password = System.getenv("AUTHENTIFICATION_PASSWORD")
+        val loginRequest = LoginRequest(username = username, password = password)
+        val response = client.post(path) { setBody(loginRequest) }
+        assertEquals(OK, response.status)
+        val loginResponse = response.body<LoginResponse>()
+        return loginResponse.accessToken
+    }
+
     @Test
     fun `All Backtest Indicators`() = testApplication {
-        application {
-            install(Koin) {
-                modules(testModule)
-            }
-            configureSerialization()
-            configureRouting()
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
-        // Precondition
         val client = createClient {
             install(ContentNegotiation) {
                 json(Json {
@@ -116,37 +122,49 @@ class APITests {
                 header("accept", "application/json")
             }
         }
-        var httpResponse = client.get("/BacktestIndicators/Original")
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        var httpResponse = client.get("/BacktestIndicators/Original") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Support")
+        httpResponse = client.get("/BacktestIndicators/Support") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Resistance")
+        httpResponse = client.get("/BacktestIndicators/Resistance") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Sma/Short")
+        httpResponse = client.get("/BacktestIndicators/Sma/Short") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Sma/Long")
+        httpResponse = client.get("/BacktestIndicators/Sma/Long") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/BollingerBands/Middle")
+        httpResponse = client.get("/BacktestIndicators/BollingerBands/Middle") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/BollingerBands/Upper")
+        httpResponse = client.get("/BacktestIndicators/BollingerBands/Upper") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/BollingerBands/Lower")
+        httpResponse = client.get("/BacktestIndicators/BollingerBands/Lower") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/BacktestIndicators/Rsi")
+        httpResponse = client.get("/BacktestIndicators/Rsi") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
     }
 
     @Test
     fun `All Normal Indicators`() = testApplication {
-        application {
-            install(Koin) {
-                modules(testModule)
-            }
-            configureSerialization()
-            configureRouting()
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
-        // Precondition
         val client = createClient {
             install(ContentNegotiation) {
                 json(Json {
@@ -161,28 +179,50 @@ class APITests {
                 header("accept", "application/json")
             }
         }
-        var httpResponse = client.get("/Indicators/Original")
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        var httpResponse = client.get("/Indicators/Original") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Support")
+        httpResponse = client.get("/Indicators/Support") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Resistance")
+        httpResponse = client.get("/Indicators/Resistance") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Sma/Short")
+        httpResponse = client.get("/Indicators/Sma/Short") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Sma/Long")
+        httpResponse = client.get("/Indicators/Sma/Long") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/BollingerBands/Middle")
+        httpResponse = client.get("/Indicators/BollingerBands/Middle") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/BollingerBands/Upper")
+        httpResponse = client.get("/Indicators/BollingerBands/Upper") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/BollingerBands/Lower")
+        httpResponse = client.get("/Indicators/BollingerBands/Lower") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
-        httpResponse = client.get("/Indicators/Rsi")
+        httpResponse = client.get("/Indicators/Rsi") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
         assertEquals(OK, httpResponse.status)
     }
 
     @Test
     fun `Create a Good Order to Alpaca`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
 
         val mockOrderResponse = OrderResponse(
             id = "64c48451-34c4-4642-83a8-43f5f75bf6fd",
@@ -228,17 +268,15 @@ class APITests {
                 status = OK,
             )
         }
+
         application {
-            install(Koin) {
-                modules(testModule, module {
+            loadKoinModules(
+                module {
                     single<HttpClientEngine> { mockEngine }
-                })
-            }
-            configureSerialization()
-            configureRouting()
+                }
+            )
         }
 
-        // Precondition
         val orderRequest = defaultOrderRequest.copy()
         val client = createClient {
             install(ContentNegotiation) {
@@ -254,7 +292,9 @@ class APITests {
                 header("accept", "application/json")
             }
         }
+        val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
         }
         val response = httpResponse.body<OrderResponse>()
@@ -267,6 +307,9 @@ class APITests {
 
     @Test
     fun `Create a Bad Order to Alpaca`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
 
         val mockOrderResponse = OrderResponse(
             id = "64c48451-34c4-4642-83a8-43f5f75bf6fd",
@@ -315,16 +358,13 @@ class APITests {
             )
         }
         application {
-            install(Koin) {
-                modules(testModule, module {
+            loadKoinModules(
+                module {
                     single<HttpClientEngine> { mockEngine }
-                })
-            }
-            configureSerialization()
-            configureRouting()
+                }
+            )
         }
 
-        // Precondition
         val orderRequest = defaultOrderRequest.copy()
         orderRequest.symbol = ""
         val client = createClient {
@@ -341,7 +381,9 @@ class APITests {
                 header("accept", "application/json")
             }
         }
+        val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
         }
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
@@ -349,6 +391,9 @@ class APITests {
 
     @Test
     fun `Get Account call to Alpaca`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
 
         val mockAccountResponse = Account(
             id = "8aa6e3cd-a6c7-41fe-8280-7bc70f11afce",
@@ -402,13 +447,11 @@ class APITests {
         }
 
         application {
-            install(Koin) {
-                modules(testModule, module {
+            loadKoinModules(
+                module {
                     single<HttpClientEngine> { mockEngine }
-                })
-            }
-            configureSerialization()
-            configureRouting()
+                }
+            )
         }
 
         val accountId = "PA3ALX4NGLN0"
@@ -427,7 +470,10 @@ class APITests {
                 header("accept", "application/json")
             }
         }
-        val httpResponse = client.get("/AccountDetails")
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.get("/AccountDetails") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
 
         assertEquals(OK, httpResponse.status)
         val accountDetails = httpResponse.body<Account>()
@@ -437,6 +483,9 @@ class APITests {
 
     @Test
     fun `Get Historical Bars Request with good parameter`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
 
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
@@ -508,15 +557,13 @@ class APITests {
         }
 
         application {
-            install(Koin) {
-                modules(testModule, module {
+            loadKoinModules(
+                module {
                     single<HttpClientEngine> { mockEngine }
-                })
-            }
-            configureSerialization()
-            configureRouting()
+                }
+            )
         }
-        // Preconditions
+
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         val client = createClient {
             install(ContentNegotiation) {
@@ -532,7 +579,9 @@ class APITests {
                 header("accept", "application/json")
             }
         }
+        val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/HistoricalBars/Request") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(stockAggregationRequest)
         }
 
@@ -543,6 +592,10 @@ class APITests {
 
     @Test
     fun `Get Historical Bars Request with bad parameter`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
+
         val mockEngine = MockEngine { _ ->
             respond(
                 content = mapOf("message" to "Invalid format for parameter symbols: query parameter 'symbols' is required").toString(),
@@ -551,18 +604,16 @@ class APITests {
             )
         }
         application {
-            install(Koin) {
-                modules(testModule, module {
+            loadKoinModules(
+                module {
                     single<HttpClientEngine> { mockEngine }
-                })
-            }
-            configureSerialization()
-            configureRouting()
+                }
+            )
         }
-        // Preconditions
+
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         stockAggregationRequest.symbols = ""
-        val mockClient = createClient {
+        val client = createClient {
             install(ContentNegotiation) {
                 json(Json {
                     prettyPrint = true
@@ -576,10 +627,11 @@ class APITests {
                 header("accept", "application/json")
             }
         }
-        val httpResponse = mockClient.post("/HistoricalBars/Request") {
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.post("/HistoricalBars/Request") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(stockAggregationRequest)
         }
         assertEquals(BadRequest, httpResponse.status)
     }
-
 }
