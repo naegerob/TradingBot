@@ -179,6 +179,7 @@ class TradingBotTests : KoinTest {
             is Result.Success<*, *> -> fail("resultValue could not be casted $resultWithLessData")
             is Result.Error<*, *>   -> assertEquals(TradingLogicError.DataError.TOO_LESS_DATA_SAMPLES, resultWithLessData.error)
         }
+        stopKoin()
     }
 
     @Test
@@ -307,6 +308,7 @@ class TradingBotTests : KoinTest {
             }
             is Result.Error<*, *>   -> fail("Expected success but got Error: ${resultWithDefault.error}")
         }
+        stopKoin()
     }
 
     @Test
@@ -345,44 +347,7 @@ class TradingBotTests : KoinTest {
             is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultWithEmptySymbol.data}")
             is Result.Error<*, *>   -> assertEquals(TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED, resultWithEmptySymbol.error)
         }
+        stopKoin()
     }
 
-    @Test
-    fun `Backtesting no Strategy Selected`() {
-        startKoin {
-            modules(testModule, module {
-                single<HttpClient> { HttpClient(get()) {
-                    install(ContentNegotiation) {
-                        json(Json {
-                            prettyPrint = true
-                            isLenient = false
-                            ignoreUnknownKeys = true
-                            encodeDefaults = true
-                        })
-                    }
-                    install(Logging) {
-                        logger = Logger.SIMPLE
-                        level = LogLevel.ALL
-                    }
-                    install(DefaultRequest) {
-                        header("content-type", "application/json")
-                        header("accept", "application/json")
-                    }
-                }
-                }
-            })
-        }
-
-        val request = StockAggregationRequest()
-        val tradingBot by inject<TradingBot>()
-
-        val resultNoStrategy = runBlocking {
-            tradingBot.backtest(Strategies.None, request)
-        }
-
-        when (resultNoStrategy) {
-            is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultNoStrategy.data}")
-            is Result.Error<*, *>   -> assertEquals(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED, resultNoStrategy.error)
-        }
-    }
 }

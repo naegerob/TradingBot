@@ -23,10 +23,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.context.GlobalContext.loadKoinModules
-import org.koin.core.context.stopKoin
+import org.koin.core.context.unloadKoinModules
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -64,11 +63,6 @@ class APITests : KoinTest {
             pageToken = null,
             sort = "asc"
         )
-    }
-
-    @AfterTest
-    fun tearDown() {
-        stopKoin()
     }
 
     private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
@@ -161,9 +155,7 @@ class APITests : KoinTest {
 
     @Test
     fun `Create a Good Order to Alpaca`() = testApplication {
-        environment {
-            config = ApplicationConfig("application.yaml")
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
         val mockOrderResponse = OrderResponse(
             id = "64c48451-34c4-4642-83a8-43f5f75bf6fd",
@@ -204,19 +196,11 @@ class APITests : KoinTest {
             expiresAt = "2025-03-24T20:00:00Z"
         )
         val mockEngine = MockEngine { _ ->
-            respond(
-                content = Json.encodeToString(mockOrderResponse),
-                status = OK,
-            )
+            respond(content = Json.encodeToString(mockOrderResponse), status = OK)
         }
 
-        application {
-            loadKoinModules(
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                }
-            )
-        }
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
 
         val orderRequest = defaultOrderRequest.copy()
         val client = createClient {
@@ -245,14 +229,12 @@ class APITests : KoinTest {
         assertEquals(mockOrderResponse.symbol, response.symbol)
         assertEquals(mockOrderResponse.qty, response.qty)
 
-        stopKoin()
+        unloadKoinModules(overrides)
     }
 
     @Test
     fun `Create a Bad Order to Alpaca`() = testApplication {
-        environment {
-            config = ApplicationConfig("application.yaml")
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
         val mockOrderResponse = OrderResponse(
             id = "64c48451-34c4-4642-83a8-43f5f75bf6fd",
@@ -300,13 +282,9 @@ class APITests : KoinTest {
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
         }
-        application {
-            loadKoinModules(
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                }
-            )
-        }
+
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
 
         val orderRequest = defaultOrderRequest.copy()
         orderRequest.symbol = ""
@@ -330,14 +308,13 @@ class APITests : KoinTest {
             setBody(orderRequest)
         }
         assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
-        stopKoin()
+
+        unloadKoinModules(overrides)
     }
 
     @Test
     fun `Get Account call to Alpaca`() = testApplication {
-        environment {
-            config = ApplicationConfig("application.yaml")
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
         val mockAccountResponse = Account(
             id = "8aa6e3cd-a6c7-41fe-8280-7bc70f11afce",
@@ -390,13 +367,8 @@ class APITests : KoinTest {
             )
         }
 
-        application {
-            loadKoinModules(
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                }
-            )
-        }
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
 
         val accountId = "PA3ALX4NGLN0"
         val state = "ACTIVE"
@@ -423,14 +395,13 @@ class APITests : KoinTest {
         val accountDetails = httpResponse.body<Account>()
         assertEquals(accountId, accountDetails.accountNumber)
         assertEquals(state, accountDetails.status)
-        stopKoin()
+
+        unloadKoinModules(overrides)
     }
 
     @Test
     fun `Get Historical Bars Request with good parameter`() = testApplication {
-        environment {
-            config = ApplicationConfig("application.yaml")
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
@@ -501,13 +472,8 @@ class APITests : KoinTest {
             )
         }
 
-        application {
-            loadKoinModules(
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                }
-            )
-        }
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         val client = createClient {
@@ -533,14 +499,13 @@ class APITests : KoinTest {
         val response = httpResponse.body<StockAggregationResponse>()
         assertEquals(OK, httpResponse.status)
         assertNotEquals(emptyMap(), response.bars)
-        stopKoin()
+
+        unloadKoinModules(overrides)
     }
 
     @Test
     fun `Get Historical Bars Request with bad parameter`() = testApplication {
-        environment {
-            config = ApplicationConfig("application.yaml")
-        }
+        environment { config = ApplicationConfig("application.yaml") }
 
         val mockEngine = MockEngine { _ ->
             respond(
@@ -549,13 +514,9 @@ class APITests : KoinTest {
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
         }
-        application {
-            loadKoinModules(
-                module {
-                    single<HttpClientEngine> { mockEngine }
-                }
-            )
-        }
+
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         stockAggregationRequest.symbols = ""
@@ -579,6 +540,7 @@ class APITests : KoinTest {
             setBody(stockAggregationRequest)
         }
         assertEquals(BadRequest, httpResponse.status)
-        stopKoin()
+
+        unloadKoinModules(overrides)
     }
 }
