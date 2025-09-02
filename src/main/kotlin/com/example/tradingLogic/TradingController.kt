@@ -23,7 +23,7 @@ class TradingController : KoinComponent {
      ************************************************************/
     fun areValidStockRequestParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
         val isSymbolValid = stockAggregationRequest.symbols.isNotEmpty() && !stockAggregationRequest.symbols.contains(",")
-        val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it)}
+        val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it) }
         val isFeedValid = feeds.any { stockAggregationRequest.feed == it }
         val isSortValid = sorts.any { stockAggregationRequest.sort == it }
         val isCorrectTimeframe = stockAggregationRequest.timeframe.contains(Regex("\\d+(Min|T|Hour|H|Day|D|Week|W|Month|M)"))
