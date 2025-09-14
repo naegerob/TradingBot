@@ -2,12 +2,12 @@ ktor:
     deployment:
         sslPort:    8081
         # port:       8080 # security concern due to public network.
-        host:       0.0.0.0
+        host:       localhost
         autoreload: true
     security:
         ssl:
             keyStore: security/tls/keystore.jks
-            keyAlias: myKeystore
+            keyAlias: mykeystore
             keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
             privateKeyPassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
             clientAuth: none
@@ -19,8 +19,6 @@ jwt:
     algorithm: RS256
     privateKeyPath: security/Authentification/private.pem
     publicKeyPath: security/Authentification/public.pem
-    issuer: "http://0.0.0.0:8080/"
-    audience: "http://0.0.0.0:8080/"
+    issuer: "https://localhost:8081/"
+    audience: "https://localhost:8081/"
     realm: "Access to Bot"
-
-
