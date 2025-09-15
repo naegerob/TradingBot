@@ -9,7 +9,6 @@ import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.BacktestConfig
 import com.example.tradingLogic.Result
 import com.example.tradingLogic.TradingController
-import com.example.tradingLogic.TradingLogicError
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
@@ -70,40 +69,58 @@ fun Application.configureRouting() {
                 }
             }
         }
-        authenticate("auth-jwt") {
 
-            post("/auth/refresh") {
-                val jwtConfig = environment.config.config("jwt")
-                val issuer = jwtConfig.property("issuer").getString()
+        post("/auth/refresh") {
+            val jwtConfig = environment.config.config("jwt")
+            val issuer = jwtConfig.property("issuer").getString()
+            val audience = jwtConfig.property("audience").getString()
+            val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
+            val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
+            val privateKey = loadRSAPrivateKey(privateKeyPath)
+            val publicKey = loadRSAPublicKey(publicKeyPath)
 
-                val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
-                val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
-
-                val privateKey = loadRSAPrivateKey(privateKeyPath)
-                val publicKey = loadRSAPublicKey(publicKeyPath)
-
-                val refreshTokenRequest = call.receive<RefreshRequest>()
-                val verifier = JWT
-                    .require(Algorithm.RSA256(publicKey, privateKey))
+            val refreshTokenRequest = call.receive<RefreshRequest>()
+            val verifier = JWT
+                .require(Algorithm.RSA256(publicKey, privateKey))
+                .withIssuer(issuer)
+                .withAudience(audience)
+                .build()
+            try {
+                val decoded = verifier.verify(refreshTokenRequest.refreshToken)
+                val type = decoded.getClaim("type")?.asString()
+                if (type != "refresh") {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_TOKEN_TYPE"))
+                    return@post
+                }
+                val username = decoded.subject
+                val now = System.currentTimeMillis()
+                val newAccessToken = JWT.create()
+                    .withAudience(audience)
                     .withIssuer(issuer)
-                    .build()
+                    .withSubject(username)
+                    .withClaim("username", username)
+                    .withClaim("type", "access")
+                    .withExpiresAt(Date(now + 15 * 60 * 1000)) // 15 min expiry
+                    .sign(Algorithm.RSA256(publicKey, privateKey))
 
-                try {
-                    val decoded = verifier.verify(refreshTokenRequest.refreshToken)
-                    val username = decoded.subject
-
-                    // issue new access token
-                    val newAccessToken = JWT.create()
-                        .withSubject(username)
+                val remaining = (decoded.expiresAt?.time ?: 0L) - now
+                val rotateThresholdMs = 24 * 60 * 60 * 1000L
+                if (remaining < rotateThresholdMs) {
+                    val newRefreshToken = JWT.create()
+                        .withAudience(audience)
                         .withIssuer(issuer)
                         .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
                         .sign(Algorithm.RSA256(publicKey, privateKey))
-
-                    call.respond(mapOf("accessToken" to newAccessToken))
-                } catch (e: Exception) {
-                    call.respond(HttpStatusCode.Unauthorized, "Invalid refresh token")
+                    call.respond(mapOf("accessToken" to newAccessToken, "refreshToken" to newRefreshToken, "rotated" to true))
+                } else {
+                    call.respond(mapOf("accessToken" to newAccessToken, "rotated" to false))
                 }
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))
             }
+        }
+
+        authenticate("auth-jwt") {
             get("/AccountDetails") {
                 val accountResponse = tradingController.fetchAccountDetails()
                 respondToClient(accountResponse, call)
