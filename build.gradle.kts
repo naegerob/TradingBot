@@ -80,3 +80,11 @@ dependencies {
     testImplementation(libs.kotlin.test)
     testImplementation(libs.koin.test)
 }
+
+sourceSets {
+    main {
+        resources {
+            srcDir("openapi")
+        }
+    }
+}

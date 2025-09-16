@@ -1,0 +1,588 @@
+openapi: 3.0.3
+info:
+  title: TradingBot API
+  version: 0.0.1
+  description: OpenAPI specification for TradingBot backend
+servers:
+  - url: http://localhost:8080
+paths:
+  /login:
+    post:
+      summary: Login and receive JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Successfully logged in
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  refreshToken:
+                    type: string
+        '401':
+          description: Invalid credentials
+  /auth/refresh:
+    post:
+      summary: Renew access token using refresh token
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New access token
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+        '401':
+          description: Invalid refresh token
+  /AccountDetails:
+    get:
+      summary: Get account details
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Account details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+  /Indicators/Original:
+    get:
+      summary: Get original prices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of original prices
+  /Indicators/Support:
+    get:
+      summary: Get support levels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of support levels
+  /Indicators/Resistance:
+    get:
+      summary: Get resistance levels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of resistance levels
+  /Indicators/Sma/Short:
+    get:
+      summary: Get short-term SMA
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Short-term SMA
+  /Indicators/Sma/Long:
+    get:
+      summary: Get long-term SMA
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Long-term SMA
+  /Indicators/BollingerBands/Middle:
+    get:
+      summary: Get middle Bollinger Band
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Middle Bollinger Band
+  /Indicators/BollingerBands/Upper:
+    get:
+      summary: Get upper Bollinger Band
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Upper Bollinger Band
+  /Indicators/BollingerBands/Lower:
+    get:
+      summary: Get lower Bollinger Band
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lower Bollinger Band
+  /Indicators/Rsi:
+    get:
+      summary: Get RSI
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: RSI value
+  /BacktestIndicators/Original:
+    get:
+      summary: Get backtest original prices
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of original prices (backtest)
+  /BacktestIndicators/Support:
+    get:
+      summary: Get backtest support levels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of support levels (backtest)
+  /BacktestIndicators/Resistance:
+    get:
+      summary: Get backtest resistance levels
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of resistance levels (backtest)
+  /BacktestIndicators/Sma/Short:
+    get:
+      summary: Get backtest short-term SMA
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Short-term SMA (backtest)
+  /BacktestIndicators/Sma/Long:
+    get:
+      summary: Get backtest long-term SMA
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Long-term SMA (backtest)
+  /BacktestIndicators/BollingerBands/Middle:
+    get:
+      summary: Get backtest middle Bollinger Band
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Middle Bollinger Band (backtest)
+  /BacktestIndicators/BollingerBands/Upper:
+    get:
+      summary: Get backtest upper Bollinger Band
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Upper Bollinger Band (backtest)
+  /BacktestIndicators/BollingerBands/Lower:
+    get:
+      summary: Get backtest lower Bollinger Band
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lower Bollinger Band (backtest)
+  /BacktestIndicators/Rsi:
+    get:
+      summary: Get backtest RSI
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: RSI value (backtest)
+  /Order/Create:
+    post:
+      summary: Create order
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderRequest'
+      responses:
+        '200':
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Invalid order data
+  /HistoricalBars/Get:
+    get:
+      summary: Get historical price data (GET)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Price data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAggregationResponse'
+        '400':
+          description: Invalid request
+  /HistoricalBars/Request:
+    post:
+      summary: Get historical price data (POST)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StockAggregationRequest'
+      responses:
+        '200':
+          description: Price data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockAggregationResponse'
+        '400':
+          description: Invalid request
+  /Bot/Backtesting:
+    post:
+      summary: Run backtesting
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BacktestConfig'
+      responses:
+        '200':
+          description: Backtest result
+        '400':
+          description: Invalid backtest configuration
+  /Bot/Start:
+    get:
+      summary: Start bot
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bot started
+  /Bot/Stop:
+    get:
+      summary: Stop bot
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bot stopped
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    LoginRequest:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+    RefreshRequest:
+      type: object
+      properties:
+        refreshToken:
+          type: string
+      required:
+        - refreshToken
+    OrderRequest:
+      $ref: '#/components/schemas/OrderRequestModel'
+    OrderResponse:
+      $ref: '#/components/schemas/OrderResponseModel'
+    StockAggregationRequest:
+      $ref: '#/components/schemas/StockAggregationRequestModel'
+    StockAggregationResponse:
+      $ref: '#/components/schemas/StockAggregationResponseModel'
+    Account:
+      $ref: '#/components/schemas/AccountModel'
+    BacktestConfig:
+      type: object
+      properties:
+        strategySelector:
+          type: string
+        stockAggregationRequest:
+          $ref: '#/components/schemas/StockAggregationRequestModel'
+      required:
+        - strategySelector
+        - stockAggregationRequest
+    # Real data models below
+    OrderRequestModel:
+      type: object
+      properties:
+        symbol:
+          type: string
+        qty:
+          type: string
+        notional:
+          type: string
+        side:
+          type: string
+        type:
+          type: string
+        time_in_force:
+          type: string
+        limit_price:
+          type: string
+        stop_price:
+          type: string
+        trail_price:
+          type: string
+        trail_percent:
+          type: string
+        extended_hours:
+          type: boolean
+        client_order_id:
+          type: string
+        order_class:
+          type: string
+        legs:
+          type: array
+          items:
+            type: object
+        take_profit:
+          type: object
+        stop_loss:
+          type: object
+        position_intent:
+          type: string
+      required:
+        - symbol
+        - side
+        - type
+        - time_in_force
+    OrderResponseModel:
+      type: object
+      properties:
+        id:
+          type: string
+        client_order_id:
+          type: string
+        created_at:
+          type: string
+        updated_at:
+          type: string
+        submitted_at:
+          type: string
+        filled_at:
+          type: string
+        expired_at:
+          type: string
+        canceled_at:
+          type: string
+        failed_at:
+          type: string
+        replaced_at:
+          type: string
+        replaced_by:
+          type: string
+        replaces:
+          type: string
+        asset_id:
+          type: string
+        symbol:
+          type: string
+        asset_class:
+          type: string
+        notional:
+          type: string
+        qty:
+          type: string
+        filled_qty:
+          type: string
+        filled_avg_price:
+          type: string
+        order_class:
+          type: string
+        order_type:
+          type: string
+        type:
+          type: string
+        side:
+          type: string
+        time_in_force:
+          type: string
+        limit_price:
+          type: string
+        stop_price:
+          type: string
+        status:
+          type: string
+        extended_hours:
+          type: boolean
+        legs:
+          type: array
+          items:
+            type: object
+        trail_percent:
+          type: string
+        trail_price:
+          type: string
+        hwm:
+          type: string
+        subtag:
+          type: string
+        source:
+          type: string
+        expires_at:
+          type: string
+        position_intent:
+          type: string
+    StockAggregationRequestModel:
+      type: object
+      properties:
+        symbols:
+          type: string
+        timeframe:
+          type: string
+        start:
+          type: string
+        end:
+          type: string
+        limit:
+          type: integer
+        adjustment:
+          type: string
+        asof:
+          type: string
+        feed:
+          type: string
+        currency:
+          type: string
+        page_token:
+          type: string
+        sort:
+          type: string
+      required:
+        - symbols
+        - timeframe
+    StockAggregationResponseModel:
+      type: object
+      properties:
+        bars:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              type: object
+        next_page_token:
+          type: string
+    AccountModel:
+      type: object
+      properties:
+        id:
+          type: string
+        admin_configurations:
+          type: object
+          additionalProperties:
+            type: string
+        user_configurations:
+          type: string
+        account_number:
+          type: string
+        status:
+          type: string
+        crypto_status:
+          type: string
+        options_approved_level:
+          type: integer
+        options_trading_level:
+          type: integer
+        currency:
+          type: string
+        buying_power:
+          type: string
+        regt_buying_power:
+          type: string
+        daytrading_buying_power:
+          type: string
+        effective_buying_power:
+          type: string
+        non_marginable_buying_power:
+          type: string
+        options_buying_power:
+          type: string
+        bod_dtbp:
+          type: string
+        cash:
+          type: string
+        accrued_fees:
+          type: string
+        portfolio_value:
+          type: string
+        pattern_day_trader:
+          type: boolean
+        trading_blocked:
+          type: boolean
+        transfers_blocked:
+          type: boolean
+        account_blocked:
+          type: boolean
+        created_at:
+          type: string
+        trade_suspended_by_user:
+          type: boolean
+        multiplier:
+          type: string
+        shorting_enabled:
+          type: boolean
+        equity:
+          type: string
+        last_equity:
+          type: string
+        long_market_value:
+          type: string
+        short_market_value:
+          type: string
+        position_market_value:
+          type: string
+        initial_margin:
+          type: string
+        maintenance_margin:
+          type: string
+        last_maintenance_margin:
+          type: string
+        sma:
+          type: string
+        daytrade_count:
+          type: integer
+        balance_asof:
+          type: string
+        crypto_tier:
+          type: integer
+        intraday_adjustments:
+          type: string
+        pending_reg_taf_fees:
+          type: string
