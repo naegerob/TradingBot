@@ -1,9 +1,8 @@
 ktor:
     deployment:
         sslPort:    8081
-        # port:       8080 # security concern due to public network.
         host:       localhost
-        autoreload: true
+        autoreload: false
     security:
         ssl:
             keyStore: security/tls/keystore.jks

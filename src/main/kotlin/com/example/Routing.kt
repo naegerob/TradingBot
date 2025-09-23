@@ -100,16 +100,22 @@ fun Application.configureRouting() {
                     .withSubject(username)
                     .withClaim("username", username)
                     .withClaim("type", "access")
+                    .withIssuedAt(Date(now))
                     .withExpiresAt(Date(now + 15 * 60 * 1000)) // 15 min expiry
+                    .withJWTId(UUID.randomUUID().toString())
                     .sign(Algorithm.RSA256(publicKey, privateKey))
 
                 val remaining = (decoded.expiresAt?.time ?: 0L) - now
                 val rotateThresholdMs = 24 * 60 * 60 * 1000L
                 if (remaining < rotateThresholdMs) {
                     val newRefreshToken = JWT.create()
-                        .withAudience(audience)
                         .withIssuer(issuer)
-                        .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
+                        .withAudience(audience)
+                        .withSubject(username)
+                        .withClaim("type", "refresh")
+                        .withIssuedAt(Date(now))
+                        .withExpiresAt(Date(now + 7L * 24 * 60 * 60 * 1000)) // 1 Week
+                        .withJWTId(UUID.randomUUID().toString())
                         .sign(Algorithm.RSA256(publicKey, privateKey))
                     call.respond(mapOf("accessToken" to newAccessToken, "refreshToken" to newRefreshToken, "rotated" to true))
                 } else {

@@ -36,6 +36,10 @@ application {
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    applicationDefaultJvmArgs += listOf(
+        "-Djdk.tls.server.protocols=TLSv1.3",
+        "-Djdk.tls.client.protocols=TLSv1.3"
+    )
 }
 
 repositories {
