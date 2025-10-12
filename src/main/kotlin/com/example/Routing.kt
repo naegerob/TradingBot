@@ -61,6 +61,7 @@ fun Application.configureRouting() {
                         .withIssuer(issuer)
                         .withSubject(loginRequest.username)
                         .withClaim("username", loginRequest.username)
+                        .withClaim("type", "refresh")
                         .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
                         .sign(Algorithm.RSA256(publicKey, privateKey))
                     call.respond(mapOf("accessToken" to accessToken,"refreshToken" to refreshToken))
@@ -117,9 +118,9 @@ fun Application.configureRouting() {
                         .withExpiresAt(Date(now + 7L * 24 * 60 * 60 * 1000)) // 1 Week
                         .withJWTId(UUID.randomUUID().toString())
                         .sign(Algorithm.RSA256(publicKey, privateKey))
-                    call.respond(mapOf("accessToken" to newAccessToken, "refreshToken" to newRefreshToken, "rotated" to true))
+                    call.respond(mapOf("accessToken" to newAccessToken, "refreshToken" to newRefreshToken, "rotated" to "true"))
                 } else {
-                    call.respond(mapOf("accessToken" to newAccessToken, "rotated" to false))
+                    call.respond(mapOf("accessToken" to newAccessToken, "rotated" to "false"))
                 }
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))

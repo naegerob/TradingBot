@@ -5,7 +5,8 @@ ktor:
         autoreload: false
     security:
         ssl:
-            keyStore: security/tls/keystore.jks
+            keyStore: security/tls/keystore.p12
+            keyStoreType: PKCS12
             keyAlias: mykeystore
             keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
             privateKeyPassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
