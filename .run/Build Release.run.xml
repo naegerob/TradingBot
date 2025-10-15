@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build &amp; Run Locally" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+  <configuration default="false" name="Build Release" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="imageTag" value="tradingbot" />
+        <option name="imageTag" value="release" />
         <option name="containerName" value="tradingbot" />
         <option name="contextFolderPath" value="." />
         <option name="portBindings">
@@ -15,8 +15,7 @@
           </list>
         </option>
         <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET" />
-        <option name="showCommandPreview" value="true" />
-        <option name="sourceFilePath" value="Docker/local/Dockerfile" />
+        <option name="sourceFilePath" value="Docker/deployment/Dockerfile" />
         <option name="volumeBindings">
           <list>
             <DockerVolumeBindingImpl>

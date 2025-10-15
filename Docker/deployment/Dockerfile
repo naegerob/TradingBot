@@ -27,7 +27,7 @@ RUN gradle clean buildFatJar --no-daemon
 # Stage 3: Runtime image
 FROM amazoncorretto:17 AS runtime
 
-EXPOSE 8080
+EXPOSE 8081
 WORKDIR /app
 
 # Use COPY with exact file name or wildcard if fatJar is consistent
