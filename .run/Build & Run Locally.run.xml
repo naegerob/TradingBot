@@ -14,7 +14,7 @@
             </DockerPortBindingImpl>
           </list>
         </option>
-        <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET" />
+        <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET -e KEYSTORE_PRIVATE_CERTIFICATE_PASSWORD " />
         <option name="showCommandPreview" value="true" />
         <option name="sourceFilePath" value="Docker/local/Dockerfile" />
         <option name="volumeBindings">

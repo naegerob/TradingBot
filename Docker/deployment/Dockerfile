@@ -16,7 +16,7 @@ RUN gradle dependencies --no-daemon || true
 # Stage 2: Build Application (fatJar)
 FROM gradle:8.13.0-jdk17-corretto-al2023 AS build
 
-COPY --from=cache $GRADLE_USER_HOME_CACHE $$GRADLE_USER_HOME
+COPY --from=cache $GRADLE_USER_HOME_CACHE $GRADLE_USER_HOME
 COPY --chown=gradle:gradle ../../.. /home/gradle/app
 WORKDIR /home/gradle/app
 
@@ -28,9 +28,23 @@ RUN gradle clean buildFatJar --no-daemon
 FROM amazoncorretto:17 AS runtime
 
 EXPOSE 8081
-WORKDIR /app
+ENV WORKDIR=/app
+
 
 # Use COPY with exact file name or wildcard if fatJar is consistent
-COPY --from=build /home/gradle/app/build/libs/*.jar /app/app.jar
+COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
+ENV KEYSTORE_TLS=$WORKDIR/security/tls/keystore.p12
+ENV JWT_PRIVATE_KEY_PATH=$WORKDIR/security/auth/private.pem
+ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
 
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+WORKDIR $WORKDIR
+#HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/actuator/health || exit 1
+
+
+ENTRYPOINT ["sh","-c","if [ ! -f \"$KEYSTORE_TLS\" ]; then echo 'Keystore fehlt: '$KEYSTORE_TLS >&2; ls -R /app/security || true; exit 1; fi; exec java \
+  -Djavax.net.ssl.keyStore=$KEYSTORE_TLS \
+  -Djavax.net.ssl.keyStoreType=PKCS12 \
+  -Djavax.net.ssl.keyStorePassword=$KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD \
+  -Djwt.privateKeyPath=$JWT_PRIVATE_KEY_PATH \
+  -Djwt.publicKeyPath=$JWT_PUBLIC_KEY_PATH \
+  -jar /app/app.jar"]

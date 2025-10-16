@@ -17,8 +17,8 @@ ktor:
 
 jwt:
     algorithm: RS256
-    privateKeyPath: security/Authentification/private.pem
-    publicKeyPath: security/Authentification/public.pem
+    privateKeyPath: security/auth/private.pem
+    publicKeyPath: security/auth/public.pem
     issuer: "https://localhost:8081/"
     audience: "https://localhost:8081/"
     realm: "Access to Bot"

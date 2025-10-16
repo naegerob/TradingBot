@@ -2,7 +2,7 @@
   <configuration default="false" name="Build Release" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
-        <option name="imageTag" value="release" />
+        <option name="imageTag" value="tradingbot" />
         <option name="containerName" value="tradingbot" />
         <option name="contextFolderPath" value="." />
         <option name="portBindings">
@@ -14,13 +14,25 @@
             </DockerPortBindingImpl>
           </list>
         </option>
-        <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET" />
+        <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET -e KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD" />
+        <option name="showCommandPreview" value="true" />
         <option name="sourceFilePath" value="Docker/deployment/Dockerfile" />
         <option name="volumeBindings">
           <list>
             <DockerVolumeBindingImpl>
               <option name="containerPath" value="/home/gradle/app" />
               <option name="hostPath" value="C:\Users\41786\Documents\GitHub\TradingBot" />
+              <option name="readOnly" value="true" />
+            </DockerVolumeBindingImpl>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/app/security/auth" />
+              <option name="hostPath" value="C:\Users\41786\Documents\GitHub\TradingBot\security\Authentification\" />
+              <option name="readOnly" value="true" />
+            </DockerVolumeBindingImpl>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/app/security/tls" />
+              <option name="hostPath" value="C:\Users\41786\Documents\GitHub\TradingBot\security\tls" />
+              <option name="readOnly" value="true" />
             </DockerVolumeBindingImpl>
           </list>
         </option>
