@@ -2,7 +2,7 @@
   <configuration default="false" name="Pull &amp; Run Locally" type="docker-deploy" factoryName="docker-image" server-name="Docker">
     <deployment type="docker-image">
       <settings>
-        <option name="imageTag" value="naegerr/tradingbot:120" />
+        <option name="imageTag" value="naegerr/tradingbot:latest" />
         <option name="containerName" value="bot" />
         <option name="portBindings">
           <list>
