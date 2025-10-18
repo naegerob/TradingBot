@@ -40,12 +40,9 @@ ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
 WORKDIR $WORKDIR
 #HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/actuator/health || exit 1
 
-ENTRYPOINT ["/bin/sh"]
+#ENTRYPOINT ["/bin/sh"]
 
-#ENTRYPOINT ["sh","-c","if [ ! -f \"$KEYSTORE_TLS\" ]; then echo 'Keystore fehlt: '$KEYSTORE_TLS >&2; ls -R /app/security || true; exit 1; fi; exec java \
-#  -Djavax.net.ssl.keyStore=$KEYSTORE_TLS \
-#  -Djavax.net.ssl.keyStoreType=PKCS12 \
-#  -Djavax.net.ssl.keyStorePassword=$KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD \
-#  -Djwt.privateKeyPath=$JWT_PRIVATE_KEY_PATH \
-#  -Djwt.publicKeyPath=$JWT_PUBLIC_KEY_PATH \
-#  -jar /app/app.jar"]
+ENTRYPOINT ["/bin/sh","-c","set -eu; \
+  echo 'Prüfe Keystore:' security/tls/keystore.p12; \
+  if [ ! -f security/tls/keystore.p12 ]; then echo 'Keystore fehlt' >&2; ls -R security || true; exit 1; fi; \
+  exec java -jar app.jar"]
