@@ -38,7 +38,7 @@ ENV JWT_PRIVATE_KEY_PATH=$WORKDIR/security/auth/private.pem
 ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
 
 WORKDIR $WORKDIR
-#HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/actuator/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/actuator/health || exit 1
 
 #ENTRYPOINT ["/bin/sh"]
 
