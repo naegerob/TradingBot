@@ -30,7 +30,6 @@ FROM amazoncorretto:17 AS runtime
 EXPOSE 8081
 ENV WORKDIR=/app
 
-
 # Use COPY with exact file name or wildcard if fatJar is consistent
 COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
 ENV KEYSTORE_TLS=$WORKDIR/security/tls/keystore.p12
@@ -38,9 +37,7 @@ ENV JWT_PRIVATE_KEY_PATH=$WORKDIR/security/auth/private.pem
 ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
 
 WORKDIR $WORKDIR
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/actuator/health || exit 1
-
-#ENTRYPOINT ["/bin/sh"]
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/health || exit 1
 
 ENTRYPOINT ["/bin/sh","-c","set -eu; \
   echo 'Prüfe Keystore:' security/tls/keystore.p12; \

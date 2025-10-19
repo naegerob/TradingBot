@@ -127,6 +127,10 @@ fun Application.configureRouting() {
             }
         }
 
+        get("/health") {
+            call.respond(HttpStatusCode.OK, "Server is healthy")
+        }
+
         authenticate("auth-jwt") {
             get("/AccountDetails") {
                 val accountResponse = tradingController.fetchAccountDetails()

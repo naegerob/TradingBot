@@ -3,6 +3,7 @@
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="tradingbot" />
+        <option name="buildCliOptions" value="--platform linux/amd64 --platform linux/arm64" />
         <option name="containerName" value="tradingbot" />
         <option name="contextFolderPath" value="." />
         <option name="portBindings">
