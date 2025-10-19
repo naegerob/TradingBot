@@ -14,7 +14,7 @@
             </DockerPortBindingImpl>
           </list>
         </option>
-        <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET -e KEYSTORE_PRIVATE_CERTIFICATE_PASSWORD " />
+        <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET -e KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD " />
         <option name="showCommandPreview" value="true" />
         <option name="sourceFilePath" value="Docker/local/Dockerfile" />
         <option name="volumeBindings">
@@ -25,13 +25,13 @@
               <option name="readOnly" value="true" />
             </DockerVolumeBindingImpl>
             <DockerVolumeBindingImpl>
-              <option name="containerPath" value="/app/security/auth" />
-              <option name="hostPath" value="$PROJECT_DIR$/security/auth" />
+              <option name="containerPath" value="/app/security/tls" />
+              <option name="hostPath" value="$PROJECT_DIR$/security/tls" />
               <option name="readOnly" value="true" />
             </DockerVolumeBindingImpl>
             <DockerVolumeBindingImpl>
-              <option name="containerPath" value="/app/security/tls" />
-              <option name="hostPath" value="$PROJECT_DIR$/security/tls" />
+              <option name="containerPath" value="/app/security/auth" />
+              <option name="hostPath" value="$PROJECT_DIR$/security/auth" />
               <option name="readOnly" value="true" />
             </DockerVolumeBindingImpl>
           </list>
