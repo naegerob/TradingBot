@@ -25,7 +25,7 @@ RUN gradle clean buildFatJar --no-daemon
 
 
 # Stage 3: Runtime image
-FROM amazoncorretto:17 AS runtime
+FROM amazoncorretto:17-alpine AS runtime
 
 EXPOSE 8081
 ENV WORKDIR=/app
