@@ -15,8 +15,8 @@ ktor {
 
         portMappings.set(listOf(
             io.ktor.plugin.features.DockerPortMapping(
-                8080,
-                8080,
+                8081,
+                8081,
                 io.ktor.plugin.features.DockerPortMappingProtocol.TCP
             )
         ))
@@ -36,6 +36,10 @@ application {
 
     val isDevelopment: Boolean = project.ext.has("development")
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
+    applicationDefaultJvmArgs += listOf(
+        "-Djdk.tls.server.protocols=TLSv1.3",
+        "-Djdk.tls.client.protocols=TLSv1.3"
+    )
 }
 
 repositories {

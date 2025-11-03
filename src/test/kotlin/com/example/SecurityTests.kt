@@ -93,7 +93,9 @@ class SecurityTests {
 
     @Test
     fun `Refresh token flow works and rejects invalid refresh tokens`() = testApplication {
-        environment { config = ApplicationConfig("application.yaml") }
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
         val client = createConfiguredClient(this)
 
         // Test both login endpoints
@@ -107,9 +109,9 @@ class SecurityTests {
                 setBody(mapOf("refreshToken" to refreshToken))
             }
             assertEquals(OK, refreshResponse.status)
-            val newaccessToken = refreshResponse.body<RefreshResponse>()
-            assertNotNull(newaccessToken.accessToken)
-            assertTrue(isJwtFormat(newaccessToken.accessToken))
+            val newAccessToken = refreshResponse.body<RefreshResponse>()
+            assertNotNull(newAccessToken.accessToken)
+            assertTrue(isJwtFormat(newAccessToken.accessToken))
         }
 
         // Use invalid refresh token (no Authorization header)
