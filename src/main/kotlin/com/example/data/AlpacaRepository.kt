@@ -99,4 +99,12 @@ class AlpacaRepository : TradingRepository, KoinComponent {
                 }
             }
         }
+    override suspend fun getMarketOpeningHours(): HttpResponse =
+        withContext(Dispatchers.IO) {
+            mClient.get(paperBaseUrl) {
+                url {
+                    appendPathSegments("clock")
+                }
+            }
+        }
 }

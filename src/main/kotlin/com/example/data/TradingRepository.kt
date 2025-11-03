@@ -13,4 +13,6 @@ interface TradingRepository {
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse
 
     suspend fun getHistoricalData(historicalRequest: StockAggregationRequest): HttpResponse
+
+    suspend fun getMarketOpeningHours(): HttpResponse
 }

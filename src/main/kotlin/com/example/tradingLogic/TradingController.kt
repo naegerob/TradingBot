@@ -48,6 +48,10 @@ class TradingController : KoinComponent {
         return mAlpacaRepo.getAccountDetails()
     }
 
+    suspend fun getOpeningHours(): HttpResponse {
+        return mAlpacaRepo.getMarketOpeningHours()
+    }
+
     suspend fun doBacktesting(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): Result<Any, TradingLogicError> {
         return mTradingBot.backtest(strategySelector, stockAggregationRequest)
     }

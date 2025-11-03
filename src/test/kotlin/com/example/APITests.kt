@@ -13,6 +13,7 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
@@ -540,6 +541,51 @@ class APITests : KoinTest {
             setBody(stockAggregationRequest)
         }
         assertEquals(BadRequest, httpResponse.status)
+
+        unloadKoinModules(overrides)
+    }
+
+    @Test
+    fun `Get opening hours`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mapOf(
+                    "is_open" to false,
+                    "next_close" to "2025-11-04T16:00:00-05:00",
+                    "next_open" to "2025-11-04T09:30:00-05:00",
+                    "timestamp" to "2025-11-03T16:48:13.091852201-05:00"
+                )),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.get("/clock") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+        assertEquals(OK, httpResponse.status)
+        val openingHours = httpResponse.body<OpeningHours>()
+        assertEquals(false, openingHours.isOpen)
+        assertEquals("2025-11-04T16:00:00-05:00", openingHours.nextClose)
+        assertEquals("2025-11-04T09:30:00-05:00", openingHours.nextOpen)
+        assertEquals("2025-11-03T16:48:13.091852201-05:00", openingHours.timestamp)
 
         unloadKoinModules(overrides)
     }

@@ -125,6 +125,10 @@ fun Application.configureRouting() {
                 val accountResponse = tradingController.fetchAccountDetails()
                 respondToClient(accountResponse, call)
             }
+            get("/clock") {
+                val openingHoursResponse = tradingController.getOpeningHours()
+                respondToClient(openingHoursResponse, call)
+            }
             route("/Indicators") {
                 get("/Original") {
                     val original = tradingController.mTradingBot.mIndicators.mOriginalPrices
