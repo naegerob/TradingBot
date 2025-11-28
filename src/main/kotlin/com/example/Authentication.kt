@@ -28,9 +28,6 @@ fun Application.configureAuthentication() {
                     .build()
             )
             validate { credential ->
-                // Neu: nur Access Token zulassen
-                val type = credential.payload.getClaim("type")?.asString()
-                if (type != "access") return@validate null
                 if (credential.payload.audience.contains(audience))
                     JWTPrincipal(credential.payload)
                 else
