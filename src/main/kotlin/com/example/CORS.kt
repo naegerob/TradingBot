@@ -2,10 +2,11 @@ package com.example
 
 import io.ktor.http.*
 import io.ktor.server.application.*
+import io.ktor.server.plugins.cors.routing.*
 
 
 fun Application.configureCORS() {
-    install(io.ktor.server.plugins.cors.routing.CORS) {
+    install(CORS) {
         allowMethod(HttpMethod.Post)
         allowMethod(HttpMethod.Get)
         allowMethod(HttpMethod.Options)
