@@ -1,10 +1,10 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Build &amp; Deploy" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
+  <configuration default="false" name="Build &amp; Run Dev" type="docker-deploy" factoryName="dockerfile" server-name="Docker">
     <deployment type="dockerfile">
       <settings>
         <option name="imageTag" value="tradingbot" />
-        <option name="buildCliOptions" value="--platform linux/arm64,linux/amd64" />
-        <option name="containerName" value="tradingbot" />
+        <option name="command" value="sh -c &quot;gradle clean buildFatJar --no-daemon &amp;&amp; java -jar build/libs/*-all.jar&quot;" />
+        <option name="containerName" value="tradingbotdev" />
         <option name="contextFolderPath" value="." />
         <option name="portBindings">
           <list>
@@ -17,22 +17,21 @@
         </option>
         <option name="commandLineOptions" value="-e APIKEY -e PAPERAPIKEY -e PAPERSECRET -e SECRET -e KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD" />
         <option name="showCommandPreview" value="true" />
-        <option name="sourceFilePath" value="Docker/deployment/Dockerfile" />
+        <option name="sourceFilePath" value="Docker/local/Dockerfile" />
         <option name="volumeBindings">
           <list>
             <DockerVolumeBindingImpl>
               <option name="containerPath" value="/home/gradle/app" />
               <option name="hostPath" value="$PROJECT_DIR$" />
+            </DockerVolumeBindingImpl>
+            <DockerVolumeBindingImpl>
+              <option name="containerPath" value="/app/security/tls" />
+              <option name="hostPath" value="$PROJECT_DIR$/security/tls" />
               <option name="readOnly" value="true" />
             </DockerVolumeBindingImpl>
             <DockerVolumeBindingImpl>
               <option name="containerPath" value="/app/security/auth" />
               <option name="hostPath" value="$PROJECT_DIR$/security/auth" />
-              <option name="readOnly" value="true" />
-            </DockerVolumeBindingImpl>
-            <DockerVolumeBindingImpl>
-              <option name="containerPath" value="/app/security/tls" />
-              <option name="hostPath" value="$PROJECT_DIR$/security/tls" />
               <option name="readOnly" value="true" />
             </DockerVolumeBindingImpl>
           </list>
