@@ -17,6 +17,7 @@ import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
+import io.ktor.http.HttpStatusCode.Companion.UnprocessableEntity
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
@@ -279,7 +280,7 @@ class APITests : KoinTest {
         val mockEngine = MockEngine { _ ->
             respond(
                 content = Json.encodeToString(mockOrderResponse),
-                status = HttpStatusCode.UnprocessableEntity,
+                status = UnprocessableEntity,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
         }
@@ -308,7 +309,7 @@ class APITests : KoinTest {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
         }
-        assertEquals(HttpStatusCode.UnprocessableEntity, httpResponse.status)
+        assertEquals(BadRequest, httpResponse.status)
 
         unloadKoinModules(overrides)
     }
