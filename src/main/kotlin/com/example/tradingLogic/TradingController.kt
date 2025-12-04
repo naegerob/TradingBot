@@ -31,9 +31,35 @@ class TradingController : KoinComponent {
     }
 
     fun areValidOrderParameter(orderRequest: OrderRequest): Boolean {
-        return orderRequest.type in types &&
-                orderRequest.side in sides &&
-                orderRequest.timeInForce in timeInForces
+        val isSymbolValid = orderRequest.symbol.isNotEmpty() &&
+            !orderRequest.symbol.contains(",") &&
+            orderRequest.symbol.matches(Regex("^[A-Z.]+$"))
+
+        val isTypeValid = types.any { it.equals(orderRequest.type, ignoreCase = true) }
+        val isSideValid = sides.any { it.equals(orderRequest.side, ignoreCase = true) }
+        val isTimeInForceValid = timeInForces.any { it.equals(orderRequest.timeInForce, ignoreCase = true) }
+
+        val hasQuantity = orderRequest.quantity?.toDoubleOrNull()?.let { it > 0 } ?: false
+        val hasNotional = orderRequest.notional?.toDoubleOrNull()?.let { it > 0 } ?: false
+        val hasValidAmount = hasQuantity || hasNotional
+
+        val isLimitPriceValid = orderRequest.limitPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
+        val isStopPriceValid = orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
+        val isTrailPriceValid = orderRequest.trailPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
+        val isTrailPercentValid = orderRequest.trailPercent?.toDoubleOrNull()?.let { it > 0 } ?: true
+
+        val areLegsValid = orderRequest.legs?.isNotEmpty() ?: true
+
+        return isTypeValid &&
+            isSideValid &&
+            isTimeInForceValid &&
+            isSymbolValid &&
+            hasValidAmount &&
+            isLimitPriceValid &&
+            isStopPriceValid &&
+            isTrailPriceValid &&
+            isTrailPercentValid &&
+            areLegsValid
     }
 
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
