@@ -1,7 +1,7 @@
 ktor:
     deployment:
         sslPort:    8081
-        host:       localhost
+        host:       0.0.0.0
         autoreload: false
     security:
         ssl:
