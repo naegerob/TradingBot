@@ -549,14 +549,17 @@ class APITests : KoinTest {
     @Test
     fun `Get opening hours`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
+
+        val mockClockResponse = OpeningHours(
+            isOpen = false,
+            nextClose = "2025-11-04T16:00:00-05:00",
+            nextOpen = "2025-11-04T09:30:00-05:00",
+            timestamp = "2025-11-03T16:48:13.091852201-05:00"
+        )
+
         val mockEngine = MockEngine { _ ->
             respond(
-                content = Json.encodeToString(mapOf(
-                    "is_open" to false,
-                    "next_close" to "2025-11-04T16:00:00-05:00",
-                    "next_open" to "2025-11-04T09:30:00-05:00",
-                    "timestamp" to "2025-11-03T16:48:13.091852201-05:00"
-                )),
+                content = Json.encodeToString(mockClockResponse),
                 status = OK,
                 headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
             )
@@ -580,6 +583,7 @@ class APITests : KoinTest {
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/clock") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+
         }
         assertEquals(OK, httpResponse.status)
         val openingHours = httpResponse.body<OpeningHours>()
@@ -587,7 +591,6 @@ class APITests : KoinTest {
         assertEquals("2025-11-04T16:00:00-05:00", openingHours.nextClose)
         assertEquals("2025-11-04T09:30:00-05:00", openingHours.nextOpen)
         assertEquals("2025-11-03T16:48:13.091852201-05:00", openingHours.timestamp)
-
         unloadKoinModules(overrides)
     }
 }
