@@ -49,49 +49,47 @@ class TradingBot : KoinComponent {
         val positionSize = 10 // Money per trade
         var positions = 0
 
-
-            val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
-                is Result.Error -> return Result.Error(result.error)
-                is Result.Success -> {
-                    result.data.ifEmpty {
-                        return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
-                    }
+        val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
+            is Result.Error -> return Result.Error(result.error)
+            is Result.Success -> {
+                result.data.ifEmpty {
+                    return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
                 }
             }
+        }
 
-            when (val result = mBacktestIndicators.updateIndicators(bars)) {
-                is Result.Error         -> return Result.Error(result.error)
-                is Result.Success       -> Unit
+        when (val result = mBacktestIndicators.updateIndicators(bars)) {
+            is Result.Error         -> return Result.Error(result.error)
+            is Result.Success       -> Unit
+        }
+
+        mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
+            val tradingSignal = when(val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
+                is Result.Error     -> return Result.Error(indicatorPointsResult.error)
+                is Result.Success   -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
             }
-
-
-            mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
-                val tradingSignal = when(val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
-                    is Result.Error     -> return Result.Error(indicatorPointsResult.error)
-                    is Result.Success   -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
-                }
-                when (tradingSignal) {
-                    TradingSignal.Buy -> {
-                        if (positions == 0) {
-                            positions = positionSize
-                            balance -= positionSize * originalPrice
-                        }
-                    }
-                    TradingSignal.Sell -> {
-                        if (positions == positionSize) {
-                            positions = 0
-                            balance += positionSize * originalPrice
-                        }
-                    }
-                    TradingSignal.Hold -> {
-                        // Do nothing
+            when (tradingSignal) {
+                TradingSignal.Buy -> {
+                    if (positions == 0) {
+                        positions = positionSize
+                        balance -= positionSize * originalPrice
                     }
                 }
+                TradingSignal.Sell -> {
+                    if (positions == positionSize) {
+                        positions = 0
+                        balance += positionSize * originalPrice
+                    }
+                }
+                TradingSignal.Hold -> {
+                    // Do nothing
+                }
             }
-            println("Final position: $positions")
-            val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
-            val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
-            return Result.Success(
+        }
+        println("Final position: $positions")
+        val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
+        val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
+        return Result.Success(
             BacktestResult(
                 strategyName = strategySelector,
                 finalBalance = finalBalance,
