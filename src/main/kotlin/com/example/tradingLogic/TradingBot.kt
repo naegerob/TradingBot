@@ -33,72 +33,72 @@ class TradingBot : KoinComponent {
         mOrderRequest = orderRequest
     }
 
-    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest) : Result<Any, TradingLogicError> {
+    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest) : Result<BacktestResult, TradingLogicError> {
         if(strategySelector == Strategies.None) {
             return Result.Error(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED)
         }
         setStrategy(strategySelector)
-        mBacktestIndicators.mStock = stockAggregationRequest.symbols
-        if(mBacktestIndicators.mStock.isEmpty()) {
+        val symbol = stockAggregationRequest.symbols
+        if (symbol.isEmpty()) {
             return Result.Error(TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED)
         }
+        mBacktestIndicators.mStock = symbol
 
         val initialBalance = 10000.0 // Starting capital
         var balance = initialBalance
         val positionSize = 10 // Money per trade
         var positions = 0
 
-        val job : Deferred<Result<Any, TradingLogicError>> = CoroutineScope(Dispatchers.IO).async {
 
             val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
-                is Result.Error -> return@async Result.Error(result.error)
+                is Result.Error -> return Result.Error(result.error)
                 is Result.Success -> {
                     result.data.ifEmpty {
-                        return@async Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                        return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
                     }
                 }
             }
 
             when (val result = mBacktestIndicators.updateIndicators(bars)) {
-                is Result.Error         -> return@async Result.Error(result.error)
-                is Result.Success       -> { }
+                is Result.Error         -> return Result.Error(result.error)
+                is Result.Success       -> Unit
             }
 
 
             mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
-                val tradingSignal = when(val result = mBacktestIndicators.getIndicatorPoints(index)) {
-                    is Result.Error     -> return@async Result.Error(result.error)
-                    is Result.Success   -> mStrategy.executeAlgorithm(result.data)
+                val tradingSignal = when(val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
+                    is Result.Error     -> return Result.Error(indicatorPointsResult.error)
+                    is Result.Success   -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
                 }
                 when (tradingSignal) {
                     TradingSignal.Buy -> {
                         if (positions == 0) {
-                            println("BUY at $originalPrice")
                             positions = positionSize
                             balance -= positionSize * originalPrice
                         }
                     }
                     TradingSignal.Sell -> {
                         if (positions == positionSize) {
-                            println("SELL at $originalPrice")
                             positions = 0
                             balance += positionSize * originalPrice
                         }
                     }
                     TradingSignal.Hold -> {
-                        println("Hold Position at $originalPrice")
+                        // Do nothing
                     }
                 }
             }
             println("Final position: $positions")
             val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
             val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
-            Result.Success(BacktestResult(strategySelector, finalBalance, winRateInPercent, positions))
-        }
-        return when (val result = job.await()) {
-            is Result.Error<*, *> -> Result.Error(result.error as TradingLogicError)
-            is Result.Success<*, *> -> Result.Success(result.data!!)
-        }
+            return Result.Success(
+            BacktestResult(
+                strategyName = strategySelector,
+                finalBalance = finalBalance,
+                winRate = winRateInPercent,
+                positions = positions
+            )
+        )
     }
 
     fun run() : Result<Unit, TradingLogicError> {

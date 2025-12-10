@@ -155,7 +155,7 @@ class TradingBotTests : KoinTest {
                         })
                     }
                     install(Logging) {
-                        logger = Logger.SIMPLE
+                        logger = Logger.DEFAULT
                         level = LogLevel.ALL
                     }
                     install(DefaultRequest) {
@@ -275,7 +275,7 @@ class TradingBotTests : KoinTest {
                         })
                     }
                     install(Logging) {
-                        logger = Logger.SIMPLE
+                        logger = Logger.DEFAULT
                         level = LogLevel.ALL
                     }
                     install(DefaultRequest) {
@@ -325,7 +325,7 @@ class TradingBotTests : KoinTest {
                         })
                     }
                     install(Logging) {
-                        logger = Logger.SIMPLE
+                        logger = Logger.DEFAULT
                         level = LogLevel.ALL
                     }
                     install(DefaultRequest) {

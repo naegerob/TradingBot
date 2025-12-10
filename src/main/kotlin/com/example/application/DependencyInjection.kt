@@ -1,4 +1,4 @@
-package com.example.di
+package com.example.application
 
 import com.example.data.AlpacaRepository
 import com.example.data.AlpacaRepository.Companion.PAPERAPIKEY
@@ -33,7 +33,7 @@ val appModule = module {
                 })
             }
             install(Logging) {
-                logger = Logger.SIMPLE
+                logger = Logger.DEFAULT
                 level = LogLevel.ALL
             }
             install(DefaultRequest) {
