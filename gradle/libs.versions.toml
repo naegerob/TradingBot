@@ -4,7 +4,7 @@ kotlin-version = "2.1.0"
 exposed-version = "0.57.0"
 h2-version = "2.3.232"
 ktor-version = "3.0.3"
-logback-version = "1.4.14"
+logback-version = "1.5.13"
 kover-version = "0.9.1"
 koin-version = "4.0.2"
 
