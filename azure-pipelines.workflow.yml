@@ -9,8 +9,10 @@ pr:
       - "*"        # run pipeline for ALL pull requests
 
 variables:
-  - group: AlpacaAccess
   - group: LoginCredentials
+  - group: CertificatePrivateKey
+  - group: AlpacaAccess
+
 
 pool:
   vmImage: 'ubuntu-latest'
@@ -30,3 +32,4 @@ steps:
       PAPERAPIKEY: $PAPERAPIKEY
       SECRET: $SECRET
       APIKEY: $APIKEY
+      KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD: $KEYSTORE_PRIVATEKEY
