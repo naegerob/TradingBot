@@ -13,12 +13,10 @@ variables:
   - group: CertificatePrivateKey
   - group: AlpacaAccess
 
-
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-  # Download Secure Files
   - task: DownloadSecureFile@1
     name: keystoreFile
     inputs:
