@@ -4,8 +4,10 @@ trigger:
   - main
 
 variables:
-  group: AlpacaAccess
-  dockerImage: naegerr/tradingbot:latest
+  - group: AlpacaAccess
+  - group: LoginCredentials
+  - name: dockerImage
+    value: naegerr/tradingbot:latest
 
 
 pool:
@@ -28,7 +30,7 @@ steps:
       azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
       imageToDeploy: 'naegerr/tradingbot:120'
       containerAppName: 'tradingbotcontainer'
-        echo "Logged in to Azure"   
+        echo "Logged in to Azure"
 
   - task: AzureCLI@2
     name: 'CreateContainerEnvironment'
