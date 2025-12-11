@@ -19,3 +19,6 @@ steps:
       tasks: 'clean test'
       publishJUnitResults: true
       testResultsFiles: '**/build/test-results/test/*.xml'
+    env:
+      AUTHENTIFICATION_USERNAME: $(USERNAME)
+      AUTHENTIFICATION_PASSWORD: $(PASSWORD)
