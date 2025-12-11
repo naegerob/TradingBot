@@ -1,0 +1,21 @@
+trigger:
+  branches:
+    include:
+      - "*"        # run pipeline on ALL branches
+
+pr:
+  branches:
+    include:
+      - "*"        # run pipeline for ALL pull requests
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: Gradle@3
+    displayName: 'Run Tests'
+    inputs:
+      gradleWrapperFile: 'gradlew'
+      tasks: 'clean test'
+      publishJUnitResults: true
+      testResultsFiles: '**/build/test-results/test/*.xml'
