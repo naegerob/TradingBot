@@ -18,6 +18,22 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+  # Download Secure Files
+  - task: DownloadSecureFile@1
+    name: keystoreFile
+    inputs:
+      secureFile: keystore.p12
+
+  - task: DownloadSecureFile@1
+    name: privateKeyFile
+    inputs:
+      secureFile: private.pem
+
+  - task: DownloadSecureFile@1
+    name: publicKeyFile
+    inputs:
+      secureFile: public.pem
+
   - task: Gradle@3
     displayName: 'Run Tests'
     inputs:
@@ -26,10 +42,13 @@ steps:
       publishJUnitResults: true
       testResultsFiles: '**/build/test-results/test/*.xml'
     env:
-      AUTHENTIFICATION_USERNAME: $USERNAME
-      AUTHENTIFICATION_PASSWORD: $PASSWORD
-      PAPERSECRET: $PAPERSECRET
-      PAPERAPIKEY: $PAPERAPIKEY
-      SECRET: $SECRET
-      APIKEY: $APIKEY
-      KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD: $KEYSTORE_PRIVATEKEY
+      AUTHENTIFICATION_USERNAME: $(USERNAME)
+      AUTHENTIFICATION_PASSWORD: $(PASSWORD)
+      PAPERSECRET: $(PAPERSECRET)
+      PAPERAPIKEY: $(PAPERAPIKEY)
+      SECRET: $(SECRET)
+      APIKEY: $(APIKEY)
+      KEYSTORE_PASSWORD: $(KEYSTORE_PRIVATEKEY)
+      KEYSTORE_PATH: $(keystoreFile.secureFilePath)
+      PRIVATE_KEY_PATH: $(privateKeyFile.secureFilePath)
+      PUBLIC_KEY_PATH: $(publicKeyFile.secureFilePath)
