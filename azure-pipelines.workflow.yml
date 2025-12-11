@@ -48,7 +48,7 @@ steps:
       PAPERAPIKEY: $(PAPERAPIKEY)
       SECRET: $(SECRET)
       APIKEY: $(APIKEY)
-      KEYSTORE_PASSWORD: $(KEYSTORE_PRIVATEKEY)
+      KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD: $(KEYSTORE_PRIVATEKEY)
       KEYSTORE_PATH: $(keystoreFile.secureFilePath)
       PRIVATE_KEY_PATH: $(privateKeyFile.secureFilePath)
       PUBLIC_KEY_PATH: $(publicKeyFile.secureFilePath)
