@@ -5,7 +5,7 @@ ktor:
         autoreload: false
     security:
         ssl:
-            keyStore: security/tls/keystore.p12
+            keyStore: ${KEYSTORE_PATH:security/tls/keystore.p12}
             keyStoreType: PKCS12
             keyAlias: mykeystore
             keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
@@ -17,8 +17,8 @@ ktor:
 
 jwt:
     algorithm: RS256
-    privateKeyPath: security/auth/private.pem
-    publicKeyPath: security/auth/public.pem
+    privateKeyPath: ${PRIVATE_KEY_PATH:security/auth/private.pem}
+    publicKeyPath: ${PUBLIC_KEY_PATH:security/auth/public.pem}
     issuer: "https://localhost:8081/"
     audience: "https://localhost:8081/"
     realm: "Access to Bot"
