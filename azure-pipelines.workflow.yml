@@ -8,6 +8,10 @@ pr:
     include:
       - "*"        # run pipeline for ALL pull requests
 
+variables:
+  - group: AlpacaAccess
+  - group: LoginCredentials
+
 pool:
   vmImage: 'ubuntu-latest'
 
@@ -20,5 +24,9 @@ steps:
       publishJUnitResults: true
       testResultsFiles: '**/build/test-results/test/*.xml'
     env:
-      AUTHENTIFICATION_USERNAME: $(USERNAME)
-      AUTHENTIFICATION_PASSWORD: $(PASSWORD)
+      AUTHENTIFICATION_USERNAME: $USERNAME
+      AUTHENTIFICATION_PASSWORD: $PASSWORD
+      PAPERSECRET: $PAPERSECRET
+      PAPERAPIKEY: $PAPERAPIKEY
+      SECRET: $SECRET
+      APIKEY: $APIKEY
