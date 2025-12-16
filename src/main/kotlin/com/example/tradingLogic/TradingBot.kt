@@ -13,9 +13,8 @@ import org.koin.core.component.inject
 class TradingBot : KoinComponent {
 
     private val mRepository by inject<TradingRepository>()
-    @Volatile
-    private var mIsRunning = false
-    private var mJob: Job? = null
+    private lateinit var mJob: Job
+    private val mBotScope = CoroutineScope(Dispatchers.IO)
     var mIndicators = Indicators()
         private set
     var mBacktestIndicators = Indicators()
@@ -100,14 +99,16 @@ class TradingBot : KoinComponent {
     }
 
     fun run() : Result<Unit, TradingLogicError> {
-        if (mIsRunning) {
+
+        if (mJob.isActive) {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
         }
+
         val delayInMs = parseTimeframeToMillis(mTimeframe)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
-        mIsRunning = true
-        mJob = CoroutineScope(Dispatchers.IO).async<Result<Unit, TradingLogicError>> {
-            while(mIsRunning) {
+
+        mJob = mBotScope.async<Result<Unit, TradingLogicError>> {
+            while(isActive) {
                 when (val result = getAccountBalance()) {
                     is Result.Error ->  return@async Result.Error(result.error)
                     is Result.Success -> mOrderRequest.quantity = result.data.toInt().toString() // TODO: check here the ratio how much it hsould be transferred
@@ -144,8 +145,7 @@ class TradingBot : KoinComponent {
     }
 
     fun stop() {
-        mJob?.cancel()
-        mIsRunning = false
+        mJob.cancel()
     }
 
     private suspend fun createHandledOrder(side: String) : Result<Unit, TradingLogicError> {
