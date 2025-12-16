@@ -15,12 +15,8 @@ class TradingController : KoinComponent {
     var mIndicators = Indicators()
         private set
 
-    // TODO: Consider using builder pattern
     val mTradingBot by inject<TradingBot>()
 
-    /************************************************************
-    Methods
-     ************************************************************/
     fun areValidStockRequestParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
         val isSymbolValid = stockAggregationRequest.symbols.isNotEmpty() && !stockAggregationRequest.symbols.contains(",")
         val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it)}
