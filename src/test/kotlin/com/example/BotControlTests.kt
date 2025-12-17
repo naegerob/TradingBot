@@ -15,6 +15,7 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
@@ -82,6 +83,37 @@ class BotControlTests {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
         assertEquals(OK, httpResponse.status)
+    }
+
+    @Test
+    fun `Start and Stop Bot endpoint returns OK`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponseStart = client.get("/Bot/Start") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+        delay(2)
+        assertEquals(OK, httpResponseStart.status)
+        val httpResponseStop = client.get("/Bot/Stop") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+        assertEquals(OK, httpResponseStop.status)
     }
 
     @Test

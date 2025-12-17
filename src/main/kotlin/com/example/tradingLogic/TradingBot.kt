@@ -13,7 +13,7 @@ import org.koin.core.component.inject
 class TradingBot : KoinComponent {
 
     private val mRepository by inject<TradingRepository>()
-    private lateinit var mJob: Job
+    private var mJob: Job? = null
     private val mBotScope = CoroutineScope(Dispatchers.IO)
     var mIndicators = Indicators()
         private set
@@ -99,11 +99,9 @@ class TradingBot : KoinComponent {
     }
 
     fun run() : Result<Unit, TradingLogicError> {
-
-        if (mJob.isActive) {
+        if(mJob != null && mJob!!.isActive) {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
         }
-
         val delayInMs = parseTimeframeToMillis(mTimeframe)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
 
@@ -145,7 +143,7 @@ class TradingBot : KoinComponent {
     }
 
     fun stop() {
-        mJob.cancel()
+        mJob?.cancel()
     }
 
     private suspend fun createHandledOrder(side: String) : Result<Unit, TradingLogicError> {
