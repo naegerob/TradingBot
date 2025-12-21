@@ -32,7 +32,7 @@ steps:
     inputs:
       secureFile: public.pem
 
-  - task: Gradle@3
+  - task: Gradle@4
     displayName: 'Run Tests'
     inputs:
       gradleWrapperFile: 'gradlew'

@@ -2,18 +2,48 @@ name: '$(Build.DefinitionName)_$(Build.BuildId)'
 
 trigger: none  # no automatic trigger
 
+variables:
+  - group: LoginCredentials
+  - group: CertificatePrivateKey
+  - group: AlpacaAccess
+
 pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+  - task: DownloadSecureFile@1
+    name: keystoreFile
+    inputs:
+      secureFile: keystore.p12
+
+  - task: DownloadSecureFile@1
+    name: privateKeyFile
+    inputs:
+      secureFile: private.pem
+
+  - task: DownloadSecureFile@1
+    name: publicKeyFile
+    inputs:
+      secureFile: public.pem
   - task: Gradle@4
+    displayName: 'Run Tests'
     inputs:
       gradleWrapperFile: 'gradlew'
-      tasks: 'test'
+      tasks: 'clean test'
       publishJUnitResults: true
       testResultsFiles: '**/build/test-results/test/*.xml'
-      options: >-
-        -Dexclude.integration.pattern=**/IntegrationTest
+    env:
+      AUTHENTIFICATION_USERNAME: $(USERNAME)
+      AUTHENTIFICATION_PASSWORD: $(PASSWORD)
+      PAPERSECRET: $(PAPERSECRET)
+      PAPERAPIKEY: $(PAPERAPIKEY)
+      SECRET: $(SECRET)
+      APIKEY: $(APIKEY)
+      KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD: $(KEYSTORE_PRIVATEKEY)
+      KEYSTORE_PATH: $(keystoreFile.secureFilePath)
+      PRIVATEKEY_PATH: $(privateKeyFile.secureFilePath)
+      PUBLICKEY_PATH: $(publicKeyFile.secureFilePath)
+
 
   - task: Docker@2
     inputs:
