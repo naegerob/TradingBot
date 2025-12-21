@@ -39,6 +39,10 @@ ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
 WORKDIR $WORKDIR
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/health || exit 1
 
+# Limit permission at the end, so copy above still works
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
+
 ENTRYPOINT ["/bin/sh","-c","set -eu; \
   echo 'Prüfe Keystore:' security/tls/keystore.p12; \
   if [ ! -f security/tls/keystore.p12 ]; then echo 'Keystore fehlt' >&2; ls -R security || true; exit 1; fi; \
