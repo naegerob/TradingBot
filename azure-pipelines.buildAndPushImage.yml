@@ -44,13 +44,10 @@ steps:
       PRIVATEKEY_PATH: $(privateKeyFile.secureFilePath)
       PUBLICKEY_PATH: $(publicKeyFile.secureFilePath)
 
-
-  - task: Docker@2
+  - task: Bash@3
+    displayName: 'Build and push multi-arch Docker image'
     inputs:
-      command: 'buildAndPush'
-      Dockerfile: '**/deployment/Dockerfile'
-      buildContext: '$(Build.SourcesDirectory)'
-      repository: 'naegerr/tradingbot'
-      containerRegistry: 'Tradingbot'
-      tags: |
-        $(Build.BuildId)
+      targetType: 'filePath'
+      filePath: '.run/CrossBuildAndPush.sh'
+      arguments: ''
+      workingDirectory: '$(Build.SourcesDirectory)'
