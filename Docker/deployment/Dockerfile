@@ -38,7 +38,6 @@ HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localho
 
 # Limit permission at the end, so copy above still works
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-RUN chown -R appuser:appgroup $WORKDIR/security
 USER appuser
 
 ENTRYPOINT ["/bin/sh","-c","set -eu; \
