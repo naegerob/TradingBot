@@ -32,9 +32,6 @@ ENV WORKDIR=/app
 
 # Use COPY with exact file name or wildcard if fatJar is consistent
 COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
-ENV KEYSTORE_TLS=$WORKDIR/security/tls/keystore.p12
-ENV JWT_PRIVATE_KEY_PATH=$WORKDIR/security/auth/private.pem
-ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
 
 WORKDIR $WORKDIR
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- http://localhost:8081/health || exit 1
