@@ -45,6 +45,23 @@ steps:
       PUBLICKEY_PATH: $(publicKeyFile.secureFilePath)
 
   - task: Bash@3
+    displayName: 'Print info'
+    inputs:
+      targetType: 'inline'
+      script: |
+        echo "Hello from pipeline"
+        echo "Build.SourcesDirectory = $(Build.SourcesDirectory)"
+        echo "Working directory = $(pwd)"
+        echo "Branch = $(Build.SourceBranch)"
+        echo ""
+        echo "=== Contents of current directory ==="
+        ls -la
+
+        echo ""
+        echo "=== Contents of Build.SourcesDirectory ==="
+        ls -la $(Build.SourcesDirectory)
+
+  - task: Bash@3
     displayName: 'Build and push multi-arch Docker image'
     inputs:
       targetType: 'filePath'
