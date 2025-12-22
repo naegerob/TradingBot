@@ -48,6 +48,6 @@ steps:
     displayName: 'Build and push multi-arch Docker image'
     inputs:
       targetType: 'filePath'
-      filePath: '**/.run/CrossBuildAndPush.sh'
+      filePath: 'Docker/CrossBuildAndPush.sh'
       arguments: ''
       workingDirectory: '$(Build.SourcesDirectory)'
