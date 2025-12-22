@@ -32,8 +32,6 @@ ENV WORKDIR=/app
 
 # Use COPY with exact file name or wildcard if fatJar is consistent
 COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
-COPY --from=build /home/gradle/app/security/tls $WORKDIR/security/tls
-COPY --from=build /home/gradle/app/security/auth $WORKDIR/security/auth
 ENV KEYSTORE_TLS=$WORKDIR/security/tls/keystore.p12
 ENV JWT_PRIVATE_KEY_PATH=$WORKDIR/security/auth/private.pem
 ENV JWT_PUBLIC_KEY_PATH=$WORKDIR/security/auth/public.pem
