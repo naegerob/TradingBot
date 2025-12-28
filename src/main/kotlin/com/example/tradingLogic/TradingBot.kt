@@ -8,10 +8,14 @@ import io.ktor.http.*
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import org.slf4j.LoggerFactory
 
 
 class TradingBot : KoinComponent {
 
+    companion object {
+        private val log = LoggerFactory.getLogger(TradingBot::class.java)
+    }
     private val mRepository by inject<TradingRepository>()
     private var mJob: Job? = null
     private val mBotScope = CoroutineScope(Dispatchers.IO)
@@ -85,7 +89,7 @@ class TradingBot : KoinComponent {
                 }
             }
         }
-        println("Final position: $positions")
+        log.info("Final position: $positions")
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
         val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
         return Result.Success(

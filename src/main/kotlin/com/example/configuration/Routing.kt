@@ -16,6 +16,7 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import org.slf4j.LoggerFactory
 import java.util.*
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -25,6 +26,9 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.Base64
+
+
+private val log = LoggerFactory.getLogger("Routing")
 
 fun Application.configureRouting() {
     val tradingController = TradingController()
@@ -240,7 +244,7 @@ fun Application.configureRouting() {
             route("/HistoricalBars") {
                 get("/Get") {
                     val stockRequest = StockAggregationRequest()
-                    println(stockRequest)
+                    log.info("Received stock request in ${call.request.path()}: $stockRequest")
                     val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
                     if (isSuccessfulSet) {
                         val stockResponse = tradingController.getStockData(stockRequest)
@@ -252,7 +256,8 @@ fun Application.configureRouting() {
                 }
                 post("/Request") {
                     val stockRequest = call.receive<StockAggregationRequest>()
-                    println(stockRequest)
+                    log.info("Received stock request in ${call.request.path()}: $stockRequest")
+                    log.error("Test")
                     val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
                     if (isSuccessfulSet) {
                         val stockResponse = tradingController.getStockData(stockRequest)
@@ -266,7 +271,8 @@ fun Application.configureRouting() {
             route("/Bot") {
                 post("/Backtesting") {
                     val backtestConfig = call.receive<BacktestConfig>()
-                    println(backtestConfig)
+                    log.info("Backtesting: $backtestConfig")
+
                     val backtestResult = backtestConfig.let {
                         tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
                     }
