@@ -25,6 +25,7 @@ data class BacktestConfig(
 data class BacktestResult(
     @SerialName("strategy_name") val strategyName: Strategies = Strategies.None,
     @SerialName("final_balance") val finalBalance: Double = 0.0,
-    @SerialName("win_rate") val winRate: Double = 0.0,
+    @SerialName("roi_percent") val roiPercent: Double = 0.0,
+    @SerialName("winRate_percent") val winRatePercent: Double = 0.0,
     @SerialName("positions") val positions: Int = 0
 ): ApiResponse()

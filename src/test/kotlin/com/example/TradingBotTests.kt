@@ -184,7 +184,7 @@ class TradingBotTests : KoinTest {
 
     @Test
     fun `Backtesting with default stockAggregation`() {
-
+        // This data set provokes one buy, therefore winRate stays default value
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
                 "AAPL" to listOf(
@@ -300,7 +300,8 @@ class TradingBotTests : KoinTest {
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
                     assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
-                    assertNotEquals(defaultBackTestResult.winRate, resultValue.winRate)
+                    assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
+                    assertEquals(defaultBackTestResult.winRatePercent, resultValue.winRatePercent)
                     assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
                 } else {
                     fail("resultValue could not be casted")

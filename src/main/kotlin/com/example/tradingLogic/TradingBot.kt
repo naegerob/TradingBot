@@ -9,6 +9,9 @@ import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
+import kotlin.collections.minusAssign
+import kotlin.text.compareTo
+import kotlin.times
 
 
 class TradingBot : KoinComponent {
@@ -49,8 +52,13 @@ class TradingBot : KoinComponent {
 
         val initialBalance = 10000.0 // Starting capital
         var balance = initialBalance
-        val positionSize = 10 // Money per trade
+        val positionSize = 10
         var positions = 0
+
+        var entryPrice: Double? = null
+        var closedTrades = 0
+        var winningTrades = 0
+
 
         val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
             is Result.Error -> return Result.Error(result.error)
@@ -66,7 +74,7 @@ class TradingBot : KoinComponent {
             is Result.Success       -> Unit
         }
 
-        mBacktestIndicators.mLongSMA.forEachIndexed { index, originalPrice ->
+        mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
             val tradingSignal = when(val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
                 is Result.Error     -> return Result.Error(indicatorPointsResult.error)
                 is Result.Success   -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
@@ -74,13 +82,28 @@ class TradingBot : KoinComponent {
             when (tradingSignal) {
                 TradingSignal.Buy -> {
                     if (positions == 0) {
-                        positions = positionSize
-                        balance -= positionSize * originalPrice
+                        val cost = positionSize * originalPrice
+                        if (balance >= cost) {
+                            positions = positionSize
+                            entryPrice = originalPrice
+                            balance -= cost
+                            log.info("Buy qty=$positionSize at price=$originalPrice, cost=$cost")
+                        } else {
+                            log.info("Buy skipped (insufficient balance). Needed=$cost, balance=$balance")
+                        }
                     }
                 }
                 TradingSignal.Sell -> {
-                    if (positions == positionSize) {
+                    if (positions == positionSize && entryPrice != null) {
+                        log.info("Closing position at price: $originalPrice, entry price was: $entryPrice")
+                        val pnl = (originalPrice - entryPrice) * positionSize
+                        closedTrades += 1
+                        if (pnl > 0.0) {
+                            winningTrades += 1
+                        }
+
                         positions = 0
+                        entryPrice = null
                         balance += positionSize * originalPrice
                     }
                 }
@@ -89,14 +112,16 @@ class TradingBot : KoinComponent {
                 }
             }
         }
-        log.info("Final position: $positions")
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
-        val winRateInPercent = (finalBalance - initialBalance) / finalBalance * 100
+        val roiPercent = (finalBalance - initialBalance) / initialBalance * 100
+        val winRatePercent = if (closedTrades == 0) 0.0 else (winningTrades.toDouble() / closedTrades) * 100.0
+        log.info("Final position: $positions, ROI%: $roiPercent, Final Balance: $finalBalance, winrate%: $winRatePercent")
         return Result.Success(
             BacktestResult(
                 strategyName = strategySelector,
                 finalBalance = finalBalance,
-                winRate = winRateInPercent,
+                roiPercent = roiPercent,
+                winRatePercent = winRatePercent,
                 positions = positions
             )
         )
