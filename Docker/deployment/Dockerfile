@@ -30,11 +30,14 @@ FROM amazoncorretto:17-alpine AS runtime
 EXPOSE 8081
 ENV WORKDIR=/app
 
+# curl installation for healthcheck
+RUN apk add --no-cache curl ca-certificates
+
 # Use COPY with exact file name or wildcard if fatJar is consistent
 COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
 
 WORKDIR $WORKDIR
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -qO- https://localhost:8081/health || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsSk https://localhost:8081/health || exit 1
 
 # Limit permission at the end, so copy above still works
 RUN addgroup -S appgroup && adduser -S appuser -G appgroup
