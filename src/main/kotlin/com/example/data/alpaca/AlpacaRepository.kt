@@ -1,23 +1,17 @@
-package com.example.data
+package com.example.data.alpaca
 
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.*
-import io.ktor.client.plugins.*
-import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
+import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
-import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.Json
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
-class AlpacaRepository : TradingRepository, KoinComponent {
+class AlpacaRepository : KoinComponent {
 
     private val mClient by inject<HttpClient>()
     private val paperBaseUrl = createPaperBaseUrl()
@@ -50,7 +44,7 @@ class AlpacaRepository : TradingRepository, KoinComponent {
         }.build()
 
 
-    override suspend fun getAccountDetails(): HttpResponse =
+    suspend fun getAccountDetails(): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseUrl) {
                 url {
@@ -59,8 +53,7 @@ class AlpacaRepository : TradingRepository, KoinComponent {
             }
         }
 
-
-    override suspend fun getOpenPositions(): HttpResponse =
+    suspend fun getOpenPositions(): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseUrl) {
                 url {
@@ -69,7 +62,7 @@ class AlpacaRepository : TradingRepository, KoinComponent {
             }
         }
 
-    override suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
+    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.post(paperBaseUrl) {
                 url {
@@ -79,7 +72,7 @@ class AlpacaRepository : TradingRepository, KoinComponent {
             }
         }
 
-    override suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
+    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest)
             : HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseMarketUrl) {
@@ -95,11 +88,15 @@ class AlpacaRepository : TradingRepository, KoinComponent {
                     parameters.append("feed", historicalRequest.feed)
                     parameters.append("currency", historicalRequest.currency)
                     historicalRequest.pageToken?.let { parameters.append("page_token", it) }
-                    parameters.append("sort", StockAggregationRequest().sort) // Hardcode to newest datapoint at end of list
+                    parameters.append(
+                        "sort",
+                        StockAggregationRequest().sort
+                    ) // Hardcode to newest datapoint at end of list
                 }
             }
         }
-    override suspend fun getMarketOpeningHours(): HttpResponse =
+
+    suspend fun getMarketOpeningHours(): HttpResponse =
         withContext(Dispatchers.IO) {
             mClient.get(paperBaseUrl) {
                 url {
