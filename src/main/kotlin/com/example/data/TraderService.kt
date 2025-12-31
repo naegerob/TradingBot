@@ -22,10 +22,14 @@ class TraderService : KoinComponent {
     }
 
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
+        val quantity: String = orderRequest.quantity?.trim().orEmpty()
+        val notional: String = orderRequest.notional?.trim().orEmpty()
+
         mTransactionStorage.addTransaction(
             symbol = orderRequest.symbol,
             side = orderRequest.side,
-            quantity = orderRequest.quantity
+            quantity = quantity,
+            notional = notional
         )
         return mRepository.createOrder(orderRequest)
     }

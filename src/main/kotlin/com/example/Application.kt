@@ -1,6 +1,7 @@
 package com.example
 
 import com.example.configuration.*
+import com.example.data.database.DatabaseFactory
 import io.ktor.server.application.*
 import io.ktor.server.netty.*
 
@@ -9,6 +10,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    DatabaseFactory.init()
     configureDependencies() // installs Koin
     configureCORS()
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)

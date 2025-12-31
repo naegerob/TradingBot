@@ -2,6 +2,7 @@ package com.example.configuration
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.example.data.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest
@@ -31,6 +32,7 @@ private val log = LoggerFactory.getLogger("Routing")
 
 fun Application.configureRouting() {
     val tradingController = TradingController()
+    val validator = ValidationService()
     routing {
         val loginPaths = listOf("/login", "/")
 
@@ -237,7 +239,7 @@ fun Application.configureRouting() {
             route("/Order") {
                 post("/Create") {
                     val orderRequest = call.receive<OrderRequest>()
-                    val isValidRequest = tradingController.areValidOrderParameter(orderRequest)
+                    val isValidRequest = validator.areValidOrderParameter(orderRequest)
                     if (isValidRequest) {
                         val orderResponse = tradingController.createOrder(orderRequest)
                         respondToClient(orderResponse, call)
@@ -246,11 +248,12 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.BadRequest)
                 }
             }
+
             route("/HistoricalBars") {
                 get("/Get") {
                     val stockRequest = StockAggregationRequest()
-                    log.info("Received stock request in ${call.request.path()}: $stockRequest")
-                    val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
+                    log.info("Received bars request in ${call.request.path()}: $stockRequest")
+                    val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
                     if (isSuccessfulSet) {
                         val stockResponse = tradingController.getStockData(stockRequest)
                         respondToClient(stockResponse, call)
@@ -263,7 +266,7 @@ fun Application.configureRouting() {
                     val stockRequest = call.receive<StockAggregationRequest>()
                     log.info("Received stock request in ${call.request.path()}: $stockRequest")
                     log.error("Test")
-                    val isSuccessfulSet = tradingController.areValidStockRequestParameter(stockRequest)
+                    val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
                     if (isSuccessfulSet) {
                         val stockResponse = tradingController.getStockData(stockRequest)
                         respondToClient(stockResponse, call)

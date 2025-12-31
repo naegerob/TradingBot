@@ -3,12 +3,13 @@ package com.example.data.database
 interface DataBaseFacade {
     suspend fun allTransactions(): List<Transaction>
 
-    suspend fun transaction(id: Int): Transaction?
+    suspend fun getTransaction(id: Int): Transaction?
 
     suspend fun addTransaction(
         symbol: String,
         side: String,
-        quantity: String?
+        quantity: String,
+        notional: String
     ): Transaction
 
     suspend fun deleteTransaction(id: Int): Boolean
