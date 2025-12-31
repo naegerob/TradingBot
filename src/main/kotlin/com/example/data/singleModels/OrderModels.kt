@@ -95,3 +95,7 @@ val sides = listOf(
 val timeInForces = listOf(
     "day", "gtc", "opg", "cls", "ioc", "fok"
 )
+
+val orderClass = listOf(
+    "simple", "bracket", "oco", "oto", "mleg"
+)

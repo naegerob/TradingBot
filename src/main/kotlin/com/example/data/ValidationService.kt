@@ -3,6 +3,7 @@ package com.example.data
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.feeds
+import com.example.data.singleModels.orderClass
 import com.example.data.singleModels.sides
 import com.example.data.singleModels.sorts
 import com.example.data.singleModels.timeInForces
@@ -11,10 +12,13 @@ import com.example.data.singleModels.types
 
 class ValidationService {
 
+    private fun isSymbolValid(symbol: String): Boolean =
+        symbol.isNotEmpty() &&
+        !symbol.contains(",") &&
+        symbol.matches(Regex("^[A-Z.]+$"))
 
     fun areValidStockRequestParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
-        val isSymbolValid =
-            stockAggregationRequest.symbols.isNotEmpty() && !stockAggregationRequest.symbols.contains(",")
+        val isSymbolValid = isSymbolValid(stockAggregationRequest.symbols)
         val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it) }
         val isFeedValid = feeds.any { stockAggregationRequest.feed == it }
         val isSortValid = sorts.any { stockAggregationRequest.sort == it }
@@ -24,9 +28,7 @@ class ValidationService {
     }
 
     fun areValidOrderParameter(orderRequest: OrderRequest): Boolean {
-        val isSymbolValid = orderRequest.symbol.isNotEmpty() &&
-                !orderRequest.symbol.contains(",") &&
-                orderRequest.symbol.matches(Regex("^[A-Z.]+$"))
+        val isSymbolValid = isSymbolValid(orderRequest.symbol)
 
         val isTypeValid = types.any { it.equals(orderRequest.type, ignoreCase = true) }
         val isSideValid = sides.any { it.equals(orderRequest.side, ignoreCase = true) }
@@ -36,6 +38,7 @@ class ValidationService {
         val hasNotional = orderRequest.notional?.toDoubleOrNull()?.let { it > 0 } ?: false
         val hasValidAmount = hasQuantity || hasNotional
 
+        val isOrderClassValid = orderClass.any { it.equals(orderRequest.orderClass, ignoreCase = true) }
         val isLimitPriceValid = orderRequest.limitPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
         val isStopPriceValid = orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
         val isTrailPriceValid = orderRequest.trailPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
@@ -48,6 +51,7 @@ class ValidationService {
                 isTimeInForceValid &&
                 isSymbolValid &&
                 hasValidAmount &&
+                isOrderClassValid &&
                 isLimitPriceValid &&
                 isStopPriceValid &&
                 isTrailPriceValid &&

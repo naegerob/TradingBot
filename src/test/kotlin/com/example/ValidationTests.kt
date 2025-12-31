@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.data.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest
@@ -374,4 +375,220 @@ class ValidationTests {
         // Should be OK or some other valid response (depends on mock setup)
         assert(httpResponse.status.value in 200..299 || httpResponse.status == HttpStatusCode.BadRequest)
     }
+
+    @Test
+    fun `areValidOrderParameter rejects SQL injection in symbol`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL; DROP TABLE orders;--",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "1",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter rejects SQL injection in symbol 2`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market; DROP TABLE orders;--",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "1",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter rejects SQL injection in symbol 3`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy; DROP TABLE orders;--",
+            timeInForce = "day",
+            quantity = "1",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter rejects SQL injection in symbol 5`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day; DROP TABLE orders;--",
+            quantity = "1",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter rejects SQL injection in symbol 6`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "1; DROP TABLE orders;--",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter with negative limitPrice`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "11",
+            notional = null,
+            limitPrice = "-23",
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter with negative stopPrice`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "11",
+            notional = null,
+            limitPrice = null,
+            stopPrice = "-74",
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter with negative trailPrice`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "11",
+            notional = null,
+            limitPrice = null,
+            stopPrice = "-234",
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+    }
+
+    @Test
+    fun `areValidOrderParameter with unreal percentages`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "11",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = "-1",
+            legs = null
+        )
+
+        val isValid = validator.areValidOrderParameter(req)
+        assertEquals(false, isValid)
+
+        val req2 = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "11",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = "101",
+            legs = null
+        )
+        val isValid2 = validator.areValidOrderParameter(req2)
+        assertEquals(false, isValid2)
+    }
+
+
 }
