@@ -6,7 +6,7 @@ class MovingAverageStrategy : TradingStrategy {
 
     override fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal {
         // TODO: Consider only buying if difference increases certain level
-        if(indicatorSnapshot.shortSMA > indicatorSnapshot.longSMA) {
+        if (indicatorSnapshot.shortSMA > indicatorSnapshot.longSMA) {
             return TradingSignal.Buy
         } else if (indicatorSnapshot.shortSMA < indicatorSnapshot.longSMA) {
             return TradingSignal.Sell

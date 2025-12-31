@@ -1,11 +1,8 @@
 package com.example
 
-import com.example.data.AlpacaRepository
-import com.example.data.TradingRepository
 import com.example.data.singleModels.*
 import com.example.data.token.LoginRequest
 import com.example.data.token.LoginResponse
-import com.example.tradingLogic.TradingBot
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -13,7 +10,6 @@ import io.ktor.client.engine.mock.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
-import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK

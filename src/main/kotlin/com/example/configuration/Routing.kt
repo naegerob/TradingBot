@@ -2,10 +2,10 @@ package com.example.configuration
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.example.data.token.LoginRequest
-import com.example.data.token.RefreshRequest
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.token.LoginRequest
+import com.example.data.token.RefreshRequest
 import com.example.tradingLogic.BacktestConfig
 import com.example.tradingLogic.Result
 import com.example.tradingLogic.TradingController
@@ -17,7 +17,6 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
@@ -25,7 +24,7 @@ import java.security.interfaces.RSAPrivateKey
 import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
-import java.util.Base64
+import java.util.*
 
 
 private val log = LoggerFactory.getLogger("Routing")
@@ -68,7 +67,7 @@ fun Application.configureRouting() {
                         .withClaim("type", "refresh")
                         .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
                         .sign(Algorithm.RSA256(publicKey, privateKey))
-                    call.respond(mapOf("accessToken" to accessToken,"refreshToken" to refreshToken))
+                    call.respond(mapOf("accessToken" to accessToken, "refreshToken" to refreshToken))
                 } else {
                     call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
                 }
@@ -122,7 +121,13 @@ fun Application.configureRouting() {
                         .withExpiresAt(Date(now + 7L * 24 * 60 * 60 * 1000)) // 1 Week
                         .withJWTId(UUID.randomUUID().toString())
                         .sign(Algorithm.RSA256(publicKey, privateKey))
-                    call.respond(mapOf("accessToken" to newAccessToken, "refreshToken" to newRefreshToken, "rotated" to "true"))
+                    call.respond(
+                        mapOf(
+                            "accessToken" to newAccessToken,
+                            "refreshToken" to newRefreshToken,
+                            "rotated" to "true"
+                        )
+                    )
                 } else {
                     call.respond(mapOf("accessToken" to newAccessToken, "rotated" to "false"))
                 }
@@ -277,7 +282,11 @@ fun Application.configureRouting() {
                         tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
                     }
                     when (backtestResult) {
-                        is Result.Error -> return@post call.respond(HttpStatusCode.BadRequest, "something went wrong in backTesting, check your config")
+                        is Result.Error -> return@post call.respond(
+                            HttpStatusCode.BadRequest,
+                            "something went wrong in backTesting, check your config"
+                        )
+
                         is Result.Success -> return@post call.respond(HttpStatusCode.OK, backtestResult.data)
                     }
                 }
@@ -320,12 +329,24 @@ fun loadRSAPublicKey(path: String): RSAPublicKey {
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
-        HttpStatusCode.OK                   -> call.respond(HttpStatusCode.OK, httpResponse.bodyAsText())
-        HttpStatusCode.BadRequest           -> call.respond(HttpStatusCode.BadRequest, "Parameter have wrong format. Check Alpaca Doc!")
-        HttpStatusCode.MovedPermanently     -> call.respond(HttpStatusCode.MovedPermanently)
-        HttpStatusCode.NotFound             -> call.respond(HttpStatusCode.NotFound)
-        HttpStatusCode.Forbidden            -> call.respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient. Or proxy blocks API call.")
-        HttpStatusCode.UnprocessableEntity  -> call.respond(HttpStatusCode.UnprocessableEntity, "Input parameters are not recognized. Or Alpaca has closed")
-        else                                -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
+        HttpStatusCode.OK -> call.respond(HttpStatusCode.OK, httpResponse.bodyAsText())
+        HttpStatusCode.BadRequest -> call.respond(
+            HttpStatusCode.BadRequest,
+            "Parameter have wrong format. Check Alpaca Doc!"
+        )
+
+        HttpStatusCode.MovedPermanently -> call.respond(HttpStatusCode.MovedPermanently)
+        HttpStatusCode.NotFound -> call.respond(HttpStatusCode.NotFound)
+        HttpStatusCode.Forbidden -> call.respond(
+            HttpStatusCode.Forbidden,
+            "Buying power or shares is not sufficient. Or proxy blocks API call."
+        )
+
+        HttpStatusCode.UnprocessableEntity -> call.respond(
+            HttpStatusCode.UnprocessableEntity,
+            "Input parameters are not recognized. Or Alpaca has closed"
+        )
+
+        else -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
     }
 }

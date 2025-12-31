@@ -1,6 +1,6 @@
 package com.example.tradingLogic
 
-import com.example.data.ApiResponse
+import com.example.data.alpaca.ApiResponse
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.tradingLogic.strategies.Strategies
 import kotlinx.serialization.SerialName
@@ -13,13 +13,13 @@ data class BotConfig(
     @SerialName("time_frame") val timeFrame: String = "",
     @SerialName("start_date") val startDate: String = "",
     @SerialName("strategy_selection") val strategySelection: Strategies = Strategies.None,
-): ApiResponse()
+) : ApiResponse()
 
 @Serializable
 data class BacktestConfig(
     @SerialName("strategy_selector") val strategySelector: Strategies = Strategies.MovingAverage,
     @SerialName("stock_aggregation_request") val stockAggregationRequest: StockAggregationRequest = StockAggregationRequest()
-): ApiResponse()
+) : ApiResponse()
 
 @Serializable
 data class BacktestResult(
@@ -28,4 +28,4 @@ data class BacktestResult(
     @SerialName("roi_percent") val roiPercent: Double = 0.0,
     @SerialName("winRate_percent") val winRatePercent: Double = 0.0,
     @SerialName("positions") val positions: Int = 0
-): ApiResponse()
+) : ApiResponse()

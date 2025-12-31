@@ -1,9 +1,10 @@
 package com.example.configuration
 
-import com.example.data.AlpacaRepository
-import com.example.data.AlpacaRepository.Companion.PAPERAPIKEY
-import com.example.data.AlpacaRepository.Companion.PAPERSECRET
-import com.example.data.TradingRepository
+import com.example.data.TraderService
+import com.example.data.alpaca.AlpacaRepository
+import com.example.data.alpaca.AlpacaRepository.Companion.PAPERAPIKEY
+import com.example.data.alpaca.AlpacaRepository.Companion.PAPERSECRET
+import com.example.data.database.DataBaseImpl
 import com.example.tradingLogic.TradingBot
 import io.ktor.client.*
 import io.ktor.client.engine.*
@@ -20,7 +21,7 @@ import org.koin.ktor.plugin.Koin
 
 val appModule = module {
     single<HttpClientEngine> { CIO.create() }
-    single<TradingRepository> { AlpacaRepository() }
+    single<AlpacaRepository> { AlpacaRepository() }
     single<TradingBot> { TradingBot() }
     single<HttpClient> { // Alpaca API
         HttpClient(get()) {
@@ -44,6 +45,8 @@ val appModule = module {
             }
         }
     }
+    single<DataBaseImpl> { DataBaseImpl() }
+    single<TraderService> { TraderService() }
 }
 
 fun Application.configureDependencies() {

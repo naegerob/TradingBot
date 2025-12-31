@@ -1,8 +1,8 @@
 package com.example
 
+import com.example.data.singleModels.OrderRequest
 import com.example.data.token.LoginRequest
 import com.example.data.token.RefreshRequest
-import com.example.data.singleModels.OrderRequest
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
@@ -317,7 +317,11 @@ class AuthenticationEdgeCaseTests {
 
         indicatorEndpoints.forEach { endpoint ->
             val httpResponse = client.get(endpoint)
-            assertEquals(HttpStatusCode.Unauthorized, httpResponse.status, "Endpoint $endpoint should require authentication")
+            assertEquals(
+                HttpStatusCode.Unauthorized,
+                httpResponse.status,
+                "Endpoint $endpoint should require authentication"
+            )
         }
     }
 
@@ -354,7 +358,11 @@ class AuthenticationEdgeCaseTests {
 
         backtestEndpoints.forEach { endpoint ->
             val httpResponse = client.get(endpoint)
-            assertEquals(HttpStatusCode.Unauthorized, httpResponse.status, "Endpoint $endpoint should require authentication")
+            assertEquals(
+                HttpStatusCode.Unauthorized,
+                httpResponse.status,
+                "Endpoint $endpoint should require authentication"
+            )
         }
     }
 }

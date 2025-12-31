@@ -1,17 +1,16 @@
 package com.example.tradingLogic
 
-import com.example.data.TradingRepository
+import com.example.data.TraderService
 import com.example.data.singleModels.*
-import com.example.tradingLogic.strategies.*
+import com.example.tradingLogic.strategies.Strategies
+import com.example.tradingLogic.strategies.StrategyFactory
+import com.example.tradingLogic.strategies.TradingSignal
 import io.ktor.client.call.*
 import io.ktor.http.*
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import kotlin.collections.minusAssign
-import kotlin.text.compareTo
-import kotlin.times
 
 
 class TradingBot : KoinComponent {
@@ -19,7 +18,8 @@ class TradingBot : KoinComponent {
     companion object {
         private val log = LoggerFactory.getLogger(TradingBot::class.java)
     }
-    private val mRepository by inject<TradingRepository>()
+
+    private val mTraderService by inject<TraderService>()
     private var mJob: Job? = null
     private val mBotScope = CoroutineScope(Dispatchers.IO)
     var mIndicators = Indicators()
@@ -39,8 +39,11 @@ class TradingBot : KoinComponent {
         mOrderRequest = orderRequest
     }
 
-    suspend fun backtest(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest) : Result<BacktestResult, TradingLogicError> {
-        if(strategySelector == Strategies.None) {
+    suspend fun backtest(
+        strategySelector: Strategies,
+        stockAggregationRequest: StockAggregationRequest
+    ): Result<BacktestResult, TradingLogicError> {
+        if (strategySelector == Strategies.None) {
             return Result.Error(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED)
         }
         setStrategy(strategySelector)
@@ -70,14 +73,14 @@ class TradingBot : KoinComponent {
         }
 
         when (val result = mBacktestIndicators.updateIndicators(bars)) {
-            is Result.Error         -> return Result.Error(result.error)
-            is Result.Success       -> Unit
+            is Result.Error -> return Result.Error(result.error)
+            is Result.Success -> Unit
         }
 
         mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
-            val tradingSignal = when(val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
-                is Result.Error     -> return Result.Error(indicatorPointsResult.error)
-                is Result.Success   -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
+            val tradingSignal = when (val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
+                is Result.Error -> return Result.Error(indicatorPointsResult.error)
+                is Result.Success -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
             }
             when (tradingSignal) {
                 TradingSignal.Buy -> {
@@ -93,6 +96,7 @@ class TradingBot : KoinComponent {
                         }
                     }
                 }
+
                 TradingSignal.Sell -> {
                     if (positions == positionSize && entryPrice != null) {
                         log.info("Closing position at price: $originalPrice, entry price was: $entryPrice")
@@ -107,6 +111,7 @@ class TradingBot : KoinComponent {
                         balance += positionSize * originalPrice
                     }
                 }
+
                 TradingSignal.Hold -> {
                     // Do nothing
                 }
@@ -127,42 +132,50 @@ class TradingBot : KoinComponent {
         )
     }
 
-    fun run() : Result<Unit, TradingLogicError> {
-        if(mJob != null && mJob!!.isActive) {
+    fun run(): Result<Unit, TradingLogicError> {
+        if (mJob != null && mJob!!.isActive) {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
         }
         val delayInMs = parseTimeframeToMillis(mTimeframe)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
 
         mJob = mBotScope.async<Result<Unit, TradingLogicError>> {
-            while(isActive) {
+            while (isActive) {
                 when (val result = getAccountBalance()) {
-                    is Result.Error ->  return@async Result.Error(result.error)
-                    is Result.Success -> mOrderRequest.quantity = result.data.toInt().toString() // TODO: check here the ratio how much it hsould be transferred
+                    is Result.Error -> return@async Result.Error(result.error)
+                    is Result.Success -> mOrderRequest.quantity =
+                        result.data.toInt().toString() // TODO: check here the ratio how much it hsould be transferred
                 }
-                when(val result = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)) {
-                    is Result.Error     -> return@async Result.Error(result.error)
-                    is Result.Success   -> mIndicators.updateIndicators(result.data)
+                when (val result = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)) {
+                    is Result.Error -> return@async Result.Error(result.error)
+                    is Result.Success -> mIndicators.updateIndicators(result.data)
                 }
 
-                val tradingSignal = when(val result = mIndicators.getIndicatorPoints(-1)) {
-                    is Result.Error     -> return@async Result.Error(result.error)
-                    is Result.Success   -> mStrategy.executeAlgorithm(result.data)
+                val tradingSignal = when (val result = mIndicators.getIndicatorPoints(-1)) {
+                    is Result.Error -> return@async Result.Error(result.error)
+                    is Result.Success -> mStrategy.executeAlgorithm(result.data)
                 }
-                when(tradingSignal) {
+                when (tradingSignal) {
                     TradingSignal.Buy -> {
                         when (val result = createHandledOrder("buy")) {
-                            is Result.Success   -> { /* Do Nothing */ }
-                            is Result.Error     -> return@async Result.Error(result.error)
+                            is Result.Success -> { /* Do Nothing */
+                            }
+
+                            is Result.Error -> return@async Result.Error(result.error)
                         }
                     }
+
                     TradingSignal.Sell -> {
                         when (val result = createHandledOrder("sell")) { // TODO: check mOrderRequest
-                            is Result.Success   -> { /* Do Nothing */ }
-                            is Result.Error     -> return@async Result.Error(result.error)
+                            is Result.Success -> { /* Do Nothing */
+                            }
+
+                            is Result.Error -> return@async Result.Error(result.error)
                         }
                     }
-                    TradingSignal.Hold -> { /* Do nothing */ }
+
+                    TradingSignal.Hold -> { /* Do nothing */
+                    }
                 }
                 delay(delayInMs)
             }
@@ -175,17 +188,17 @@ class TradingBot : KoinComponent {
         mJob?.cancel()
     }
 
-    private suspend fun createHandledOrder(side: String) : Result<Unit, TradingLogicError> {
+    private suspend fun createHandledOrder(side: String): Result<Unit, TradingLogicError> {
         if (side != "sell" && side != "buy") {
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
         }
         mOrderRequest.side = side
-        val httpResponse = mRepository.createOrder(mOrderRequest) // TODO: check mOrderRequest
+        val httpResponse = mTraderService.createOrder(mOrderRequest) // TODO: check mOrderRequest
         return when (httpResponse.status) {
-            HttpStatusCode.OK                   -> Result.Success(Unit)
-            HttpStatusCode.Forbidden            -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
-            HttpStatusCode.UnprocessableEntity  -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            else                                -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
+            HttpStatusCode.OK -> Result.Success(Unit)
+            HttpStatusCode.Forbidden -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
+            HttpStatusCode.UnprocessableEntity -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            else -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
         }
     }
 
@@ -206,8 +219,11 @@ class TradingBot : KoinComponent {
         }
     }
 
-    private suspend fun getValidatedHistoricalBars(stockAggregationRequest: StockAggregationRequest, indicators: Indicators) : Result<List<StockBar>, TradingLogicError> {
-        val httpResponse = mRepository.getHistoricalData(stockAggregationRequest)
+    private suspend fun getValidatedHistoricalBars(
+        stockAggregationRequest: StockAggregationRequest,
+        indicators: Indicators
+    ): Result<List<StockBar>, TradingLogicError> {
+        val httpResponse = mTraderService.getHistoricalData(stockAggregationRequest)
         when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val stockResponse = httpResponse.body<StockAggregationResponse>()
@@ -216,18 +232,19 @@ class TradingBot : KoinComponent {
                 }
                 return Result.Success(stockResponse.bars[indicators.mStock]!!)
             }
-            HttpStatusCode.TooManyRequests  -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
-            HttpStatusCode.BadRequest       -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            HttpStatusCode.Unauthorized     -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            else                            -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
+
+            HttpStatusCode.TooManyRequests -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
+            HttpStatusCode.BadRequest -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            HttpStatusCode.Unauthorized -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            else -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
         }
     }
 
-    private suspend fun getAccountBalance() : Result<Double, TradingLogicError> {
-        val httpResponse = mRepository.getAccountDetails()
+    private suspend fun getAccountBalance(): Result<Double, TradingLogicError> {
+        val httpResponse = mTraderService.getAccountDetails()
         return when (httpResponse.status) {
-            HttpStatusCode.OK   -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
-            else                -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
+            HttpStatusCode.OK -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
+            else -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
         }
     }
 

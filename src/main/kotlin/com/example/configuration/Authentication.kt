@@ -42,19 +42,28 @@ fun Application.configureAuthentication() {
                     when (state) {
                         TokenState.EXPIRED -> call.respond(
                             HttpStatusCode.Unauthorized,
-                            mapOf("error" to "TOKEN_EXPIRED", "message" to "Access token expired. Please use the refresh token.")
+                            mapOf(
+                                "error" to "TOKEN_EXPIRED",
+                                "message" to "Access token expired. Please use the refresh token."
+                            )
                         )
+
                         TokenState.MALFORMED -> call.respond(
                             HttpStatusCode.Unauthorized,
                             mapOf("error" to "TOKEN_MALFORMED", "message" to "Token structure invalid (malformed).")
                         )
+
                         TokenState.MISSING -> call.respond(
                             HttpStatusCode.Unauthorized,
                             mapOf("error" to "TOKEN_MISSING", "message" to "Authorization header missing.")
                         )
+
                         TokenState.VALID_OR_UNKNOWN -> call.respond(
                             HttpStatusCode.Unauthorized,
-                            mapOf("error" to "TOKEN_INVALID", "message" to "Token is invalid or signature verification failed.")
+                            mapOf(
+                                "error" to "TOKEN_INVALID",
+                                "message" to "Token is invalid or signature verification failed."
+                            )
                         )
                     }
                 } catch (e: Exception) {

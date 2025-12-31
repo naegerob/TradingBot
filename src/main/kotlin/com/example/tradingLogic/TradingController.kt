@@ -1,7 +1,6 @@
 package com.example.tradingLogic
 
-
-import com.example.data.TradingRepository
+import com.example.data.alpaca.AlpacaRepository
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.statement.*
@@ -10,7 +9,7 @@ import org.koin.core.component.inject
 
 class TradingController : KoinComponent {
 
-    private val mAlpacaRepo by inject<TradingRepository>()
+    private val mAlpacaRepo by inject<AlpacaRepository>()
 
     var mIndicators = Indicators()
         private set
@@ -18,18 +17,20 @@ class TradingController : KoinComponent {
     val mTradingBot by inject<TradingBot>()
 
     fun areValidStockRequestParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
-        val isSymbolValid = stockAggregationRequest.symbols.isNotEmpty() && !stockAggregationRequest.symbols.contains(",")
-        val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it)}
+        val isSymbolValid =
+            stockAggregationRequest.symbols.isNotEmpty() && !stockAggregationRequest.symbols.contains(",")
+        val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it) }
         val isFeedValid = feeds.any { stockAggregationRequest.feed == it }
         val isSortValid = sorts.any { stockAggregationRequest.sort == it }
-        val isCorrectTimeframe = stockAggregationRequest.timeframe.contains(Regex("\\d+(Min|T|Hour|H|Day|D|Week|W|Month|M)"))
+        val isCorrectTimeframe =
+            stockAggregationRequest.timeframe.contains(Regex("\\d+(Min|T|Hour|H|Day|D|Week|W|Month|M)"))
         return isSymbolValid && isTimeframeValid && isFeedValid && isSortValid && isCorrectTimeframe
     }
 
     fun areValidOrderParameter(orderRequest: OrderRequest): Boolean {
         val isSymbolValid = orderRequest.symbol.isNotEmpty() &&
-            !orderRequest.symbol.contains(",") &&
-            orderRequest.symbol.matches(Regex("^[A-Z.]+$"))
+                !orderRequest.symbol.contains(",") &&
+                orderRequest.symbol.matches(Regex("^[A-Z.]+$"))
 
         val isTypeValid = types.any { it.equals(orderRequest.type, ignoreCase = true) }
         val isSideValid = sides.any { it.equals(orderRequest.side, ignoreCase = true) }
@@ -47,15 +48,15 @@ class TradingController : KoinComponent {
         val areLegsValid = orderRequest.legs?.isNotEmpty() ?: true
 
         return isTypeValid &&
-            isSideValid &&
-            isTimeInForceValid &&
-            isSymbolValid &&
-            hasValidAmount &&
-            isLimitPriceValid &&
-            isStopPriceValid &&
-            isTrailPriceValid &&
-            isTrailPercentValid &&
-            areLegsValid
+                isSideValid &&
+                isTimeInForceValid &&
+                isSymbolValid &&
+                hasValidAmount &&
+                isLimitPriceValid &&
+                isStopPriceValid &&
+                isTrailPriceValid &&
+                isTrailPercentValid &&
+                areLegsValid
     }
 
     suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
@@ -74,9 +75,13 @@ class TradingController : KoinComponent {
         return mAlpacaRepo.getMarketOpeningHours()
     }
 
-    suspend fun doBacktesting(strategySelector: Strategies, stockAggregationRequest: StockAggregationRequest): Result<Any, TradingLogicError> {
+    suspend fun doBacktesting(
+        strategySelector: Strategies,
+        stockAggregationRequest: StockAggregationRequest
+    ): Result<Any, TradingLogicError> {
         return mTradingBot.backtest(strategySelector, stockAggregationRequest)
     }
+
     fun startBot() {
         mTradingBot.run()
     }

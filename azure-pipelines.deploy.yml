@@ -30,7 +30,7 @@ steps:
       azureSubscription: 'TradingbotSubscription(f2d42c0b-0993-4ce2-b0c2-9a304c1092d9)'
       imageToDeploy: 'naegerr/tradingbot:120'
       containerAppName: 'tradingbotcontainer'
-        echo "Logged in to Azure"
+                          echo "Logged in to Azure"
 
   - task: AzureCLI@2
     name: 'CreateContainerEnvironment'
@@ -78,10 +78,10 @@ steps:
                     apikey=$(APIKEY) \
                     secret=$(SECRET)
     env:
-     PAPERSECRET: $PAPERSECRET
-     PAPERAPIKEY: $PAPERAPIKEY
-     SECRET: $SECRET
-     APIKEY: $APIKEY
+      PAPERSECRET: $PAPERSECRET
+      PAPERAPIKEY: $PAPERAPIKEY
+      SECRET: $SECRET
+      APIKEY: $APIKEY
   - task: AzureCLI@2
     name: 'UpdateSecrets'
     inputs:

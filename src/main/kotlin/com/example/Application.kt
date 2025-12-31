@@ -8,7 +8,7 @@ fun main(args: Array<String>) {
     EngineMain.main(args)
 }
 
-fun Application.module(){
+fun Application.module() {
     configureDependencies() // installs Koin
     configureCORS()
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)

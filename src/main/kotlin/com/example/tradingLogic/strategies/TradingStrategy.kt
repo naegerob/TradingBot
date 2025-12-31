@@ -6,6 +6,7 @@ import com.example.tradingLogic.IndicatorSnapshot
 interface TradingStrategy {
     fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal
 }
+
 enum class TradingSignal {
     Buy,
     Sell,
@@ -15,8 +16,8 @@ enum class TradingSignal {
 class StrategyFactory {
     fun createStrategy(strategy: Strategies): TradingStrategy {
         return when (strategy) {
-            Strategies.MovingAverage    -> MovingAverageStrategy()
-            Strategies.None             -> NoOpStrategy()
+            Strategies.MovingAverage -> MovingAverageStrategy()
+            Strategies.None -> NoOpStrategy()
         }
     }
 }

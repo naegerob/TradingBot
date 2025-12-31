@@ -13,13 +13,15 @@ ktor {
         localImageName.set("tradingbot-docker-image")
         imageTag.set("$version-preview")
 
-        portMappings.set(listOf(
-            io.ktor.plugin.features.DockerPortMapping(
-                8081,
-                8081,
-                io.ktor.plugin.features.DockerPortMappingProtocol.TCP
+        portMappings.set(
+            listOf(
+                io.ktor.plugin.features.DockerPortMapping(
+                    8081,
+                    8081,
+                    io.ktor.plugin.features.DockerPortMappingProtocol.TCP
+                )
             )
-        ))
+        )
 
         externalRegistry.set(
             io.ktor.plugin.features.DockerImageRegistry.dockerHub(

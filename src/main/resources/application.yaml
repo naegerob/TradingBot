@@ -1,24 +1,24 @@
 ktor:
-    deployment:
-        sslPort:    8081
-        host:       0.0.0.0
-        autoreload: false
-    security:
-        ssl:
-            keyStore: $KEYSTORE_PATH
-            keyStoreType: PKCS12
-            keyAlias: mykeystore
-            keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD  # it won't work with {}
-            privateKeyPassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
-            clientAuth: none
-    application:
-        modules:
-            - com.example.ApplicationKt.module
+  deployment:
+    sslPort: 8081
+    host: 0.0.0.0
+    autoreload: false
+  security:
+    ssl:
+      keyStore: $KEYSTORE_PATH
+      keyStoreType: PKCS12
+      keyAlias: mykeystore
+      keyStorePassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD  # it won't work with {}
+      privateKeyPassword: $KEYSTORE_PRIVATEKEY_CERTIFICATE_PASSWORD
+      clientAuth: none
+  application:
+    modules:
+      - com.example.ApplicationKt.module
 
 jwt:
-    algorithm: RS256
-    privateKeyPath: $PRIVATEKEY_PATH
-    publicKeyPath: $PUBLICKEY_PATH
-    issuer: "https://localhost:8081/"
-    audience: "https://localhost:8081/"
-    realm: "Access to Bot"
+  algorithm: RS256
+  privateKeyPath: $PRIVATEKEY_PATH
+  publicKeyPath: $PUBLICKEY_PATH
+  issuer: "https://localhost:8081/"
+  audience: "https://localhost:8081/"
+  realm: "Access to Bot"

@@ -4,6 +4,7 @@ import com.example.data.singleModels.StockBar
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.math.pow
+import kotlin.math.sqrt
 
 data class IndicatorSnapshot(
     val originalPrice: Double,
@@ -43,7 +44,7 @@ class Indicators {
     var mRsi = mutableListOf<Double>()
         private set
 
-    fun updateIndicators(historicalBars: List<StockBar>) : Result<Any, TradingLogicError> {
+    fun updateIndicators(historicalBars: List<StockBar>): Result<Any, TradingLogicError> {
         val closingPrices: List<Double> = historicalBars.map { it.close }
 
         mOriginalPrices = closingPrices.toMutableList()
@@ -56,7 +57,7 @@ class Indicators {
         // trim all to shortest
         when (val result = trimListsToShortest()) {
             is Result.Error -> return Result.Error(result.error)
-            is Result.Success -> { }
+            is Result.Success -> {}
         }
 
         // TODO: Check calculation properly
@@ -143,7 +144,7 @@ class Indicators {
                 val roundedSma = df.format(sma).toDouble()
                 mAverageBollingerBand.add(roundedSma)
 
-                val stdDev = kotlin.math.sqrt(window.sumOf { (it - sma).pow(2) } / period)
+                val stdDev = sqrt(window.sumOf { (it - sma).pow(2) } / period)
 
                 val lowerRounded = df.format(roundedSma - stdDevMultiplier * stdDev).toDouble()
                 val upperRounded = df.format(roundedSma + stdDevMultiplier * stdDev).toDouble()
@@ -153,7 +154,7 @@ class Indicators {
         }
     }
 
-    private fun trimListsToShortest() : Result<Any, TradingLogicError> {
+    private fun trimListsToShortest(): Result<Any, TradingLogicError> {
         val allLists = listOf(
             mLowerBollingerBand,
             mUpperBollingerBand,

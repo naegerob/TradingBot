@@ -1,8 +1,8 @@
 package com.example.data.singleModels
 
-import com.example.data.ApiResponse
-import kotlinx.serialization.Serializable
+import com.example.data.alpaca.ApiResponse
 import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 
 @Serializable
@@ -24,7 +24,7 @@ data class OrderRequest(
     @SerialName("take_profit") val takeProfit: TakeProfit? = null,
     @SerialName("stop_loss") val stopLoss: StopLoss? = null,
     @SerialName("position_intent") val positionIntent: String? = null
-): ApiResponse()
+) : ApiResponse()
 
 @Serializable
 data class OrderResponse(
@@ -64,17 +64,17 @@ data class OrderResponse(
     val source: String? = null,
     @SerialName("expires_at") val expiresAt: String? = null,
     @SerialName("position_intent") val positionIntent: String,
-): ApiResponse()
+) : ApiResponse()
 
 @Serializable
 data class TakeProfit(
     @SerialName("limit_price") val limitPrice: String
-): ApiResponse()
+) : ApiResponse()
 
 @Serializable
 data class StopLoss(
     @SerialName("stop_price") val stopPrice: String
-): ApiResponse()
+) : ApiResponse()
 
 @Serializable
 data class OrderLeg(
