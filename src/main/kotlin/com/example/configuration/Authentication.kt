@@ -69,7 +69,7 @@ fun Application.configureAuthentication() {
                 } catch (e: Exception) {
                     call.respond(
                         HttpStatusCode.InternalServerError,
-                        mapOf("error" to "AUTH_FAILURE", "message" to "Authentication handling failed.")
+                        mapOf("error" to "AUTH_FAILURE", "message" to "Authentication handling failed with an error: $e")
                     )
                 }
             }

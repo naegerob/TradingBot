@@ -4,7 +4,6 @@ import com.example.data.alpaca.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
-
 @Serializable
 data class OrderRequest(
     @SerialName("symbol") var symbol: String = "AAPL",
@@ -82,7 +81,7 @@ data class OrderLeg(
     @SerialName("position_intent") val positionIntent: String? = null,
     val symbol: String? = null,
     @SerialName("radio_qty") val ratioQty: String? = null,
-)
+) : ApiResponse()
 
 val types = listOf(
     "market", "limit", "stop", "stop_limit", "trailing_stop"

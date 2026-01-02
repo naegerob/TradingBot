@@ -194,7 +194,11 @@ class APITests : KoinTest {
             expiresAt = "2025-03-24T20:00:00Z"
         )
         val mockEngine = MockEngine { _ ->
-            respond(content = Json.encodeToString(mockOrderResponse), status = OK)
+            respond(
+                content = Json.encodeToString(mockOrderResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
         }
 
         val overrides = module { single<HttpClientEngine> { mockEngine } }
@@ -579,7 +583,6 @@ class APITests : KoinTest {
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/clock") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
-
         }
         assertEquals(OK, httpResponse.status)
         val openingHours = httpResponse.body<OpeningHours>()

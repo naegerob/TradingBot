@@ -332,7 +332,10 @@ fun loadRSAPublicKey(path: String): RSAPublicKey {
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 
     when (httpResponse.status) {
-        HttpStatusCode.OK -> call.respond(HttpStatusCode.OK, httpResponse.bodyAsText())
+        HttpStatusCode.OK -> {
+            val body = httpResponse.bodyAsText()
+            call.respondText(body, ContentType.Application.Json, HttpStatusCode.OK)
+        }
         HttpStatusCode.BadRequest -> call.respond(
             HttpStatusCode.BadRequest,
             "Parameter have wrong format. Check Alpaca Doc!"

@@ -38,11 +38,11 @@ class ValidationService {
         val hasNotional = orderRequest.notional?.toDoubleOrNull()?.let { it > 0 } ?: false
         val hasValidAmount = hasQuantity || hasNotional
 
-        val isOrderClassValid = orderClass.any { it.equals(orderRequest.orderClass, ignoreCase = true) }
+        val isOrderClassValid = orderRequest.orderClass == null || orderClass.any { it.equals(orderRequest.orderClass, ignoreCase = true) }
         val isLimitPriceValid = orderRequest.limitPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
         val isStopPriceValid = orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
         val isTrailPriceValid = orderRequest.trailPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
-        val isTrailPercentValid = orderRequest.trailPercent?.toDoubleOrNull()?.let { it > 0 } ?: true
+        val isTrailPercentValid = orderRequest.trailPercent?.toDoubleOrNull()?.let { it > 0 && it <= 100 } ?: true
 
         val areLegsValid = orderRequest.legs?.isNotEmpty() ?: true
 

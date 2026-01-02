@@ -25,6 +25,7 @@ steps:
     name: publicKeyFile
     inputs:
       secureFile: public.pem
+
   - task: Gradle@4
     displayName: 'Run Tests'
     inputs:

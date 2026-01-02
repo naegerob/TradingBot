@@ -10,6 +10,7 @@ import io.ktor.client.call.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
+import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
@@ -183,8 +184,7 @@ class BotControlTests {
         val httpResponse = client.get("/HistoricalBars/Get") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
-        // This endpoint uses default StockAggregationRequest which may have validation issues
-        // Expected behavior depends on default values - could be OK or BadRequest
-        assert(httpResponse.status == OK || httpResponse.status == HttpStatusCode.BadRequest)
+        assert(httpResponse.status == OK)
+        assert(httpResponse.bodyAsText().isNotEmpty())
     }
 }
