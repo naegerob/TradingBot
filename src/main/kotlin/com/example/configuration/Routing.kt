@@ -2,7 +2,7 @@ package com.example.configuration
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.example.data.ValidationService
+import com.example.services.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest

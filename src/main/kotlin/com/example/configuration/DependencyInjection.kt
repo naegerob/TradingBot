@@ -1,6 +1,6 @@
 package com.example.configuration
 
-import com.example.data.TraderService
+import com.example.services.TraderService
 import com.example.data.alpaca.AlpacaRepository
 import com.example.data.alpaca.AlpacaRepository.Companion.PAPERAPIKEY
 import com.example.data.alpaca.AlpacaRepository.Companion.PAPERSECRET

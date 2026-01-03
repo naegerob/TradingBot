@@ -1,7 +1,7 @@
 package com.example
 
 
-import com.example.data.TraderService
+import com.example.services.TraderService
 import com.example.data.alpaca.AlpacaRepository
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse

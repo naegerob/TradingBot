@@ -1,6 +1,6 @@
 package com.example
 
-import com.example.data.ValidationService
+import com.example.services.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest

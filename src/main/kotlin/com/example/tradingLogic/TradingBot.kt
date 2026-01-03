@@ -1,6 +1,6 @@
 package com.example.tradingLogic
 
-import com.example.data.TraderService
+import com.example.services.TraderService
 import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
 import com.example.tradingLogic.strategies.StrategyFactory
@@ -193,13 +193,8 @@ class TradingBot : KoinComponent {
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
         }
         mOrderRequest.side = side
-        val httpResponse = mTraderService.createOrder(mOrderRequest) // TODO: check mOrderRequest
-        return when (httpResponse.status) {
-            HttpStatusCode.OK -> Result.Success(Unit)
-            HttpStatusCode.Forbidden -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
-            HttpStatusCode.UnprocessableEntity -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            else -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
-        }
+        return mTraderService.createOrder(mOrderRequest) // TODO: check mOrderRequest
+
     }
 
     private fun parseTimeframeToMillis(timeframe: String): Long? {
@@ -222,30 +217,21 @@ class TradingBot : KoinComponent {
     private suspend fun getValidatedHistoricalBars(
         stockAggregationRequest: StockAggregationRequest,
         indicators: Indicators
-    ): Result<List<StockBar>, TradingLogicError> {
-        val httpResponse = mTraderService.getHistoricalData(stockAggregationRequest)
-        when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                val stockResponse = httpResponse.body<StockAggregationResponse>()
-                if (stockResponse.bars[indicators.mStock] == null) {
-                    return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
-                }
-                return Result.Success(stockResponse.bars[indicators.mStock]!!)
-            }
+    ): Result<List<StockBar>, TradingLogicError> =
+        mTraderService.getHistoricalData(stockAggregationRequest, indicators.mStock)
 
-            HttpStatusCode.TooManyRequests -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
-            HttpStatusCode.BadRequest -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            HttpStatusCode.Unauthorized -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            else -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
-        }
-    }
 
     private suspend fun getAccountBalance(): Result<Double, TradingLogicError> {
-        val httpResponse = mTraderService.getAccountDetails()
-        return when (httpResponse.status) {
-            HttpStatusCode.OK -> Result.Success(httpResponse.body<Account>().buyingPower.toDouble())
-            else -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
+        when (val accountDetails = mTraderService.getAccountDetails()) {
+            is Result.Error -> return Result.Error(accountDetails.error)
+            is Result.Success -> {
+                val balanceStr = accountDetails.data.buyingPower
+                val balance = balanceStr.toDoubleOrNull()
+                    ?: return Result.Error(TradingLogicError.DataError.MISC_ERROR)
+                return Result.Success(balance)
+            }
         }
+
     }
 
     private fun setStrategy(strategySelector: Strategies) {

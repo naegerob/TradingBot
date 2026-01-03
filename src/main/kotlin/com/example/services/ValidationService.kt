@@ -1,4 +1,4 @@
-package com.example.data
+package com.example.services
 
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
