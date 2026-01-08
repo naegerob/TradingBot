@@ -9,18 +9,6 @@ Here are some useful links to get you started:
 - The [Ktor Slack chat](https://app.slack.com/client/T09229ZC6/C0A974TJ9). You'll need
   to [request an invite](https://surveys.jetbrains.com/s3/kotlin-slack-sign-up) to join.
 
-## Features
-
-Here's a list of features included in this project:
-
-| Name                                                                   | Description                                                                        |
-|------------------------------------------------------------------------|------------------------------------------------------------------------------------|
-| [Routing](https://start.ktor.io/p/routing)                             | Provides a structured routing DSL                                                  |
-| [kotlinx.serialization](https://start.ktor.io/p/kotlinx-serialization) | Handles JSON serialization using kotlinx.serialization library                     |
-| [Content Negotiation](https://start.ktor.io/p/content-negotiation)     | Provides automatic content conversion according to Content-Type and Accept headers |
-| [Exposed](https://start.ktor.io/p/exposed)                             | Adds Exposed database to your application                                          |
-| [Call Logging](https://start.ktor.io/p/call-logging)                   | Logs client requests                                                               |
-
 ## Building & Running
 
 To build or run the project, use one of the following tasks:
@@ -42,3 +30,19 @@ If the server starts successfully, you'll see the following output:
 2024-12-04 14:32:45.682 [main] INFO  Application - Responding at http://0.0.0.0:8080
 ```
 
+## Dependencies
+This project is based on ktor and uses some supported frameworks and plugins:
+- REST API with https
+- TLS for security
+- Koin: For simplification for Dependency Injection
+- Kotlin Unit Tests
+- Kotlinx-serialization for transmitting http header
+- Authentification with JWT
+- Exposed as database for order history
+- Logging with logback
+- Docker for Containerization
+- Azure for CI
+
+## Description
+This project is a tradingbot which uses the Alpaca API. Ktor works as a backend and communicated with Alpaca API for ordering and requesting stock information.
+The frontend is in early development stage but is in another repository.
