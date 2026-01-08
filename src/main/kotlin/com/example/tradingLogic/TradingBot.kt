@@ -5,8 +5,6 @@ import com.example.data.singleModels.*
 import com.example.tradingLogic.strategies.Strategies
 import com.example.tradingLogic.strategies.StrategyFactory
 import com.example.tradingLogic.strategies.TradingSignal
-import io.ktor.client.call.*
-import io.ktor.http.*
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -31,14 +29,6 @@ class TradingBot : KoinComponent {
     private var mStockAggregationRequest = StockAggregationRequest()
     private var mTimeframe = StockAggregationRequest().timeframe
 
-    fun setStockAggregationRequest(stockAggregationRequest: StockAggregationRequest) {
-        mStockAggregationRequest = stockAggregationRequest
-    }
-
-    fun setOrderRequest(orderRequest: OrderRequest) {
-        mOrderRequest = orderRequest
-    }
-
     suspend fun backtest(
         strategySelector: Strategies,
         stockAggregationRequest: StockAggregationRequest
@@ -61,7 +51,6 @@ class TradingBot : KoinComponent {
         var entryPrice: Double? = null
         var closedTrades = 0
         var winningTrades = 0
-
 
         val bars = when (val result = getValidatedHistoricalBars(stockAggregationRequest, mBacktestIndicators)) {
             is Result.Error -> return Result.Error(result.error)
@@ -100,7 +89,7 @@ class TradingBot : KoinComponent {
                 TradingSignal.Sell -> {
                     if (positions == positionSize && entryPrice != null) {
                         log.info("Closing position at price: $originalPrice, entry price was: $entryPrice")
-                        val pnl = (originalPrice - entryPrice) * positionSize
+                        val pnl = (originalPrice - entryPrice!!) * positionSize
                         closedTrades += 1
                         if (pnl > 0.0) {
                             winningTrades += 1
@@ -219,7 +208,6 @@ class TradingBot : KoinComponent {
         indicators: Indicators
     ): Result<List<StockBar>, TradingLogicError> =
         mTraderService.getHistoricalData(stockAggregationRequest, indicators.mStock)
-
 
     private suspend fun getAccountBalance(): Result<Double, TradingLogicError> {
         when (val accountDetails = mTraderService.getAccountDetails()) {
