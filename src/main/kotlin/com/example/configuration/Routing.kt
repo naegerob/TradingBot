@@ -17,7 +17,6 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.slf4j.LoggerFactory
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
@@ -27,8 +26,6 @@ import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
 
-
-private val log = LoggerFactory.getLogger("Routing")
 
 fun Application.configureRouting() {
     val tradingController = TradingController()
