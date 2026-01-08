@@ -245,8 +245,8 @@ class TradingBotTests : KoinTest {
     }
 
     @Test
-    fun `Backtesting with default stockAggregation`() {
-        // This data set provokes one buy, therefore winRate stays default value
+    fun `Backtesting with default stockAggregation AAPL`() {
+
         val mockStockAggregationResponse = StockAggregationResponse(
             bars = mapOf(
                 "AAPL" to listOf(
@@ -889,8 +889,493 @@ class TradingBotTests : KoinTest {
                 }
             })
         }
+        val stockAggregationRequest = defaultStockAggregationRequest.copy()
+        val backtestConfig = BacktestConfig()
+        backtestConfig.stockAggregationRequest = defaultStockAggregationRequest.copy()
+        backtestConfig.strategySelector = Strategies.MovingAverage
+        val tradingBot by inject<TradingBot>()
+
+        val resultWithDefault = runBlocking {
+            tradingBot.backtest(Strategies.MovingAverage, stockAggregationRequest)
+        }
+        val defaultBackTestResult = BacktestResult()
+        when (resultWithDefault) {
+            is Result.Success<*, *> -> {
+                val resultValue = resultWithDefault.data
+                if (resultValue is BacktestResult) {
+                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
+                    assertEquals(defaultBackTestResult.winRatePercent, resultValue.winRatePercent)
+                    assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
+                } else {
+                    fail("resultValue could not be casted")
+                }
+            }
+            is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
+        }
+        stopKoin()
+    }
+
+    @Test
+    fun `Backtesting with default stockAggregation TSLA`() {
+        // This data set provokes one buy, therefore winRate stays default value
+        val mockStockAggregationResponse = StockAggregationResponse(
+            bars = mapOf(
+                "TSLA" to listOf(
+                    StockBar(
+                        open = 185.31,
+                        high = 185.31,
+                        low = 185.31,
+                        close = 185.31,
+                        volume = 1045,
+                        trades = 28,
+                        vwap = 185.31,
+                        timestamp = "2024-01-03T00:00:00Z"
+                    ),
+                    StockBar(
+                        open = 185.29,
+                        high = 185.29,
+                        low = 185.29,
+                        close = 185.29,
+                        volume = 283,
+                        trades = 36,
+                        vwap = 185.29,
+                        timestamp = "2024-01-03T00:01:00Z"
+                    ),
+                    StockBar(
+                        open = 185.29,
+                        high = 185.29,
+                        low = 185.29,
+                        close = 185.29,
+                        volume = 381,
+                        trades = 26,
+                        vwap = 185.29,
+                        timestamp = "2024-01-03T00:02:00Z"
+                    ),
+                    StockBar(
+                        open = 185.26,
+                        high = 185.26,
+                        low = 185.26,
+                        close = 185.26,
+                        volume = 650,
+                        trades = 30,
+                        vwap = 185.26,
+                        timestamp = "2024-01-03T00:03:00Z"
+                    ),
+                    StockBar(
+                        open = 185.24,
+                        high = 185.24,
+                        low = 185.24,
+                        close = 185.24,
+                        volume = 982,
+                        trades = 40,
+                        vwap = 185.24,
+                        timestamp = "2024-01-03T00:04:00Z"
+                    ),
+                    StockBar(
+                        open = 185.24,
+                        high = 185.24,
+                        low = 185.24,
+                        close = 185.24,
+                        volume = 2718,
+                        trades = 30,
+                        vwap = 185.24,
+                        timestamp = "2024-01-03T00:05:00Z"
+                    ),
+                    StockBar(
+                        open = 185.27,
+                        high = 185.35,
+                        low = 185.25,
+                        close = 185.30,
+                        volume = 1200,
+                        trades = 50,
+                        vwap = 185.29,
+                        timestamp = "2024-01-03T00:06:00Z"
+                    ),
+                    StockBar(
+                        open = 185.30,
+                        high = 185.38,
+                        low = 185.28,
+                        close = 185.32,
+                        volume = 1100,
+                        trades = 45,
+                        vwap = 185.32,
+                        timestamp = "2024-01-03T00:07:00Z"
+                    ),
+                    StockBar(
+                        open = 185.31,
+                        high = 185.40,
+                        low = 185.30,
+                        close = 185.33,
+                        volume = 1300,
+                        trades = 42,
+                        vwap = 185.34,
+                        timestamp = "2024-01-03T00:08:00Z"
+                    ),
+                    StockBar(
+                        open = 185.32,
+                        high = 185.45,
+                        low = 185.33,
+                        close = 185.35,
+                        volume = 1400,
+                        trades = 48,
+                        vwap = 185.36,
+                        timestamp = "2024-01-03T00:09:00Z"
+                    ),
+                    StockBar(
+                        open = 185.33,
+                        high = 185.46,
+                        low = 185.31,
+                        close = 185.34,
+                        volume = 1250,
+                        trades = 39,
+                        vwap = 185.35,
+                        timestamp = "2024-01-03T00:10:00Z"
+                    ),
+                    StockBar(
+                        open = 185.34,
+                        high = 185.48,
+                        low = 185.34,
+                        close = 185.36,
+                        volume = 1600,
+                        trades = 55,
+                        vwap = 185.38,
+                        timestamp = "2024-01-03T00:11:00Z"
+                    ),
+                    StockBar(
+                        open = 185.35,
+                        high = 185.50,
+                        low = 185.36,
+                        close = 185.37,
+                        volume = 1700,
+                        trades = 60,
+                        vwap = 185.39,
+                        timestamp = "2024-01-03T00:12:00Z"
+                    ),
+                    StockBar(
+                        open = 185.37,
+                        high = 185.52,
+                        low = 185.37,
+                        close = 185.39,
+                        volume = 1800,
+                        trades = 62,
+                        vwap = 185.41,
+                        timestamp = "2024-01-03T00:13:00Z"
+                    ),
+                    StockBar(
+                        open = 185.38,
+                        high = 185.51,
+                        low = 185.36,
+                        close = 185.38,
+                        volume = 1500,
+                        trades = 57,
+                        vwap = 185.40,
+                        timestamp = "2024-01-03T00:14:00Z"
+                    ),
+                    StockBar(
+                        open = 185.38,
+                        high = 185.53,
+                        low = 185.39,
+                        close = 185.40,
+                        volume = 1550,
+                        trades = 58,
+                        vwap = 185.42,
+                        timestamp = "2024-01-03T00:15:00Z"
+                    ),
+                    StockBar(
+                        open = 185.40,
+                        high = 185.55,
+                        low = 185.40,
+                        close = 185.41,
+                        volume = 1650,
+                        trades = 54,
+                        vwap = 185.43,
+                        timestamp = "2024-01-03T00:16:00Z"
+                    ),
+                    StockBar(
+                        open = 185.42,
+                        high = 185.57,
+                        low = 185.41,
+                        close = 185.43,
+                        volume = 1750,
+                        trades = 53,
+                        vwap = 185.45,
+                        timestamp = "2024-01-03T00:17:00Z"
+                    ),
+                    StockBar(
+                        open = 185.43,
+                        high = 185.56,
+                        low = 185.40,
+                        close = 185.42,
+                        volume = 1600,
+                        trades = 59,
+                        vwap = 185.44,
+                        timestamp = "2024-01-03T00:18:00Z"
+                    ),
+                    StockBar(
+                        open = 185.44,
+                        high = 185.58,
+                        low = 185.42,
+                        close = 185.44,
+                        volume = 1700,
+                        trades = 61,
+                        vwap = 185.46,
+                        timestamp = "2024-01-03T00:19:00Z"
+                    ),
+                    StockBar(
+                        open = 185.45,
+                        high = 185.60,
+                        low = 185.44,
+                        close = 185.45,
+                        volume = 1800,
+                        trades = 63,
+                        vwap = 185.47,
+                        timestamp = "2024-01-03T00:20:00Z"
+                    ),
+                    StockBar(
+                        open = 185.46,
+                        high = 185.62,
+                        low = 185.45,
+                        close = 185.47,
+                        volume = 1900,
+                        trades = 65,
+                        vwap = 185.49,
+                        timestamp = "2024-01-03T00:21:00Z"
+                    ),
+                    StockBar(
+                        open = 185.47,
+                        high = 185.61,
+                        low = 185.44,
+                        close = 185.46,
+                        volume = 1850,
+                        trades = 64,
+                        vwap = 185.48,
+                        timestamp = "2024-01-03T00:22:00Z"
+                    ),
+                    StockBar(
+                        open = 185.48,
+                        high = 185.63,
+                        low = 185.46,
+                        close = 185.48,
+                        volume = 1950,
+                        trades = 66,
+                        vwap = 185.50,
+                        timestamp = "2024-01-03T00:23:00Z"
+                    ),
+                    StockBar(
+                        open = 185.49,
+                        high = 185.65,
+                        low = 185.47,
+                        close = 185.49,
+                        volume = 2000,
+                        trades = 68,
+                        vwap = 185.51,
+                        timestamp = "2024-01-03T00:24:00Z"
+                    ),
+                    StockBar(
+                        open = 185.50,
+                        high = 185.66,
+                        low = 185.48,
+                        close = 185.50,
+                        volume = 2100,
+                        trades = 70,
+                        vwap = 185.52,
+                        timestamp = "2024-01-03T00:25:00Z"
+                    ),
+                    StockBar(
+                        open = 185.51,
+                        high = 185.67,
+                        low = 185.50,
+                        close = 185.52,
+                        volume = 2200,
+                        trades = 72,
+                        vwap = 185.54,
+                        timestamp = "2024-01-03T00:26:00Z"
+                    ),
+                    StockBar(
+                        open = 185.52,
+                        high = 185.70,
+                        low = 185.53,
+                        close = 185.55,
+                        volume = 2300,
+                        trades = 75,
+                        vwap = 185.56,
+                        timestamp = "2024-01-03T00:27:00Z"
+                    ),
+                    StockBar(
+                        open = 185.55,
+                        high = 185.72,
+                        low = 185.54,
+                        close = 185.57,
+                        volume = 2400,
+                        trades = 77,
+                        vwap = 185.59,
+                        timestamp = "2024-01-03T00:28:00Z"
+                    ),
+                    StockBar(
+                        open = 185.57,
+                        high = 185.75,
+                        low = 185.58,
+                        close = 185.60,
+                        volume = 2500,
+                        trades = 80,
+                        vwap = 185.61,
+                        timestamp = "2024-01-03T00:29:00Z"
+                    ),
+                    StockBar(
+                        open = 185.60,
+                        high = 185.77,
+                        low = 185.60,
+                        close = 185.62,
+                        volume = 2600,
+                        trades = 83,
+                        vwap = 185.64,
+                        timestamp = "2024-01-03T00:30:00Z"
+                    ),
+                    StockBar(
+                        open = 185.62,
+                        high = 185.80,
+                        low = 185.63,
+                        close = 185.65,
+                        volume = 2700,
+                        trades = 85,
+                        vwap = 185.67,
+                        timestamp = "2024-01-03T00:31:00Z"
+                    ),
+                    StockBar(
+                        open = 185.65,
+                        high = 185.82,
+                        low = 185.65,
+                        close = 185.67,
+                        volume = 2800,
+                        trades = 88,
+                        vwap = 185.69,
+                        timestamp = "2024-01-03T00:32:00Z"
+                    ),
+                    StockBar(
+                        open = 185.67,
+                        high = 185.85,
+                        low = 185.68,
+                        close = 185.70,
+                        volume = 2900,
+                        trades = 90,
+                        vwap = 185.72,
+                        timestamp = "2024-01-03T00:33:00Z"
+                    ),
+                    StockBar(
+                        open = 185.70,
+                        high = 185.87,
+                        low = 185.70,
+                        close = 185.72,
+                        volume = 3000,
+                        trades = 92,
+                        vwap = 185.74,
+                        timestamp = "2024-01-03T00:34:00Z"
+                    ),
+                    StockBar(
+                        open = 185.72,
+                        high = 185.90,
+                        low = 185.73,
+                        close = 185.75,
+                        volume = 3100,
+                        trades = 95,
+                        vwap = 185.77,
+                        timestamp = "2024-01-03T00:35:00Z"
+                    ),
+                    StockBar(
+                        open = 185.75,
+                        high = 185.92,
+                        low = 185.75,
+                        close = 185.77,
+                        volume = 3200,
+                        trades = 97,
+                        vwap = 185.79,
+                        timestamp = "2024-01-03T00:36:00Z"
+                    ),
+                    StockBar(
+                        open = 185.77,
+                        high = 185.95,
+                        low = 185.78,
+                        close = 185.80,
+                        volume = 3300,
+                        trades = 100,
+                        vwap = 185.82,
+                        timestamp = "2024-01-03T00:37:00Z"
+                    ),
+                    StockBar(
+                        open = 185.80,
+                        high = 185.97,
+                        low = 185.80,
+                        close = 185.82,
+                        volume = 3400,
+                        trades = 102,
+                        vwap = 185.84,
+                        timestamp = "2024-01-03T00:38:00Z"
+                    ),
+                    StockBar(
+                        open = 185.82,
+                        high = 186.00,
+                        low = 185.83,
+                        close = 185.85,
+                        volume = 3500,
+                        trades = 105,
+                        vwap = 185.87,
+                        timestamp = "2024-01-03T00:39:00Z"
+                    ),
+                    StockBar(
+                        open = 185.85,
+                        high = 186.02,
+                        low = 185.85,
+                        close = 185.87,
+                        volume = 3600,
+                        trades = 107,
+                        vwap = 185.89,
+                        timestamp = "2024-01-03T00:40:00Z"
+                    )
+                )
+            ),
+            nextPageToken = null
+        )
+
+        val mockEngine = MockEngine { request ->
+            println("🔧 MockEngine intercepted request to: ${request.url}")
+            respond(
+                content = Json.encodeToString(mockStockAggregationResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        startKoin {
+            modules(testModule, module {
+                single<HttpClientEngine> { mockEngine }
+                single<HttpClient> {
+                    HttpClient(get()) {
+                        install(ContentNegotiation) {
+                            json(Json {
+                                prettyPrint = true
+                                isLenient = false
+                                ignoreUnknownKeys = true
+                                encodeDefaults = true
+                            })
+                        }
+                        install(Logging) {
+                            logger = Logger.DEFAULT
+                            level = LogLevel.ALL
+                        }
+                        install(DefaultRequest) {
+                            header("content-type", "application/json")
+                            header("accept", "application/json")
+                        }
+                    }
+                }
+            })
+        }
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
+        stockAggregationRequest.symbols = "TSLA"
+
         val tradingBot by inject<TradingBot>()
 
         val resultWithDefault = runBlocking {

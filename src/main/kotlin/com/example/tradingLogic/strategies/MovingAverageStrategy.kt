@@ -14,5 +14,4 @@ class MovingAverageStrategy : TradingStrategy {
         return TradingSignal.Hold
     }
 
-
 }

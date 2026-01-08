@@ -278,10 +278,7 @@ fun Application.configureRouting() {
                     val backtestConfig = call.receive<BacktestConfig>()
                     log.info("Backtesting: $backtestConfig")
 
-                    val backtestResult = backtestConfig.let {
-                        tradingController.doBacktesting(it.strategySelector, it.stockAggregationRequest)
-                    }
-                    when (backtestResult) {
+                    when (val backtestResult = tradingController.doBacktesting(backtestConfig)) {
                         is Result.Error -> return@post call.respond(
                             HttpStatusCode.BadRequest,
                             "something went wrong in backTesting, check your config"

@@ -30,10 +30,9 @@ class TradingController : KoinComponent {
     }
 
     suspend fun doBacktesting(
-        strategySelector: Strategies,
-        stockAggregationRequest: StockAggregationRequest
+        backtestConfig: BacktestConfig
     ): Result<Any, TradingLogicError> {
-        return mTradingBot.backtest(strategySelector, stockAggregationRequest)
+        return mTradingBot.backtest(backtestConfig)
     }
 
     fun startBot() {

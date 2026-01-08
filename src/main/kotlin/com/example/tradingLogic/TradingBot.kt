@@ -30,9 +30,10 @@ class TradingBot : KoinComponent {
     private var mTimeframe = StockAggregationRequest().timeframe
 
     suspend fun backtest(
-        strategySelector: Strategies,
-        stockAggregationRequest: StockAggregationRequest
+        backtestConfig: BacktestConfig
     ): Result<BacktestResult, TradingLogicError> {
+        val strategySelector = backtestConfig.strategySelector
+        val stockAggregationRequest = backtestConfig.stockAggregationRequest
         if (strategySelector == Strategies.None) {
             return Result.Error(TradingLogicError.StrategyError.NO_STRATEGY_SELECTED)
         }
@@ -102,7 +103,7 @@ class TradingBot : KoinComponent {
                 }
 
                 TradingSignal.Hold -> {
-                    // Do nothing
+                    log.info("Hold with $positions positions and $balance balance")
                 }
             }
         }
