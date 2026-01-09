@@ -2,7 +2,6 @@ package com.example.tradingLogic
 
 import com.example.data.alpaca.AlpacaRepository
 import com.example.data.singleModels.*
-import com.example.tradingLogic.strategies.Strategies
 import io.ktor.client.statement.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject

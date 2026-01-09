@@ -49,4 +49,3 @@ val timeframes = listOf(
 val feeds = listOf(
     "", "iex", "otc", "sip"
 )
-
