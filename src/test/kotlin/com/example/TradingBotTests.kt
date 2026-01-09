@@ -386,6 +386,72 @@ class TradingBotTests : KoinTest {
     }
 
     @Test
+    fun `Backtesting with default stockAggregation and fake data`() {
+
+        val stockAggregationResponse: StockAggregationResponse =
+            JsonToDataClassConverter.stockAggregationResponseFromResource("AAPL_fake.json")
+
+        val mockEngine = MockEngine { request ->
+            println("🔧 MockEngine intercepted request to: ${request.url}")
+            respond(
+                content = Json.encodeToString(stockAggregationResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        startKoin {
+            modules(testModule, module {
+                single<HttpClientEngine> { mockEngine }
+                single<HttpClient> {
+                    HttpClient(get()) {
+                        install(ContentNegotiation) {
+                            json(Json {
+                                prettyPrint = true
+                                isLenient = false
+                                ignoreUnknownKeys = true
+                                encodeDefaults = true
+                            })
+                        }
+                        install(Logging) {
+                            logger = Logger.DEFAULT
+                            level = LogLevel.ALL
+                        }
+                        install(DefaultRequest) {
+                            header("content-type", "application/json")
+                            header("accept", "application/json")
+                        }
+                    }
+                }
+            })
+        }
+        val backtestConfig = BacktestConfig(
+            stockAggregationRequest = defaultStockAggregationRequest.copy(),
+            strategySelector = Strategies.MovingAverage
+        )
+        val tradingBot by inject<TradingBot>()
+
+        val resultWithDefault = runBlocking {
+            tradingBot.backtest(backtestConfig)
+        }
+        val defaultBackTestResult = BacktestResult()
+        when (resultWithDefault) {
+            is Result.Success<*, *> -> {
+                val resultValue = resultWithDefault.data
+                if (resultValue is BacktestResult) {
+                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
+                } else {
+                    fail("resultValue could not be casted")
+                }
+            }
+            is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
+        }
+        stopKoin()
+    }
+
+    @Test
     fun `Backtesting without valid Indicators`() {
         startKoin {
             modules(testModule, module {

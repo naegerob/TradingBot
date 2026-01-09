@@ -6,21 +6,16 @@ from datetime import datetime, timezone
 import matplotlib.pyplot as plt
 
 
-def _parse_iso8601(ts: str) -> datetime:
+# 
+
+def parse_iso8601(ts: str) -> datetime:
     # Handles "2024-01-03T00:00:00Z" and also "...+00:00"
     if ts.endswith("Z"):
         ts = ts[:-1] + "+00:00"
     return datetime.fromisoformat(ts).astimezone(timezone.utc)
 
 
-def _extract_symbol_and_bars(payload):
-    """
-    Supports shapes:
-      1) {"bars": {"AAPL": [ {c,h,l,n,o,t,v,vw}, ... ]}, "next_page_token": ...}
-      2) {"AAPL": [ {c,h,l,n,o,t,v,vw}, ... ], "next_page_token": ...}
-      3) [ {c,h,l,n,o,t,v,vw}, ... ]  (NOT supported anymore; files should include a symbol)
-    Returns: (symbol, bars_list)
-    """
+def extract_symbol_and_bars(payload):
     if isinstance(payload, dict) and "bars" in payload and isinstance(payload["bars"], dict):
         bars_map = payload["bars"]
         symbols = list(bars_map.keys())
@@ -45,14 +40,13 @@ def _extract_symbol_and_bars(payload):
     raise ValueError("Unsupported JSON shape")
 
 
-def _iter_json_files(path: Path) -> list[Path]:
+def iter_json_files(path: Path) -> list[Path]:
     print(path)
     if path.is_dir():
         pattern = "*.json"
         files = sorted(p for p in path.glob(pattern) if p.is_file())
         return files
 
-    # treat as file
     if path.is_file() and path.suffix.lower() == ".json":
         return [path]
 
@@ -70,7 +64,7 @@ def main():
     # Collect & de-duplicate files while keeping stable order
     files: list[Path] = []
     seen: set[str] = set()
-    for file in _iter_json_files(Path(args.input)):
+    for file in iter_json_files(Path(args.input)):
         key = str(file.resolve()).lower()
         if key not in seen:
             seen.add(key)
@@ -82,10 +76,10 @@ def main():
 
     for path in files:
         payload = json.loads(path.read_text(encoding="utf-8"))
-        symbol, bars = _extract_symbol_and_bars(payload)
+        symbol, bars = extract_symbol_and_bars(payload)
 
-        bars_sorted = sorted(bars, key=lambda b: _parse_iso8601(b["t"]))
-        x = [_parse_iso8601(b["t"]) for b in bars_sorted]
+        bars_sorted = sorted(bars, key=lambda b: parse_iso8601(b["t"]))
+        x = [parse_iso8601(b["t"]) for b in bars_sorted]
 
         close = [float(b["c"]) for b in bars_sorted]
         plt.plot(x, close, label=f"{symbol} close ({path.name})", linewidth=1.5)

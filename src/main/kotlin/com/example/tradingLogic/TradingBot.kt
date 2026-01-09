@@ -9,6 +9,7 @@ import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
+import java.lang.Math.abs
 
 
 class TradingBot : KoinComponent {
@@ -66,7 +67,8 @@ class TradingBot : KoinComponent {
             is Result.Error -> return Result.Error(result.error)
             is Result.Success -> Unit
         }
-
+        var grossProfit = 0.0
+        var grossLoss = 0.0
         mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
             val tradingSignal = when (val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
                 is Result.Error -> return Result.Error(indicatorPointsResult.error)
@@ -89,10 +91,15 @@ class TradingBot : KoinComponent {
 
                 TradingSignal.Sell -> {
                     if (positions == positionSize && entryPrice != null) {
-                        log.info("Closing position at price: $originalPrice, entry price was: $entryPrice")
-                        val pnl = (originalPrice - entryPrice!!) * positionSize
+                        val grossprofit = (originalPrice - entryPrice) * positionSize
+                        if(grossprofit > 0) {
+                            grossProfit += grossprofit
+                        } else {
+                            grossLoss += kotlin.math.abs(grossprofit)
+                        }
+                        log.info("Closing position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossprofit")
                         closedTrades += 1
-                        if (pnl > 0.0) {
+                        if (grossprofit > 0.0) {
                             winningTrades += 1
                         }
 
@@ -108,9 +115,11 @@ class TradingBot : KoinComponent {
             }
         }
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
-        val roiPercent = (finalBalance - initialBalance) / initialBalance * 100
+        val profitfactor = if (grossLoss == 0.0) grossProfit else (grossProfit / grossLoss)
+        val profit = finalBalance - initialBalance
+        val roiPercent = profit / initialBalance * 100
         val winRatePercent = if (closedTrades == 0) 0.0 else (winningTrades.toDouble() / closedTrades) * 100.0
-        log.info("Final position: $positions, ROI%: $roiPercent, Final Balance: $finalBalance, winrate%: $winRatePercent")
+        log.info("Final position: $positions, ROI%: $roiPercent, Final Balance: $finalBalance, winrate%: $winRatePercent, profit = $profit, profitfactor = $profitfactor")
         return Result.Success(
             BacktestResult(
                 strategyName = strategySelector,
