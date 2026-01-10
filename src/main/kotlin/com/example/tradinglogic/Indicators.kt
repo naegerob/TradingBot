@@ -1,4 +1,4 @@
-package com.example.tradingLogic
+package com.example.tradinglogic
 
 import com.example.data.singleModels.StockBar
 import java.math.RoundingMode

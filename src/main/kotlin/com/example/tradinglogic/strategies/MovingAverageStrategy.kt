@@ -1,6 +1,6 @@
-package com.example.tradingLogic.strategies
+package com.example.tradinglogic.strategies
 
-import com.example.tradingLogic.IndicatorSnapshot
+import com.example.tradinglogic.IndicatorSnapshot
 
 class MovingAverageStrategy : TradingStrategy {
 

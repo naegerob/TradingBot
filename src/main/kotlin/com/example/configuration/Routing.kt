@@ -7,9 +7,9 @@ import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest
 import com.example.data.token.RefreshRequest
-import com.example.tradingLogic.BacktestConfig
-import com.example.tradingLogic.Result
-import com.example.tradingLogic.TradingController
+import com.example.tradinglogic.BacktestConfig
+import com.example.tradinglogic.Result
+import com.example.tradinglogic.TradingController
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*

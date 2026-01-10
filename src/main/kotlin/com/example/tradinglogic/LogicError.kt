@@ -1,4 +1,4 @@
-package com.example.tradingLogic
+package com.example.tradinglogic
 
 sealed interface Error
 

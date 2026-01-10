@@ -1,15 +1,12 @@
-package com.example.tradingLogic
+package com.example.tradinglogic
 
 import com.example.services.TraderService
 import com.example.data.singleModels.*
-import com.example.tradingLogic.strategies.Strategies
-import com.example.tradingLogic.strategies.StrategyFactory
-import com.example.tradingLogic.strategies.TradingSignal
+import com.example.tradinglogic.strategies.*
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import java.lang.Math.abs
 
 
 class TradingBot : KoinComponent {
@@ -69,50 +66,13 @@ class TradingBot : KoinComponent {
         }
         var grossProfit = 0.0
         var grossLoss = 0.0
+        var positionState = TradingPosition.Flat // We have no positions yet
         mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
             val tradingSignal = when (val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
                 is Result.Error -> return Result.Error(indicatorPointsResult.error)
                 is Result.Success -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
             }
-            when (tradingSignal) {
-                TradingSignal.Buy -> {
-                    if (positions == 0) {
-                        val cost = positionSize * originalPrice
-                        if (balance >= cost) {
-                            positions = positionSize
-                            entryPrice = originalPrice
-                            balance -= cost
-                            log.info("Buy qty=$positionSize at price=$originalPrice, cost=$cost")
-                        } else {
-                            log.info("Buy skipped (insufficient balance). Needed=$cost, balance=$balance")
-                        }
-                    }
-                }
 
-                TradingSignal.Sell -> {
-                    if (positions == positionSize && entryPrice != null) {
-                        val grossprofit = (originalPrice - entryPrice) * positionSize
-                        if(grossprofit > 0) {
-                            grossProfit += grossprofit
-                        } else {
-                            grossLoss += kotlin.math.abs(grossprofit)
-                        }
-                        log.info("Closing position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossprofit")
-                        closedTrades += 1
-                        if (grossprofit > 0.0) {
-                            winningTrades += 1
-                        }
-
-                        positions = 0
-                        entryPrice = null
-                        balance += positionSize * originalPrice
-                    }
-                }
-
-                TradingSignal.Hold -> {
-                    log.info("Hold with $positions positions and $balance balance")
-                }
-            }
         }
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
         val profitfactor = if (grossLoss == 0.0) grossProfit else (grossProfit / grossLoss)
@@ -129,6 +89,27 @@ class TradingBot : KoinComponent {
                 positions = positions
             )
         )
+    }
+
+    fun handleSignal(tradingPosition: TradingPosition, tradingSignal: TradingSignal) : TradingAction {
+        when (tradingPosition to tradingSignal) {
+            // TODO: ocnsider calling closing and opening functions here
+            (TradingPosition.Flat to TradingSignal.Buy) -> {
+                return TradingAction.OpenLong
+            }
+            (TradingPosition.Flat to TradingSignal.Sell) -> {
+                return TradingAction.OpenShort
+            }
+            (TradingPosition.Long to TradingSignal.Sell) -> {
+                return TradingAction.CloseLong
+            }
+            (TradingPosition.Short to TradingSignal.Buy) -> {
+                return TradingAction.CloseShort
+            }
+            else -> {
+                return TradingAction.DoNothing
+            }
+        }
     }
 
     fun run(): Result<Unit, TradingLogicError> {

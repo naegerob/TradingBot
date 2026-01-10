@@ -3,11 +3,11 @@ package com.example.services
 import com.example.data.alpaca.AlpacaRepository
 import com.example.data.database.DataBaseFacade
 import com.example.data.singleModels.*
-import com.example.tradingLogic.TradingLogicError
+import com.example.tradinglogic.TradingLogicError
 import io.ktor.http.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import com.example.tradingLogic.Result
+import com.example.tradinglogic.Result
 import io.ktor.client.call.*
 
 class TraderService : KoinComponent {

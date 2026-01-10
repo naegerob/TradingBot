@@ -7,11 +7,11 @@ import com.example.data.alpaca.AlpacaRepository
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
-import com.example.tradingLogic.*
-import com.example.tradingLogic.strategies.Strategies
-import com.example.tradingLogic.strategies.StrategyFactory
-import com.example.tradingLogic.strategies.TradingSignal
-import com.example.tradingLogic.strategies.TradingStrategy
+import com.example.tradinglogic.*
+import com.example.tradinglogic.strategies.Strategies
+import com.example.tradinglogic.strategies.StrategyFactory
+import com.example.tradinglogic.strategies.TradingSignal
+import com.example.tradinglogic.strategies.TradingStrategy
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.mock.*
