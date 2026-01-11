@@ -38,7 +38,7 @@ class TradingBotTests : KoinTest {
 
         val defaultStockAggregationRequest = StockAggregationRequest(
             symbols = "AAPL",
-            timeframe = "1H",
+            timeframe = "1Min",
             startDateTime = "2024-01-01T00:00:00Z",
             endDateTime = "2025-02-02T00:00:00Z",
             limit = 1000,
