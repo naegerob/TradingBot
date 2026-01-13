@@ -66,13 +66,32 @@ class TradingBot : KoinComponent {
         var grossProfit = 0.0
         var grossLoss = 0.0
         var positionState = TradingPosition.Flat // We have no positions yet
-        mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
+        mBacktestIndicators.mOriginalPrices.forEachIndexed { index, _ ->
             val tradingSignal = when (val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
                 is Result.Error -> return Result.Error(indicatorPointsResult.error)
                 is Result.Success -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
             }
             val tradingAction = handleSignal(positionState, tradingSignal)
-            // TODO: handle TradingAction
+
+            when(tradingAction) {
+                TradingAction.OpenLong -> {
+                    positionState = TradingPosition.Long
+                    createHandledOrder(side = "buy")
+                }
+                TradingAction.OpenShort -> {
+                    positionState = TradingPosition.Short
+                    createHandledOrder(side = "sell")
+                }
+                TradingAction.CloseLong -> {
+                    positionState = TradingPosition.Flat
+                    createHandledOrder(side = "sell")
+                }
+                TradingAction.CloseShort -> {
+                    positionState = TradingPosition.Flat
+                    createHandledOrder(side = "buy")
+                }
+                TradingAction.DoNothing -> {}
+            }
 
         }
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
@@ -92,7 +111,7 @@ class TradingBot : KoinComponent {
         )
     }
 
-    fun handleSignal(tradingPosition: TradingPosition, tradingSignal: TradingSignal) : TradingAction {
+    private fun handleSignal(tradingPosition: TradingPosition, tradingSignal: TradingSignal) : TradingAction {
         when (tradingPosition to tradingSignal) {
             // TODO: ocnsider calling closing and opening functions here
             (TradingPosition.Flat to TradingSignal.Buy) -> {
