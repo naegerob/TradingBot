@@ -40,8 +40,6 @@ enum class TradingAction {
 }
 
 
-
-
 class StrategyFactory {
     fun createStrategy(strategy: Strategies): TradingStrategy {
         return when (strategy) {

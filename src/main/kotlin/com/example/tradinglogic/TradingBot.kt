@@ -44,9 +44,8 @@ class TradingBot : KoinComponent {
 
         val initialBalance = 10000.0 // Starting capital
         var balance = initialBalance
-        val positionSize = 10
+        val positionSizePerOrder = 10
         var positions = 0
-
         var entryPrice: Double? = null
         var closedTrades = 0
         var winningTrades = 0
@@ -72,6 +71,8 @@ class TradingBot : KoinComponent {
                 is Result.Error -> return Result.Error(indicatorPointsResult.error)
                 is Result.Success -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
             }
+            val tradingAction = handleSignal(positionState, tradingSignal)
+            // TODO: handle TradingAction
 
         }
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()

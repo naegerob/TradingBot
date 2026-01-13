@@ -73,7 +73,6 @@ dependencies {
     implementation(libs.ktor.server.auth.jwt)
     implementation(libs.ktor.network.tls.certificates)
 
-
     // Ktor client
     implementation(libs.ktor.client.okhttp)
     implementation(libs.ktor.client.cio)
