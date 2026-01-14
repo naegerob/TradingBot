@@ -43,8 +43,8 @@ class TradingBot : KoinComponent {
         mBacktestIndicators.mStock = symbol
 
         val initialBalance = 10000.0 // Starting capital
-        var balance = initialBalance
         val positionSizePerOrder = 10
+        var balance = initialBalance
         var positions = 0
         var entryPrice: Double? = null
         var closedTrades = 0
@@ -66,7 +66,7 @@ class TradingBot : KoinComponent {
         var grossProfit = 0.0
         var grossLoss = 0.0
         var positionState = TradingPosition.Flat // We have no positions yet
-        mBacktestIndicators.mOriginalPrices.forEachIndexed { index, _ ->
+        mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
             val tradingSignal = when (val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
                 is Result.Error -> return Result.Error(indicatorPointsResult.error)
                 is Result.Success -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
@@ -75,20 +75,74 @@ class TradingBot : KoinComponent {
 
             when(tradingAction) {
                 TradingAction.OpenLong -> {
+                    // Buy
+                    if (positions == 0) {
+                        val cost = positionSizePerOrder * originalPrice
+                        if (balance >= cost) {
+                            positions = positionSizePerOrder
+                            entryPrice = originalPrice
+                            balance -= cost
+                            log.info("Open Long. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$cost")
+                        } else {
+                            log.info("Open Long. Buy skipped (insufficient balance). Needed=$cost, balance=$balance")
+                        }
+                    }
                     positionState = TradingPosition.Long
-                    createHandledOrder(side = "buy")
                 }
                 TradingAction.OpenShort -> {
+                    // Sell
+                    if (positions == positionSizePerOrder && entryPrice != null) {
+                        val grossProfitPerOrder = (originalPrice - entryPrice!!) * positionSizePerOrder
+                        if(grossProfitPerOrder > 0) {
+                            grossProfit += grossProfitPerOrder
+                        } else {
+                            grossLoss += kotlin.math.abs(grossProfitPerOrder)
+                        }
+                        log.info("Opening Short position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossProfit")
+                        closedTrades += 1
+                        if (grossProfit > 0.0) {
+                            winningTrades += 1
+                        }
+                        positions = 0
+                        entryPrice = null
+                        balance += positionSizePerOrder * originalPrice
+                    }
                     positionState = TradingPosition.Short
-                    createHandledOrder(side = "sell")
                 }
                 TradingAction.CloseLong -> {
+                    // Sell
+                    if (positions == positionSizePerOrder && entryPrice != null) {
+                        val grossProfitPerOrder = (originalPrice - entryPrice!!) * positionSizePerOrder
+                        if(grossProfitPerOrder > 0) {
+                            grossProfit += grossProfitPerOrder
+                        } else {
+                            grossLoss += kotlin.math.abs(grossProfitPerOrder)
+                        }
+                        log.info("Closing long position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossProfit")
+                        closedTrades += 1
+                        if (grossProfit > 0.0) {
+                            winningTrades += 1
+                        }
+                        positions = 0
+                        entryPrice = null
+                        balance += positionSizePerOrder * originalPrice
+                    }
                     positionState = TradingPosition.Flat
-                    createHandledOrder(side = "sell")
                 }
                 TradingAction.CloseShort -> {
+                    // Buy
+                    if (positions == 0) {
+                        val cost = positionSizePerOrder * originalPrice
+                        if (balance >= cost) {
+                            positions = positionSizePerOrder
+                            entryPrice = originalPrice
+                            balance -= cost
+                            log.info("Close short. buy qty=$positionSizePerOrder at price=$originalPrice, cost=$cost")
+                        } else {
+                            log.info("Close short. Buy skipped (insufficient balance). Needed=$cost, balance=$balance")
+                        }
+                    }
                     positionState = TradingPosition.Flat
-                    createHandledOrder(side = "buy")
                 }
                 TradingAction.DoNothing -> {}
             }

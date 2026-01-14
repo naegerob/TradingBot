@@ -4,6 +4,7 @@ import com.example.services.TraderService
 import com.example.data.alpaca.AlpacaRepository
 import com.example.data.alpaca.AlpacaRepository.Companion.PAPERAPIKEY
 import com.example.data.alpaca.AlpacaRepository.Companion.PAPERSECRET
+import com.example.data.database.DataBaseFacade
 import com.example.data.database.DataBaseImpl
 import com.example.tradinglogic.TradingBot
 import io.ktor.client.*
@@ -45,7 +46,7 @@ val appModule = module {
             }
         }
     }
-    single<DataBaseImpl> { DataBaseImpl() }
+    single<DataBaseFacade> { DataBaseImpl() }
     single<TraderService> { TraderService() }
 }
 

@@ -4,6 +4,8 @@ package com.example
 import com.example.backtestdata.JsonToDataClassConverter
 import com.example.services.TraderService
 import com.example.data.alpaca.AlpacaRepository
+import com.example.data.database.DataBaseFacade
+import com.example.data.database.DataBaseImpl
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
@@ -32,7 +34,7 @@ import org.koin.test.KoinTest
 import org.koin.test.inject
 import kotlin.test.*
 
-class TradingBotTests : KoinTest {
+class Backtest : KoinTest {
 
     companion object {
 
