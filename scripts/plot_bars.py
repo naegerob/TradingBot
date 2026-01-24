@@ -52,6 +52,8 @@ def iter_json_files(path: Path) -> list[Path]:
 
     raise SystemExit(f"Path is neither a folder nor a .json file: {path.resolve()}")
 
+### How to start this script:
+###  <Root path>\scripts> python .\plot_bars.py --show-ohlcv --input ..\src\test\kotlin\com\example\backtestdata\
 
 def main():
     ap = argparse.ArgumentParser(description="Plot Alpaca-style bar JSON fixtures (all on one chart)")

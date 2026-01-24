@@ -7,6 +7,7 @@ import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
+import kotlin.math.abs
 
 
 class TradingBot : KoinComponent {
@@ -96,7 +97,7 @@ class TradingBot : KoinComponent {
                         if(grossProfitPerOrder > 0) {
                             grossProfit += grossProfitPerOrder
                         } else {
-                            grossLoss += kotlin.math.abs(grossProfitPerOrder)
+                            grossLoss += abs(grossProfitPerOrder)
                         }
                         log.info("Opening Short position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossProfit")
                         closedTrades += 1
@@ -116,7 +117,7 @@ class TradingBot : KoinComponent {
                         if(grossProfitPerOrder > 0) {
                             grossProfit += grossProfitPerOrder
                         } else {
-                            grossLoss += kotlin.math.abs(grossProfitPerOrder)
+                            grossLoss += abs(grossProfitPerOrder)
                         }
                         log.info("Closing long position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossProfit")
                         closedTrades += 1
@@ -146,14 +147,13 @@ class TradingBot : KoinComponent {
                 }
                 TradingAction.DoNothing -> {}
             }
-
         }
         val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
-        val profitfactor = if (grossLoss == 0.0) grossProfit else (grossProfit / grossLoss)
+        val profitFactor = if (grossLoss == 0.0) grossProfit else (grossProfit / grossLoss)
         val profit = finalBalance - initialBalance
         val roiPercent = profit / initialBalance * 100
         val winRatePercent = if (closedTrades == 0) 0.0 else (winningTrades.toDouble() / closedTrades) * 100.0
-        log.info("Final position: $positions, ROI%: $roiPercent, Final Balance: $finalBalance, winrate%: $winRatePercent, profit = $profit, profitfactor = $profitfactor")
+        log.info("Final position: $positions, ROI%: $roiPercent, Final Balance: $finalBalance, winrate%: $winRatePercent, profit = $profit, profitfactor = $profitFactor")
         return Result.Success(
             BacktestResult(
                 strategyName = strategySelector,

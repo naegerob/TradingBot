@@ -47,7 +47,7 @@ data class OrderResponse(
     @SerialName("filled_qty") val filledQty: String,
     @SerialName("filled_avg_price") val filledAvgPrice: String? = null,
     @SerialName("order_class") val orderClass: String,
-    @SerialName("order_type") val orderType: String,
+    @SerialName("order_type") val orderType: String? = null,
     val type: String,
     val side: String,
     @SerialName("time_in_force") val timeInForce: String,
