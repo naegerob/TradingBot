@@ -152,7 +152,7 @@ class APITests : KoinTest {
     }
 
     @Test
-    fun `Create a Good Order to Alpaca`() = testApplication {
+    fun `Create a Good Order to Alpaca with default settings from Alpaca`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
         val mockOrderResponse = OrderResponse(
@@ -176,7 +176,6 @@ class APITests : KoinTest {
             filledQty = "0",
             filledAvgPrice = null,
             orderClass = "",
-            orderType = "market",
             type = "market",
             side = "buy",
             positionIntent = "buy_to_open",
@@ -226,11 +225,355 @@ class APITests : KoinTest {
         }
         val response = httpResponse.body<OrderResponse>()
         assertEquals(OK, httpResponse.status)
+        assertEquals("64c48451-34c4-4642-83a8-43f5f75bf6fd", response.id)
+        assertEquals("b0b6dd9d-8b9b-48a9-ba46-b9d54906e415", response.assetId)
         assertEquals(orderRequest.quantity, response.qty)
         assertEquals(orderRequest.symbol, response.symbol)
-        assertEquals(mockOrderResponse.symbol, response.symbol)
-        assertEquals(mockOrderResponse.qty, response.qty)
+        assertEquals(orderRequest.symbol, response.symbol)
+        assertEquals(orderRequest.quantity, response.qty)
+        assertEquals(orderRequest.type, response.type)
 
+        unloadKoinModules(overrides)
+    }
+
+    @Test
+    fun `Create Good Order with limit type from Alpaca`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val mockOrderResponse = OrderResponse(
+            id = "64c48451-34c4-4642-83a8-43f5f75bf6fd",
+            clientOrderId = "2b3b5479-923b-4b5e-a95c-00e0b8d0280a",
+            createdAt = "2025-03-23T20:09:23.265233813Z",
+            updatedAt = "2025-03-23T20:09:23.266033472Z",
+            submittedAt = "2025-03-23T20:09:23.265233813Z",
+            filledAt = null,
+            expiredAt = null,
+            canceledAt = null,
+            failedAt = null,
+            replacedAt = null,
+            replacedBy = null,
+            replaces = null,
+            assetId = "b0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
+            symbol = "AAPL",
+            assetClass = "us_equity",
+            notional = "150",
+            filledQty = "0",
+            filledAvgPrice = null,
+            orderClass = "",
+            type = "limit",
+            side = "buy",
+            positionIntent = "buy_to_open",
+            timeInForce = "day",
+            limitPrice = "140",
+            stopPrice = null,
+            status = "accepted",
+            extendedHours = false,
+            legs = null,
+            trailPercent = null,
+            trailPrice = null,
+            hwm = null,
+            subtag = null,
+            source = null,
+            expiresAt = "2025-03-24T20:00:00Z"
+        )
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockOrderResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
+
+        val orderRequest = OrderRequest(
+            symbol = "AAPL",
+            notional = "150",
+            side = "buy",
+            type = "limit",
+            limitPrice = "140",
+            timeInForce = "day",
+            extendedHours = false,
+            positionIntent = "buy_to_open"
+        )
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.post("/Order/Create") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(orderRequest)
+        }
+
+        assertEquals(OK, httpResponse.status)
+        val response = httpResponse.body<OrderResponse>()
+        assertEquals("64c48451-34c4-4642-83a8-43f5f75bf6fd", response.id)
+        assertEquals("b0b6dd9d-8b9b-48a9-ba46-b9d54906e415", response.assetId)
+        assertEquals(orderRequest.side, response.side)
+        assertEquals(orderRequest.symbol, response.symbol)
+        assertEquals(orderRequest.notional, response.notional)
+        assertEquals(orderRequest.type, response.type)
+        assertEquals(orderRequest.timeInForce, response.timeInForce)
+        assertEquals(orderRequest.limitPrice, response.limitPrice)
+        assertEquals(orderRequest.positionIntent, response.positionIntent)
+        assertEquals(orderRequest.extendedHours, response.extendedHours)
+
+        unloadKoinModules(overrides)
+    }
+
+    @Test
+    fun `Create Good Order with stop type from Alpaca`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val mockOrderResponse = OrderResponse(
+            id = "74c48451-34c4-4642-83a8-43f5f75bf6fd",
+            clientOrderId = "3b3b5479-923b-4b5e-a95c-00e0b8d0280a",
+            createdAt = "2025-03-23T20:09:23.265233813Z",
+            updatedAt = "2025-03-23T20:09:23.266033472Z",
+            submittedAt = "2025-03-23T20:09:23.265233813Z",
+            filledAt = null,
+            expiredAt = null,
+            canceledAt = null,
+            failedAt = null,
+            replacedAt = null,
+            replacedBy = null,
+            replaces = null,
+            assetId = "c0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
+            symbol = "GOOGL",
+            assetClass = "us_equity",
+            notional = "250",
+            filledQty = "0",
+            filledAvgPrice = null,
+            orderClass = "",
+            type = "stop",
+            side = "sell",
+            positionIntent = "sell_to_open",
+            timeInForce = "day",
+            limitPrice = null,
+            stopPrice = "236",
+            status = "accepted",
+            extendedHours = false,
+            legs = null,
+            trailPercent = null,
+            trailPrice = null,
+            hwm = null,
+            subtag = null,
+            source = null,
+            expiresAt = "2025-03-24T20:00:00Z"
+        )
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockOrderResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
+
+        val orderRequest = OrderRequest(
+            symbol = "GOOGL",
+            notional = "250",
+            side = "sell",
+            type = "stop",
+            stopPrice = "236",
+            timeInForce = "day",
+            extendedHours = false,
+            positionIntent = "sell_to_open"
+        )
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.post("/Order/Create") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(orderRequest)
+        }
+
+        assertEquals(OK, httpResponse.status)
+        val response = httpResponse.body<OrderResponse>()
+        assertEquals("74c48451-34c4-4642-83a8-43f5f75bf6fd", response.id)
+        assertEquals("c0b6dd9d-8b9b-48a9-ba46-b9d54906e415", response.assetId)
+        assertEquals(orderRequest.side, response.side)
+        assertEquals(orderRequest.symbol, response.symbol)
+        assertEquals(orderRequest.notional, response.notional)
+        assertEquals(orderRequest.type, response.type)
+        assertEquals(orderRequest.timeInForce, response.timeInForce)
+        assertEquals(orderRequest.stopPrice, response.stopPrice)
+        assertEquals(orderRequest.positionIntent, response.positionIntent)
+        assertEquals(orderRequest.extendedHours, response.extendedHours)
+
+        unloadKoinModules(overrides)
+    }
+
+
+    @Test
+    fun `Create Good Order with market type, orderClass bracket, tif as fok from Alpaca`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val mockOrderResponse = OrderResponse(
+            id = "84c48451-34c4-4642-83a8-43f5f75bf6fd",
+            clientOrderId = "4b3b5479-923b-4b5e-a95c-00e0b8d0280a",
+            createdAt = "2025-03-23T20:09:23.265233813Z",
+            updatedAt = "2025-03-23T20:09:23.266033472Z",
+            submittedAt = "2025-03-23T20:09:23.265233813Z",
+            filledAt = null,
+            expiredAt = null,
+            canceledAt = null,
+            failedAt = null,
+            replacedAt = null,
+            replacedBy = null,
+            replaces = null,
+            assetId = "d0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
+            symbol = "NVDA",
+            assetClass = "us_equity",
+            notional = "250",
+            filledQty = "0",
+            filledAvgPrice = null,
+            orderClass = "bracket",
+            type = "stop",
+            side = "buy",
+            positionIntent = "buy_to_open",
+            timeInForce = "fok",
+            limitPrice = null,
+            stopPrice = "236",
+            status = "accepted",
+            extendedHours = false,
+            legs = null,
+            trailPercent = null,
+            trailPrice = null,
+            hwm = null,
+            subtag = null,
+            source = null,
+            expiresAt = "2025-03-24T20:00:00Z"
+        )
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockOrderResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
+
+        val orderRequest = OrderRequest(
+            symbol = "NVDA",
+            notional = "250",
+            side = "buy",
+            type = "stop",
+            stopPrice = "236",
+            timeInForce = "fok",
+            extendedHours = false,
+            positionIntent = "buy_to_open",
+            orderClass = "bracket"
+        )
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.post("/Order/Create") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(orderRequest)
+        }
+
+        assertEquals(OK, httpResponse.status)
+        val response = httpResponse.body<OrderResponse>()
+        assertEquals("84c48451-34c4-4642-83a8-43f5f75bf6fd", response.id)
+        assertEquals("d0b6dd9d-8b9b-48a9-ba46-b9d54906e415", response.assetId)
+        assertEquals(orderRequest.side, response.side)
+        assertEquals(orderRequest.symbol, response.symbol)
+        assertEquals(orderRequest.notional, response.notional)
+        assertEquals(orderRequest.type, response.type)
+        assertEquals(orderRequest.timeInForce, response.timeInForce)
+        assertEquals(orderRequest.stopPrice, response.stopPrice)
+        assertEquals(orderRequest.positionIntent, response.positionIntent)
+        assertEquals(orderRequest.extendedHours, response.extendedHours)
+        assertEquals(orderRequest.orderClass, response.orderClass)
+
+        unloadKoinModules(overrides)
+    }
+
+    @Test
+    fun `Get opening hours`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val mockClockResponse = OpeningHours(
+            isOpen = false,
+            nextClose = "2025-11-04T16:00:00-05:00",
+            nextOpen = "2025-11-04T09:30:00-05:00",
+            timestamp = "2025-11-03T16:48:13.091852201-05:00"
+        )
+
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockClockResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
+        val client = createClient {
+            install(ContentNegotiation) {
+                json(Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                })
+            }
+            install(DefaultRequest) {
+                header("content-type", "application/json")
+                header("accept", "application/json")
+            }
+        }
+        val accessToken = runBlocking { loginAndGetToken(client) }
+        val httpResponse = client.get("/clock") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+        assertEquals(OK, httpResponse.status)
+        val openingHours = httpResponse.body<OpeningHours>()
+        assertEquals(false, openingHours.isOpen)
+        assertEquals("2025-11-04T16:00:00-05:00", openingHours.nextClose)
+        assertEquals("2025-11-04T09:30:00-05:00", openingHours.nextOpen)
+        assertEquals("2025-11-03T16:48:13.091852201-05:00", openingHours.timestamp)
         unloadKoinModules(overrides)
     }
 
@@ -546,140 +889,4 @@ class APITests : KoinTest {
         unloadKoinModules(overrides)
     }
 
-    @Test
-    fun `Get opening hours`() = testApplication {
-        environment { config = ApplicationConfig("application.yaml") }
-
-        val mockClockResponse = OpeningHours(
-            isOpen = false,
-            nextClose = "2025-11-04T16:00:00-05:00",
-            nextOpen = "2025-11-04T09:30:00-05:00",
-            timestamp = "2025-11-03T16:48:13.091852201-05:00"
-        )
-
-        val mockEngine = MockEngine { _ ->
-            respond(
-                content = Json.encodeToString(mockClockResponse),
-                status = OK,
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            )
-        }
-        val overrides = module { single<HttpClientEngine> { mockEngine } }
-        application { loadKoinModules(overrides) }
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
-        val accessToken = runBlocking { loginAndGetToken(client) }
-        val httpResponse = client.get("/clock") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponse.status)
-        val openingHours = httpResponse.body<OpeningHours>()
-        assertEquals(false, openingHours.isOpen)
-        assertEquals("2025-11-04T16:00:00-05:00", openingHours.nextClose)
-        assertEquals("2025-11-04T09:30:00-05:00", openingHours.nextOpen)
-        assertEquals("2025-11-03T16:48:13.091852201-05:00", openingHours.timestamp)
-        unloadKoinModules(overrides)
-    }
-
-    @Test
-    fun `Create Good Order with limit type from Alpaca`() = testApplication {
-        environment { config = ApplicationConfig("application.yaml") }
-
-        val mockOrderResponse = OrderResponse(
-            id = "64c48451-34c4-4642-83a8-43f5f75bf6fd",
-            clientOrderId = "2b3b5479-923b-4b5e-a95c-00e0b8d0280a",
-            createdAt = "2025-03-23T20:09:23.265233813Z",
-            updatedAt = "2025-03-23T20:09:23.266033472Z",
-            submittedAt = "2025-03-23T20:09:23.265233813Z",
-            filledAt = null,
-            expiredAt = null,
-            canceledAt = null,
-            failedAt = null,
-            replacedAt = null,
-            replacedBy = null,
-            replaces = null,
-            assetId = "b0b6dd9d-8b9b-48a9-ba46-b9d54906e415",
-            symbol = "AAPL",
-            assetClass = "us_equity",
-            notional = "150",
-            filledQty = "0",
-            filledAvgPrice = null,
-            orderClass = "",
-            type = "limit",
-            side = "buy",
-            positionIntent = "buy_to_open",
-            timeInForce = "day",
-            limitPrice = "140",
-            stopPrice = null,
-            status = "accepted",
-            extendedHours = false,
-            legs = null,
-            trailPercent = null,
-            trailPrice = null,
-            hwm = null,
-            subtag = null,
-            source = null,
-            expiresAt = "2025-03-24T20:00:00Z"
-        )
-        val mockEngine = MockEngine { _ ->
-            respond(
-                content = Json.encodeToString(mockOrderResponse),
-                status = OK,
-                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
-            )
-        }
-
-        val overrides = module { single<HttpClientEngine> { mockEngine } }
-        application { loadKoinModules(overrides) }
-
-        val orderRequest = OrderRequest(
-            symbol = "AAPL",
-            notional = "150",
-            side = "buy",
-            type = "limit",
-            limitPrice = "140",
-            timeInForce = "day",
-            extendedHours = false
-        )
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
-        val accessToken = runBlocking { loginAndGetToken(client) }
-        val httpResponse = client.post("/Order/Create") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-            setBody(orderRequest)
-        }
-
-        assertEquals(OK, httpResponse.status)
-        val response = httpResponse.body<OrderResponse>()
-        assertEquals("64c48451-34c4-4642-83a8-43f5f75bf6fd", response.id)
-        assertEquals("150", response.notional)
-        assertEquals("limit", response.type)
-        assertEquals("day", response.timeInForce)
-        assertEquals("140", response.limitPrice)
-        assertEquals("b0b6dd9d-8b9b-48a9-ba46-b9d54906e415", response.assetId)
-    }
 }
