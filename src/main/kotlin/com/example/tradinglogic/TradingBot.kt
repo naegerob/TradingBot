@@ -198,8 +198,9 @@ class TradingBot : KoinComponent {
             while (isActive) {
                 when (val result = getAccountBalance()) {
                     is Result.Error -> return@async Result.Error(result.error)
-                    is Result.Success -> mOrderRequest.quantity =
-                        result.data.toInt().toString() // TODO: check here the ratio how much it hsould be transferred
+                    is Result.Success -> {
+                        mOrderRequest.quantity = result.data.toInt().toString()
+                    }
                 }
                 when (val result = getValidatedHistoricalBars(mStockAggregationRequest, mIndicators)) {
                     is Result.Error -> return@async Result.Error(result.error)

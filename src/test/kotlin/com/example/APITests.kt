@@ -631,8 +631,9 @@ class APITests : KoinTest {
         val overrides = module { single<HttpClientEngine> { mockEngine } }
         application { loadKoinModules(overrides) }
 
-        val orderRequest = defaultOrderRequest.copy()
-        orderRequest.symbol = ""
+        val orderRequest = defaultOrderRequest.copy(
+            symbol = ""
+        )
         val client = createClient {
             install(ContentNegotiation) {
                 json(Json {

@@ -6,12 +6,12 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data class OrderRequest(
-    @SerialName("symbol") var symbol: String = "AAPL",
+    @SerialName("symbol") val symbol: String = "AAPL",
     @SerialName("qty") var quantity: String? = null,
-    @SerialName("notional") var notional: String? = "10",
+    @SerialName("notional") val notional: String? = "10",
     @SerialName("side") var side: String = "buy",
-    @SerialName("type") var type: String = "market",
-    @SerialName("time_in_force") var timeInForce: String = "day",
+    @SerialName("type") val type: String = "market",
+    @SerialName("time_in_force") val timeInForce: String = "day",
     @SerialName("limit_price") val limitPrice: String? = null,
     @SerialName("stop_price") val stopPrice: String? = null,
     @SerialName("trail_price") val trailPrice: String? = null,
