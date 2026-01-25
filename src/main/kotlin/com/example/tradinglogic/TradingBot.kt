@@ -77,73 +77,74 @@ class TradingBot : KoinComponent {
             when(tradingAction) {
                 TradingAction.OpenLong -> {
                     // Buy
-                    if (positions == 0) {
-                        val cost = positionSizePerOrder * originalPrice
-                        if (balance >= cost) {
+                    if (positionState == TradingPosition.Flat) {
+                        val costPerTrade = positionSizePerOrder * originalPrice
+                        if (balance >= costPerTrade) {
                             positions = positionSizePerOrder
                             entryPrice = originalPrice
-                            balance -= cost
-                            log.info("Open Long. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$cost")
+                            balance -= costPerTrade
+                            positionState = TradingPosition.Long
+                            log.info("Open Long. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade")
                         } else {
-                            log.info("Open Long. Buy skipped (insufficient balance). Needed=$cost, balance=$balance")
+                            log.info("Open Long. Buy skipped (insufficient balance). Needed=$costPerTrade, balance=$balance")
                         }
                     }
-                    positionState = TradingPosition.Long
                 }
                 TradingAction.OpenShort -> {
-                    // Sell
-                    if (positions == positionSizePerOrder && entryPrice != null) {
-                        val grossProfitPerOrder = (originalPrice - entryPrice!!) * positionSizePerOrder
-                        if(grossProfitPerOrder > 0) {
-                            grossProfit += grossProfitPerOrder
-                        } else {
-                            grossLoss += abs(grossProfitPerOrder)
-                        }
-                        log.info("Opening Short position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossProfit")
-                        closedTrades += 1
-                        if (grossProfit > 0.0) {
-                            winningTrades += 1
-                        }
-                        positions = 0
-                        entryPrice = null
-                        balance += positionSizePerOrder * originalPrice
+                    // Sell to open short
+                    if (positionState == TradingPosition.Flat) {
+                        val proceeds = positionSizePerOrder * originalPrice
+                        positions = -positionSizePerOrder
+                        entryPrice = originalPrice
+                        balance += proceeds
+                        positionState = TradingPosition.Short
+                        log.info("Open Short. Sell qty=$positionSizePerOrder at price=$originalPrice, proceeds=$proceeds")
                     }
-                    positionState = TradingPosition.Short
                 }
                 TradingAction.CloseLong -> {
                     // Sell
-                    if (positions == positionSizePerOrder && entryPrice != null) {
-                        val grossProfitPerOrder = (originalPrice - entryPrice!!) * positionSizePerOrder
-                        if(grossProfitPerOrder > 0) {
-                            grossProfit += grossProfitPerOrder
+                    if (positionState == TradingPosition.Long && entryPrice != null) {
+                        val tradeProfitOrLoss = (originalPrice - entryPrice) * positionSizePerOrder
+                        if (tradeProfitOrLoss > 0) {
+                            grossProfit += tradeProfitOrLoss
                         } else {
-                            grossLoss += abs(grossProfitPerOrder)
+                            grossLoss += abs(tradeProfitOrLoss)
                         }
-                        log.info("Closing long position at price: $originalPrice, entry price was: $entryPrice, grossprofit is $grossProfit")
                         closedTrades += 1
-                        if (grossProfit > 0.0) {
+                        if (tradeProfitOrLoss > 0.0) {
                             winningTrades += 1
                         }
                         positions = 0
                         entryPrice = null
                         balance += positionSizePerOrder * originalPrice
+                        positionState = TradingPosition.Flat
+                        log.info("Close Long. Sell qty=$positionSizePerOrder at price=$originalPrice, tradePnl=$tradeProfitOrLoss")
                     }
-                    positionState = TradingPosition.Flat
                 }
                 TradingAction.CloseShort -> {
                     // Buy
-                    if (positions == 0) {
-                        val cost = positionSizePerOrder * originalPrice
-                        if (balance >= cost) {
-                            positions = positionSizePerOrder
-                            entryPrice = originalPrice
-                            balance -= cost
-                            log.info("Close short. buy qty=$positionSizePerOrder at price=$originalPrice, cost=$cost")
+                    if (positionState == TradingPosition.Short && entryPrice != null) {
+                        val costPerTrade = positionSizePerOrder * originalPrice
+                        if (balance >= costPerTrade) {
+                            val tradeProfitOrLoss = (entryPrice - originalPrice) * positionSizePerOrder
+                            if (tradeProfitOrLoss > 0) {
+                                grossProfit += tradeProfitOrLoss
+                            } else {
+                                grossLoss += abs(tradeProfitOrLoss)
+                            }
+                            closedTrades += 1
+                            if (tradeProfitOrLoss > 0.0) {
+                                winningTrades += 1
+                            }
+                            positions = 0
+                            entryPrice = null
+                            balance -= costPerTrade
+                            positionState = TradingPosition.Flat
+                            log.info("Close Short. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade, tradePnl=$tradeProfitOrLoss")
                         } else {
-                            log.info("Close short. Buy skipped (insufficient balance). Needed=$cost, balance=$balance")
+                            log.info("Close Short. Buy skipped (insufficient balance). Needed=$costPerTrade, balance=$balance")
                         }
                     }
-                    positionState = TradingPosition.Flat
                 }
                 TradingAction.DoNothing -> {}
             }

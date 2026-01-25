@@ -863,8 +863,9 @@ class APITests : KoinTest {
         val overrides = module { single<HttpClientEngine> { mockEngine } }
         application { loadKoinModules(overrides) }
 
-        val stockAggregationRequest = defaultStockAggregationRequest.copy()
-        stockAggregationRequest.symbols = ""
+        val stockAggregationRequest = defaultStockAggregationRequest.copy(
+            symbols = ""
+        )
         val client = createClient {
             install(ContentNegotiation) {
                 json(Json {

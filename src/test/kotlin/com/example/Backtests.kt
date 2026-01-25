@@ -4,8 +4,6 @@ package com.example
 import com.example.backtestdata.JsonToDataClassConverter
 import com.example.services.TraderService
 import com.example.data.alpaca.AlpacaRepository
-import com.example.data.database.DataBaseFacade
-import com.example.data.database.DataBaseImpl
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
@@ -356,21 +354,99 @@ class Backtest : KoinTest {
             })
         }
 
-        val stockAggregationRequest = defaultStockAggregationRequest.copy()
-        stockAggregationRequest.symbols = "TSLA"
+        val stockAggregationRequest = defaultStockAggregationRequest.copy(
+            symbols = "TSLA"
+        )
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
         val tradingBot by inject<TradingBot>()
 
-        val resultWithDefault = runBlocking {
+        val result = runBlocking {
+            tradingBot.backtest(backtestConfig)
+        }
+        val backTestResult = BacktestResult()
+        when (result) {
+            is Result.Success<*, *> -> {
+                val resultValue = result.data
+                if (resultValue is BacktestResult) {
+                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                    assertNotEquals(backTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
+                    assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
+                    assertNotEquals(backTestResult.positions, resultValue.positions)
+                } else {
+                    fail("resultValue could not be casted")
+                }
+            }
+
+            is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
+        }
+        stopKoin()
+    }
+
+    @Test
+    fun `Backtesting with default stockAggregation GOOGL`() {
+
+        val stockAggregationResponse: StockAggregationResponse =
+            JsonToDataClassConverter.stockAggregationResponseFromResource("GOOGL_1.json")
+
+        val mockEngine = MockEngine { request ->
+            println("🔧 MockEngine intercepted request to: ${request.url}")
+            respond(
+                content = Json.encodeToString(stockAggregationResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        startKoin {
+            modules(testModule, module {
+                single<HttpClientEngine> { mockEngine }
+                single<HttpClient> {
+                    HttpClient(get()) {
+                        install(ContentNegotiation) {
+                            json(Json {
+                                prettyPrint = true
+                                isLenient = false
+                                ignoreUnknownKeys = true
+                                encodeDefaults = true
+                            })
+                        }
+                        install(Logging) {
+                            logger = Logger.DEFAULT
+                            level = LogLevel.ALL
+                        }
+                        install(DefaultRequest) {
+                            header("content-type", "application/json")
+                            header("accept", "application/json")
+                        }
+                    }
+                }
+            })
+        }
+        val stockAggregationRequest = defaultStockAggregationRequest.copy(
+            symbols = "GOOGL",
+            timeframe = "30Min",
+            startDateTime = "2025-12-29T00:00:00Z",
+            endDateTime = "2026-01-22T00:00:00Z",
+            limit = 10000
+        )
+
+        val backtestConfig = BacktestConfig(
+            stockAggregationRequest = stockAggregationRequest,
+            strategySelector = Strategies.MovingAverage
+        )
+        val tradingBot by inject<TradingBot>()
+
+        val result = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         val defaultBackTestResult = BacktestResult()
-        when (resultWithDefault) {
+        when (result) {
             is Result.Success<*, *> -> {
-                val resultValue = resultWithDefault.data
+                val resultValue = result.data
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
                     assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
@@ -381,8 +457,7 @@ class Backtest : KoinTest {
                     fail("resultValue could not be casted")
                 }
             }
-
-            is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
+            is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
         }
         stopKoin()
     }
@@ -479,8 +554,7 @@ class Backtest : KoinTest {
                 }
             })
         }
-        val stockAggregationRequest = defaultStockAggregationRequest.copy()
-        stockAggregationRequest.symbols = ""
+        val stockAggregationRequest = defaultStockAggregationRequest.copy(symbols = "")
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage

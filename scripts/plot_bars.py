@@ -5,8 +5,8 @@ from datetime import datetime, timezone
 
 import matplotlib.pyplot as plt
 
-
-# 
+### How to start this script:
+###  <Root path>\scripts> python .\plot_bars.py --show-ohlcv --input ..\src\test\kotlin\com\example\backtestdata\
 
 def parse_iso8601(ts: str) -> datetime:
     # Handles "2024-01-03T00:00:00Z" and also "...+00:00"
@@ -51,9 +51,6 @@ def iter_json_files(path: Path) -> list[Path]:
         return [path]
 
     raise SystemExit(f"Path is neither a folder nor a .json file: {path.resolve()}")
-
-### How to start this script:
-###  <Root path>\scripts> python .\plot_bars.py --show-ohlcv --input ..\src\test\kotlin\com\example\backtestdata\
 
 def main():
     ap = argparse.ArgumentParser(description="Plot Alpaca-style bar JSON fixtures (all on one chart)")
