@@ -301,7 +301,7 @@ class Backtest : KoinTest {
                 val resultValue = resultWithDefault.data
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
                     assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
                     assertNotEquals(defaultBackTestResult.winRatePercent, resultValue.winRatePercent)
                     assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
@@ -373,7 +373,7 @@ class Backtest : KoinTest {
                 val resultValue = result.data
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(backTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(backTestResult.finalEquity, resultValue.finalEquity)
                     assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
                     assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
                     assertNotEquals(backTestResult.positions, resultValue.positions)
@@ -450,7 +450,7 @@ class Backtest : KoinTest {
                 val resultValue = result.data
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
                     assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
                     assertNotEquals(defaultBackTestResult.winRatePercent, resultValue.winRatePercent)
                     assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
@@ -518,7 +518,7 @@ class Backtest : KoinTest {
                 val resultValue = resultWithDefault.data
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(defaultBackTestResult.finalBalance, resultValue.finalBalance)
+                    assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
                     assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
                 } else {
                     fail("resultValue could not be casted")
