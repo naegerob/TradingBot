@@ -104,7 +104,7 @@ class TradingBot : KoinComponent {
                 TradingAction.CloseLong -> {
                     // Sell
                     if (positionState == TradingPosition.Long && entryPrice != null) {
-                        val tradeProfitOrLoss = (originalPrice - entryPrice) * positionSizePerOrder
+                        val tradeProfitOrLoss = (originalPrice - entryPrice!!) * positionSizePerOrder
                         if (tradeProfitOrLoss > 0) {
                             grossProfit += tradeProfitOrLoss
                         } else {
@@ -126,7 +126,7 @@ class TradingBot : KoinComponent {
                     if (positionState == TradingPosition.Short && entryPrice != null) {
                         val costPerTrade = positionSizePerOrder * originalPrice
                         if (balance >= costPerTrade) {
-                            val tradeProfitOrLoss = (entryPrice - originalPrice) * positionSizePerOrder
+                            val tradeProfitOrLoss = (entryPrice!! - originalPrice) * positionSizePerOrder
                             if (tradeProfitOrLoss > 0) {
                                 grossProfit += tradeProfitOrLoss
                             } else {

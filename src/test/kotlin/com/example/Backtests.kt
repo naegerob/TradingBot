@@ -25,6 +25,7 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.junit.After
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.module
@@ -57,7 +58,7 @@ class Backtest : KoinTest {
         }
     }
 
-    @AfterTest
+    @After
     fun tearDown() {
         stopKoin()
     }
