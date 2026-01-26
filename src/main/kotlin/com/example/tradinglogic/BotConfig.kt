@@ -24,7 +24,8 @@ data class BacktestConfig(
 @Serializable
 data class BacktestResult(
     @SerialName("strategy_name") val strategyName: Strategies = Strategies.None,
-    @SerialName("final_balance") val finalBalance: Double = 0.0,
+    @SerialName("final_equity") val finalEquity: Double = 0.0,
+    @SerialName("profit") val profit: Double = 0.0,
     @SerialName("roi_percent") val roiPercent: Double = 0.0,
     @SerialName("winRate_percent") val winRatePercent: Double = 0.0,
     @SerialName("positions") val positions: Int = 0

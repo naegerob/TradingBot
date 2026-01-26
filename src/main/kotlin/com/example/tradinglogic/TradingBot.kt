@@ -125,40 +125,38 @@ class TradingBot : KoinComponent {
                     // Buy
                     if (positionState == TradingPosition.Short && entryPrice != null) {
                         val costPerTrade = positionSizePerOrder * originalPrice
-                        if (balance >= costPerTrade) {
-                            val tradeProfitOrLoss = (entryPrice!! - originalPrice) * positionSizePerOrder
-                            if (tradeProfitOrLoss > 0) {
-                                grossProfit += tradeProfitOrLoss
-                            } else {
-                                grossLoss += abs(tradeProfitOrLoss)
-                            }
-                            closedTrades += 1
-                            if (tradeProfitOrLoss > 0.0) {
-                                winningTrades += 1
-                            }
-                            positions = 0
-                            entryPrice = null
-                            balance -= costPerTrade
-                            positionState = TradingPosition.Flat
-                            log.info("Close Short. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade, tradePnl=$tradeProfitOrLoss")
+                        val tradeProfitOrLoss = (entryPrice!! - originalPrice) * positionSizePerOrder
+                        if (tradeProfitOrLoss > 0) {
+                            grossProfit += tradeProfitOrLoss
                         } else {
-                            log.info("Close Short. Buy skipped (insufficient balance). Needed=$costPerTrade, balance=$balance")
+                            grossLoss += abs(tradeProfitOrLoss)
                         }
+                        closedTrades += 1
+                        if (tradeProfitOrLoss > 0.0) {
+                            winningTrades += 1
+                        }
+                        positions = 0
+                        entryPrice = null
+                        balance -= costPerTrade
+                        positionState = TradingPosition.Flat
+                        log.info("Close Short. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade, tradePnl=$tradeProfitOrLoss")
+
                     }
                 }
                 TradingAction.DoNothing -> {}
             }
         }
-        val finalBalance = balance + positions * mBacktestIndicators.mOriginalPrices.last()
+        val finalEquity = balance + positions * mBacktestIndicators.mOriginalPrices.last()
         val profitFactor = if (grossLoss == 0.0) grossProfit else (grossProfit / grossLoss)
-        val profit = finalBalance - initialBalance
+        val profit = finalEquity - initialBalance
         val roiPercent = profit / initialBalance * 100
         val winRatePercent = if (closedTrades == 0) 0.0 else (winningTrades.toDouble() / closedTrades) * 100.0
-        log.info("Final position: $positions, ROI%: $roiPercent, Final Balance: $finalBalance, winrate%: $winRatePercent, profit = $profit, profitfactor = $profitFactor")
+        log.info("Final position: $positions, positionState: $positionState, ROI%: $roiPercent, Final Balance (Cash): $balance, Final equity (Cash+Positions) $finalEquity, winrate%: $winRatePercent, profit = $profit, profitfactor = $profitFactor")
         return Result.Success(
             BacktestResult(
                 strategyName = strategySelector,
-                finalBalance = finalBalance,
+                finalEquity = finalEquity,
+                profit = profit,
                 roiPercent = roiPercent,
                 winRatePercent = winRatePercent,
                 positions = positions
