@@ -387,6 +387,80 @@ class Backtest : KoinTest {
         stopKoin()
     }
 
+
+    @Test
+    fun `Backtesting with default stockAggregation TSLA with 3years`() {
+
+        val stockAggregationResponse: StockAggregationResponse =
+            JsonToDataClassConverter.stockAggregationResponseFromResource("TSLA_2.json")
+
+        val mockEngine = MockEngine { request ->
+            println("🔧 MockEngine intercepted request to: ${request.url}")
+            respond(
+                content = Json.encodeToString(stockAggregationResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+
+        startKoin {
+            modules(testModule, module {
+                single<HttpClientEngine> { mockEngine }
+                single<HttpClient> {
+                    HttpClient(get()) {
+                        install(ContentNegotiation) {
+                            json(Json {
+                                prettyPrint = true
+                                isLenient = false
+                                ignoreUnknownKeys = true
+                                encodeDefaults = true
+                            })
+                        }
+                        install(Logging) {
+                            logger = Logger.DEFAULT
+                            level = LogLevel.ALL
+                        }
+                        install(DefaultRequest) {
+                            header("content-type", "application/json")
+                            header("accept", "application/json")
+                        }
+                    }
+                }
+            })
+        }
+
+        val stockAggregationRequest = defaultStockAggregationRequest.copy(
+            symbols = "TSLA"
+        )
+        val backtestConfig = BacktestConfig(
+            stockAggregationRequest = stockAggregationRequest,
+            strategySelector = Strategies.MovingAverage
+        )
+        val tradingBot by inject<TradingBot>()
+
+        val result = runBlocking {
+            tradingBot.backtest(backtestConfig)
+        }
+        val backTestResult = BacktestResult()
+        when (result) {
+            is Result.Success<*, *> -> {
+                val resultValue = result.data
+                if (resultValue is BacktestResult) {
+                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                    assertNotEquals(backTestResult.finalEquity, resultValue.finalEquity)
+                    assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
+                    assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
+                    assertNotEquals(backTestResult.positions, resultValue.positions)
+                } else {
+                    fail("resultValue could not be casted")
+                }
+            }
+
+            is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
+        }
+        stopKoin()
+    }
+
     @Test
     fun `Backtesting with default stockAggregation GOOGL`() {
 

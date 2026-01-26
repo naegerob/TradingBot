@@ -43,7 +43,7 @@ class TradingBot : KoinComponent {
         }
         mBacktestIndicators.mStock = symbol
 
-        val initialBalance = 10000.0 // Starting capital
+        val initialBalance = 10000.0
         val positionSizePerOrder = 10
         var balance = initialBalance
         var positions = 0
@@ -84,7 +84,7 @@ class TradingBot : KoinComponent {
                             entryPrice = originalPrice
                             balance -= costPerTrade
                             positionState = TradingPosition.Long
-                            log.info("Open Long. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade")
+                            log.info("Open Long. Buy qty=$positionSizePerOrder at price=$originalPrice equals to cost=$costPerTrade")
                         } else {
                             log.info("Open Long. Buy skipped (insufficient balance). Needed=$costPerTrade, balance=$balance")
                         }
@@ -93,12 +93,12 @@ class TradingBot : KoinComponent {
                 TradingAction.OpenShort -> {
                     // Sell to open short
                     if (positionState == TradingPosition.Flat) {
-                        val proceeds = positionSizePerOrder * originalPrice
+                        val costPerTrade = positionSizePerOrder * originalPrice
                         positions = -positionSizePerOrder
                         entryPrice = originalPrice
-                        balance += proceeds
+                        balance += costPerTrade
                         positionState = TradingPosition.Short
-                        log.info("Open Short. Sell qty=$positionSizePerOrder at price=$originalPrice, proceeds=$proceeds")
+                        log.info("Open Short. Sell qty=$positionSizePerOrder at price=$originalPrice equals to costPerTrade=$costPerTrade")
                     }
                 }
                 TradingAction.CloseLong -> {
@@ -118,7 +118,7 @@ class TradingBot : KoinComponent {
                         entryPrice = null
                         balance += positionSizePerOrder * originalPrice
                         positionState = TradingPosition.Flat
-                        log.info("Close Long. Sell qty=$positionSizePerOrder at price=$originalPrice, tradePnl=$tradeProfitOrLoss")
+                        log.info("Close Long. Sell qty=$positionSizePerOrder at price=$originalPrice, tradeProfitOrLoss=$tradeProfitOrLoss")
                     }
                 }
                 TradingAction.CloseShort -> {
@@ -139,7 +139,7 @@ class TradingBot : KoinComponent {
                         entryPrice = null
                         balance -= costPerTrade
                         positionState = TradingPosition.Flat
-                        log.info("Close Short. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade, tradePnl=$tradeProfitOrLoss")
+                        log.info("Close Short. Buy qty=$positionSizePerOrder at price=$originalPrice, cost=$costPerTrade, tradeProfitOrLoss=$tradeProfitOrLoss")
 
                     }
                 }
