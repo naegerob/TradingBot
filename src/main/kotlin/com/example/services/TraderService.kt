@@ -48,19 +48,31 @@ class TraderService : KoinComponent {
         }
     }
 
-    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest, stock: String): Result<List<StockBar>, TradingLogicError> {
+    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest): Result<List<StockBar>, TradingLogicError> {
         val httpResponse = mRepository.getHistoricalData(historicalRequest)
         return when (httpResponse.status) {
             HttpStatusCode.OK -> {
                 val stockResponse = httpResponse.body<StockAggregationResponse>()
-                if (stockResponse.bars[stock] == null) {
+                if (stockResponse.bars[historicalRequest.symbols] == null) {
                     return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
                 }
-                Result.Success(stockResponse.bars[stock]!!)
+                Result.Success(stockResponse.bars[historicalRequest.symbols]!!)
             }
             HttpStatusCode.TooManyRequests -> Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
             HttpStatusCode.BadRequest -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
             HttpStatusCode.Unauthorized -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+            else -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
+        }
+    }
+
+    suspend fun getMarketOpeningHours(): Result<Boolean, TradingLogicError> {
+        val httpResponse = mRepository.getMarketOpeningHours()
+        return when (httpResponse.status) {
+            HttpStatusCode.OK -> {
+                val clockResponse = httpResponse.body<MarketHours>()
+                Result.Success(clockResponse.isOpen)
+            };
+            HttpStatusCode.BadRequest -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
             else -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
         }
     }
