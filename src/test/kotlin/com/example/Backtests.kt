@@ -28,6 +28,7 @@ import kotlinx.serialization.json.Json
 import org.junit.After
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.context.stopKoin
+import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import org.koin.test.inject
@@ -56,11 +57,6 @@ class Backtest : KoinTest {
             single<TraderService> { TraderService() }
             single { TradingBot() }
         }
-    }
-
-    @After
-    fun tearDown() {
-        stopKoin()
     }
 
     @Test
@@ -202,7 +198,7 @@ class Backtest : KoinTest {
             )
         }
 
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClientEngine> { mockEngine }
                 single<HttpClient> {
@@ -226,13 +222,13 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
 
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = defaultStockAggregationRequest.copy(),
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
         val resultWithLessData = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
@@ -243,7 +239,7 @@ class Backtest : KoinTest {
                 resultWithLessData.error
             )
         }
-        stopKoin()
+        customKoin.close()
     }
 
     @Test
@@ -261,7 +257,7 @@ class Backtest : KoinTest {
             )
         }
 
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClientEngine> { mockEngine }
                 single<HttpClient> {
@@ -285,12 +281,12 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = defaultStockAggregationRequest.copy(),
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
 
         val resultWithDefault = runBlocking {
             tradingBot.backtest(backtestConfig)
@@ -311,7 +307,7 @@ class Backtest : KoinTest {
             }
             is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
         }
-        stopKoin()
+        customKoin.close()
     }
 
     @Test
@@ -329,7 +325,7 @@ class Backtest : KoinTest {
             )
         }
 
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClientEngine> { mockEngine }
                 single<HttpClient> {
@@ -353,7 +349,7 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = "TSLA"
@@ -362,7 +358,7 @@ class Backtest : KoinTest {
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
 
         val result = runBlocking {
             tradingBot.backtest(backtestConfig)
@@ -384,7 +380,7 @@ class Backtest : KoinTest {
 
             is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
         }
-        stopKoin()
+        customKoin.close()
     }
 
 
@@ -403,7 +399,7 @@ class Backtest : KoinTest {
             )
         }
 
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClientEngine> { mockEngine }
                 single<HttpClient> {
@@ -427,7 +423,7 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = "TSLA"
@@ -436,7 +432,7 @@ class Backtest : KoinTest {
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
 
         val result = runBlocking {
             tradingBot.backtest(backtestConfig)
@@ -458,7 +454,7 @@ class Backtest : KoinTest {
 
             is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
         }
-        stopKoin()
+        customKoin.close()
     }
 
     @Test
@@ -476,7 +472,7 @@ class Backtest : KoinTest {
             )
         }
 
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClientEngine> { mockEngine }
                 single<HttpClient> {
@@ -500,7 +496,7 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = "GOOGL",
             timeframe = "30Min",
@@ -513,7 +509,7 @@ class Backtest : KoinTest {
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
 
         val result = runBlocking {
             tradingBot.backtest(backtestConfig)
@@ -534,7 +530,7 @@ class Backtest : KoinTest {
             }
             is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
         }
-        stopKoin()
+        customKoin.close()
     }
 
     @Test
@@ -552,7 +548,7 @@ class Backtest : KoinTest {
             )
         }
 
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClientEngine> { mockEngine }
                 single<HttpClient> {
@@ -576,12 +572,12 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = defaultStockAggregationRequest.copy(),
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
 
         val resultWithDefault = runBlocking {
             tradingBot.backtest(backtestConfig)
@@ -600,12 +596,12 @@ class Backtest : KoinTest {
             }
             is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
         }
-        stopKoin()
+        customKoin.close()
     }
 
     @Test
     fun `Backtesting without valid Indicators`() {
-        startKoin {
+        val customKoin = koinApplication {
             modules(testModule, module {
                 single<HttpClient> {
                     HttpClient(get()) {
@@ -628,13 +624,13 @@ class Backtest : KoinTest {
                     }
                 }
             })
-        }
+        }.koin
         val stockAggregationRequest = defaultStockAggregationRequest.copy(symbols = "")
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot by inject<TradingBot>()
+        val tradingBot = customKoin.get<TradingBot>()
         val resultWithEmptySymbol = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
@@ -645,6 +641,6 @@ class Backtest : KoinTest {
                 resultWithEmptySymbol.error
             )
         }
-        stopKoin()
+        customKoin.close()
     }
 }
