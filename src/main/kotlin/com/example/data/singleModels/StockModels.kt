@@ -16,7 +16,7 @@ data class StockAggregationRequest(
     @SerialName("feed") val feed: String = "sip", // Data feed source (default: "sip")
     @SerialName("currency") val currency: String = "USD", // Currency of prices (default: "USD")
     @SerialName("page_token") val pageToken: String? = null, // Pagination token for continuing a request
-    @SerialName("sort") val sort: String = "asc" // Sort order: Newest at end
+    @SerialName("sort") var sort: String = "asc" // Sort order: asc:Newest at end / desc: newest up front
 ) : ApiResponse()
 
 @Serializable

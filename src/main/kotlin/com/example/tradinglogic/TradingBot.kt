@@ -209,15 +209,16 @@ class TradingBot : KoinComponent {
             mStockAggregationRequest.endDateTime = null
             mStockAggregationRequest.startDateTime = null
             mStockAggregationRequest.limit = requiredBars()
+            mStockAggregationRequest.sort = "desc"
             // Initially data fetch for mStocks
             when (val result = getValidatedHistoricalBars(mStockAggregationRequest)) {
                 is Result.Error -> return@async Result.Error(result.error)
                 is Result.Success -> {
-                    mStocks = result.data
+                    mStocks = result.data.sortedBy { it.timestamp }
                 }
             }
             mStockAggregationRequest.limit = 5
-
+            log.info("mStockAggregation: $mStockAggregationRequest")
             while (isActive) {
                 when (val result = mTraderService.getMarketOpeningHours()) {
                     is Result.Error -> return@async Result.Error(result.error)
@@ -229,14 +230,17 @@ class TradingBot : KoinComponent {
                         }
                     }
                 }
+
                 when (val result = getValidatedHistoricalBars(mStockAggregationRequest)) {
                     is Result.Error -> return@async Result.Error(result.error)
                     is Result.Success -> {
+                        log.info("result: ${result.data.toString()}")
                         mStocks = upsertRollingWindow(
                             current = mStocks,
                             incoming = result.data,
                             windowSize = requiredBars()
                         )
+                        log.info("mStock: $mStocks")
                         when (val update = mIndicators.updateIndicators(mStocks)) {
                             is Result.Error -> return@async Result.Error(update.error)
                             is Result.Success -> Unit
@@ -337,7 +341,7 @@ class TradingBot : KoinComponent {
 
 
     private fun requiredBars(): Int {
-        val maxLookback = 200 // z.B. SMA200; an deine Strategie anpassen
+        val maxLookback = 200 // z.B. SMA200
         val warmup = 50
         return maxLookback + warmup
     }
