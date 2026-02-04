@@ -27,6 +27,7 @@ class TradingBot : KoinComponent {
     private var mOrderRequest = OrderRequest()
     private var mStockAggregationRequest = StockAggregationRequest()
     private var mTimeframe = StockAggregationRequest().timeframe
+    private var mStocks = listOf<StockBar>()
 
     suspend fun backtest(
         backtestConfig: BacktestConfig
@@ -193,6 +194,7 @@ class TradingBot : KoinComponent {
         val delayInMs = parseTimeframeToMillis(mTimeframe)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
 
+
         mJob = mBotScope.async<Result<Unit, TradingLogicError>> {
 
             // Set notional to 0.1% of account balance
@@ -206,6 +208,15 @@ class TradingBot : KoinComponent {
             var positionState = TradingPosition.Flat
             mStockAggregationRequest.endDateTime = null
             mStockAggregationRequest.startDateTime = null
+            mStockAggregationRequest.limit = requiredBars()
+            // Initially data fetch for mStocks
+            when (val result = getValidatedHistoricalBars(mStockAggregationRequest)) {
+                is Result.Error -> return@async Result.Error(result.error)
+                is Result.Success -> {
+                    mStocks = result.data
+                }
+            }
+            mStockAggregationRequest.limit = 5
 
             while (isActive) {
                 when (val result = mTraderService.getMarketOpeningHours()) {
@@ -221,7 +232,12 @@ class TradingBot : KoinComponent {
                 when (val result = getValidatedHistoricalBars(mStockAggregationRequest)) {
                     is Result.Error -> return@async Result.Error(result.error)
                     is Result.Success -> {
-                        when (val update = mIndicators.updateIndicators(result.data)) {
+                        mStocks = upsertRollingWindow(
+                            current = mStocks,
+                            incoming = result.data,
+                            windowSize = requiredBars()
+                        )
+                        when (val update = mIndicators.updateIndicators(mStocks)) {
                             is Result.Error -> return@async Result.Error(update.error)
                             is Result.Success -> Unit
                         }
@@ -297,6 +313,35 @@ class TradingBot : KoinComponent {
         mJob?.cancel()
     }
 
+    private fun upsertRollingWindow(
+        current: List<StockBar>,
+        incoming: List<StockBar>,
+        windowSize: Int
+    ): List<StockBar> {
+        if (incoming.isEmpty()) return current
+
+        // Für Stabilität: out-of-order eingehende Bars zeitlich sortieren
+        val sortedIncoming = incoming.sortedBy { it.timestamp }
+
+        var updated = current
+        for (bar in sortedIncoming) {
+            updated = when {
+                updated.isEmpty() -> listOf(bar)
+                bar.timestamp == updated.last().timestamp -> updated.dropLast(1) + bar   // replace
+                bar.timestamp > updated.last().timestamp -> updated + bar               // append
+                else -> updated                                                         // out-of-order ignorieren
+            }
+        }
+        return if (updated.size > windowSize) updated.takeLast(windowSize) else updated
+    }
+
+
+    private fun requiredBars(): Int {
+        val maxLookback = 200 // z.B. SMA200; an deine Strategie anpassen
+        val warmup = 50
+        return maxLookback + warmup
+    }
+
     private suspend fun createHandledOrder(side: String): Result<Unit, TradingLogicError> {
         if (side != "sell" && side != "buy") {
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
@@ -323,7 +368,7 @@ class TradingBot : KoinComponent {
         }
     }
 
-    suspend fun getValidatedHistoricalBars(
+    private suspend fun getValidatedHistoricalBars(
         stockAggregationRequest: StockAggregationRequest
     ): Result<List<StockBar>, TradingLogicError> =
         mTraderService.getHistoricalData(stockAggregationRequest)

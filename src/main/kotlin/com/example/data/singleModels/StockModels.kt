@@ -10,7 +10,7 @@ data class StockAggregationRequest(
     @SerialName("timeframe") val timeframe: String = "1Min", // Timeframe for aggregation (e.g., "5Min", "1D", "3M")
     @SerialName("start") var startDateTime: String? = "2024-01-03T00:00:00Z", // Inclusive start date-time (RFC-3339 or "YYYY-MM-DD")
     @SerialName("end") var endDateTime: String? = "2024-01-04T00:00:00Z", // Inclusive end date-time (RFC-3339 or "YYYY-MM-DD")
-    @SerialName("limit") val limit: Int = 1000, // Maximum number of data points to return (default: 1000)
+    @SerialName("limit") var limit: Int = 500, // Maximum number of data points to return (default: 1000)
     @SerialName("adjustment") val adjustment: String = "raw", // Corporate action adjustment (default: "raw")
     @SerialName("asof") val asOfDate: String? = null, // As-of date to identify the underlying entity (format: "YYYY-MM-DD")
     @SerialName("feed") val feed: String = "sip", // Data feed source (default: "sip")
