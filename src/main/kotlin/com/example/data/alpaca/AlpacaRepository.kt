@@ -90,7 +90,7 @@ class AlpacaRepository : KoinComponent {
                     historicalRequest.pageToken?.let { parameters.append("page_token", it) }
                     parameters.append(
                         "sort",
-                        StockAggregationRequest().sort
+                        historicalRequest.sort
                     ) // Hardcode to newest datapoint at end of list
                 }
             }
