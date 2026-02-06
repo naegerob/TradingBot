@@ -34,7 +34,7 @@ class TradingController : KoinComponent {
         return mTradingBot.backtest(backtestConfig)
     }
 
-    fun startBot() {
+    suspend fun startBot() {
         mTradingBot.run()
     }
 

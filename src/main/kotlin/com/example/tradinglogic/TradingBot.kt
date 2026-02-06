@@ -7,7 +7,12 @@ import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
+import java.time.Duration
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 import kotlin.math.abs
+import kotlin.times
+import kotlin.toString
 
 
 class TradingBot : KoinComponent {
@@ -17,17 +22,12 @@ class TradingBot : KoinComponent {
     }
 
     private val mTraderService by inject<TraderService>()
-    private var mJob: Job? = null
-    private val mBotScope = CoroutineScope(Dispatchers.IO)
+    private var mJob: Deferred<Result<Unit, TradingLogicError>>? = null
     var mIndicators = Indicators()
         private set
     var mBacktestIndicators = Indicators()
         private set
     private var mStrategy = StrategyFactory().createStrategy(Strategies.None)
-    private var mOrderRequest = OrderRequest()
-    private var mStockAggregationRequest = StockAggregationRequest()
-    private var mTimeframe = StockAggregationRequest().timeframe
-    private var mStocks = listOf<StockBar>()
 
     suspend fun backtest(
         backtestConfig: BacktestConfig
@@ -165,9 +165,154 @@ class TradingBot : KoinComponent {
         )
     }
 
+    suspend fun run(): Result<Unit, TradingLogicError> {
+        log.info("Bot started with strategy")
+        if (mJob?.isActive == true) {
+            return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
+        }
+        val stockAggregationRequest = StockAggregationRequest(
+            endDateTime = null,
+            startDateTime = null,
+            limit = requiredBars(),
+            sort = "asc"
+        )
+        val delayInMs = parseTimeframeToMillis(stockAggregationRequest.timeframe)?.div(2)
+            ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
+
+
+        val orderRequest = OrderRequest(
+            symbol = stockAggregationRequest.symbols,
+            side = "buy",
+            type = "market",
+            timeInForce = "gtc",
+            notional = null,
+            quantity = null
+        )
+
+        mJob = CoroutineScope(Dispatchers.IO).async<Result<Unit, TradingLogicError>> {
+
+            // Set notional to 0.1% of account balance
+            when (val result = getAccountBalance()) {
+                is Result.Error -> return@async Result.Error(result.error)
+                is Result.Success -> {
+                    orderRequest.notional = 1000.toString()
+                }
+            }
+            var positionState = TradingPosition.Flat
+            var stocks = when (val result = getValidatedHistoricalBars(stockAggregationRequest)) {
+                is Result.Error     -> return@async Result.Error(result.error)
+                is Result.Success   -> result.data.sortedBy { it.timestamp }
+            }
+            stockAggregationRequest.limit = 5
+            stockAggregationRequest.sort = "desc"
+            log.info("mStockAggregation: $stockAggregationRequest")
+            while (isActive) {
+                when (val result = mTraderService.getMarketOpeningHours()) {
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> {
+                        if (!result.data) {
+                            log.info("Market is closed. Waiting...")
+                            delay(delayInMs)
+                            continue
+                        }
+                    }
+                }
+                when (val result = configurePollingRequest(stockAggregationRequest)) {
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> Unit
+                }
+                when (val result = getValidatedHistoricalBars(stockAggregationRequest)) {
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> {
+                        log.info("result: ${result.data}")
+                        stocks = upsertRollingWindow(
+                            current = stocks,
+                            incoming = result.data,
+                            windowSize = requiredBars()
+                        )
+                        log.info("mStock: $stocks")
+                        when (val update = mIndicators.updateIndicators(stocks)) {
+                            is Result.Error     -> return@async Result.Error(update.error)
+                            is Result.Success   -> Unit
+                        }
+                    }
+                }
+
+                log.info("getValidatedHistoricalBars called")
+                val tradingSignal = when (val result = mIndicators.getIndicatorPoints(-1)) {
+                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Success   -> mStrategy.executeAlgorithm(result.data)
+                }
+                val tradingAction = handleSignal(positionState, tradingSignal)
+
+                log.info("trading action: $tradingAction, positionState: $positionState, signal: $tradingSignal")
+                when (tradingAction) {
+                    TradingAction.OpenLong -> {
+                        if (positionState == TradingPosition.Flat) {
+                            orderRequest.side = "buy"
+                            when (val order = createHandledOrder(orderRequest)) {
+                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Success   -> {
+                                    positionState = TradingPosition.Long
+                                    log.info("Open Long: order sent")
+                                }
+                            }
+                        }
+                    }
+                    TradingAction.OpenShort -> {
+                        if (positionState == TradingPosition.Flat) {
+                            orderRequest.side = "sell"
+                            when (val order = createHandledOrder(orderRequest)) {
+                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Success   -> {
+                                    positionState = TradingPosition.Short
+                                    log.info("Open Short: order sent")
+                                }
+                            }
+                        }
+                    }
+                    TradingAction.CloseLong -> {
+                        if (positionState == TradingPosition.Long) {
+                            orderRequest.side = "sell"
+                            when (val order = createHandledOrder(orderRequest)) {
+                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Success   -> {
+                                    positionState = TradingPosition.Flat
+                                    log.info("Close Long: order sent")
+                                }
+                            }
+                        }
+                    }
+                    TradingAction.CloseShort -> {
+                        if (positionState == TradingPosition.Short) {
+                            orderRequest.side = "buy"
+                            when (val order = createHandledOrder(orderRequest)) {
+                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Success   -> {
+                                    positionState = TradingPosition.Flat
+                                    log.info("Close Short: order sent")
+                                }
+                            }
+                        }
+                    }
+                    TradingAction.DoNothing -> {
+                        log.info("No trading action taken.")
+                    }
+                }
+                delay(delayInMs)
+            }
+            return@async Result.Success(Unit)
+        }
+        return mJob!!.await()
+    }
+
+    fun stop() {
+        mJob?.cancel()
+        mJob = null
+    }
+
     private fun handleSignal(tradingPosition: TradingPosition, tradingSignal: TradingSignal) : TradingAction {
         when (tradingPosition to tradingSignal) {
-            // TODO: ocnsider calling closing and opening functions here
             (TradingPosition.Flat to TradingSignal.Buy) -> {
                 return TradingAction.OpenLong
             }
@@ -186,135 +331,19 @@ class TradingBot : KoinComponent {
         }
     }
 
-    fun run(): Result<Unit, TradingLogicError> {
-        log.info("Bot started with strategy")
-        if (mJob != null && mJob!!.isActive) {
-            return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
-        }
-        val delayInMs = parseTimeframeToMillis(mTimeframe)
-            ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
+    private fun configurePollingRequest(stockAggregationRequest: StockAggregationRequest): Result<Unit, TradingLogicError> {
+        stockAggregationRequest.let {
+            val endTime = Instant.now().truncatedTo(ChronoUnit.SECONDS)
 
+            val deltaTime = parseTimeframeToMillis(it.timeframe)?.times(it.limit)
+                ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
 
-        mJob = mBotScope.async<Result<Unit, TradingLogicError>> {
+            val startTime = endTime.minus(Duration.ofMillis(deltaTime))
 
-            // Set notional to 0.1% of account balance
-            when (val result = getAccountBalance()) {
-                is Result.Error -> return@async Result.Error(result.error)
-                is Result.Success -> {
-                    mOrderRequest.notional = 1000.toString()
-                }
-            }
-
-            var positionState = TradingPosition.Flat
-            mStockAggregationRequest.endDateTime = null
-            mStockAggregationRequest.startDateTime = null
-            mStockAggregationRequest.limit = requiredBars()
-            mStockAggregationRequest.sort = "desc"
-            // Initially data fetch for mStocks
-            when (val result = getValidatedHistoricalBars(mStockAggregationRequest)) {
-                is Result.Error -> return@async Result.Error(result.error)
-                is Result.Success -> {
-                    mStocks = result.data.sortedBy { it.timestamp }
-                }
-            }
-            mStockAggregationRequest.limit = 5
-            log.info("mStockAggregation: $mStockAggregationRequest")
-            while (isActive) {
-                when (val result = mTraderService.getMarketOpeningHours()) {
-                    is Result.Error -> return@async Result.Error(result.error)
-                    is Result.Success -> {
-                        if (!result.data) {
-                            log.info("Market is closed. Waiting...")
-                            delay(delayInMs)
-                            continue
-                        }
-                    }
-                }
-
-                when (val result = getValidatedHistoricalBars(mStockAggregationRequest)) {
-                    is Result.Error -> return@async Result.Error(result.error)
-                    is Result.Success -> {
-                        log.info("result: ${result.data.toString()}")
-                        mStocks = upsertRollingWindow(
-                            current = mStocks,
-                            incoming = result.data,
-                            windowSize = requiredBars()
-                        )
-                        log.info("mStock: $mStocks")
-                        when (val update = mIndicators.updateIndicators(mStocks)) {
-                            is Result.Error -> return@async Result.Error(update.error)
-                            is Result.Success -> Unit
-                        }
-                    }
-                }
-
-                log.info("getValidatedHistoricalBars called")
-                val tradingSignal = when (val result = mIndicators.getIndicatorPoints(-1)) {
-                    is Result.Error -> return@async Result.Error(result.error)
-                    is Result.Success -> mStrategy.executeAlgorithm(result.data)
-                }
-                val tradingAction = handleSignal(positionState, tradingSignal)
-
-                log.info("trading action: $tradingAction, positionState: $positionState, signal: $tradingSignal")
-                when (tradingAction) {
-                    TradingAction.OpenLong -> {
-                        if (positionState == TradingPosition.Flat) {
-                            when (val order = createHandledOrder("buy")) {
-                                is Result.Error -> return@async Result.Error(order.error)
-                                is Result.Success -> {
-                                    positionState = TradingPosition.Long
-                                    log.info("Open Long: order sent")
-                                }
-                            }
-                        }
-                    }
-                    TradingAction.OpenShort -> {
-                        if (positionState == TradingPosition.Flat) {
-                            when (val order = createHandledOrder("sell")) {
-                                is Result.Error -> return@async Result.Error(order.error)
-                                is Result.Success -> {
-                                    positionState = TradingPosition.Short
-                                    log.info("Open Short: order sent")
-                                }
-                            }
-                        }
-                    }
-                    TradingAction.CloseLong -> {
-                        if (positionState == TradingPosition.Long) {
-                            when (val order = createHandledOrder("sell")) {
-                                is Result.Error -> return@async Result.Error(order.error)
-                                is Result.Success -> {
-                                    positionState = TradingPosition.Flat
-                                    log.info("Close Long: order sent")
-                                }
-                            }
-                        }
-                    }
-                    TradingAction.CloseShort -> {
-                        if (positionState == TradingPosition.Short) {
-                            when (val order = createHandledOrder("buy")) {
-                                is Result.Error -> return@async Result.Error(order.error)
-                                is Result.Success -> {
-                                    positionState = TradingPosition.Flat
-                                    log.info("Close Short: order sent")
-                                }
-                            }
-                        }
-                    }
-                    TradingAction.DoNothing -> {
-                        log.info("No trading action taken.")
-                    }
-                }
-                delay(delayInMs)
-            }
-
-            return@async Result.Success(Unit)
+            it.startDateTime = startTime.toString()
+            it.endDateTime = endTime.toString()
         }
         return Result.Success(Unit)
-    }
-
-    fun stop() {
-        mJob?.cancel()
     }
 
     private fun upsertRollingWindow(
@@ -322,12 +351,13 @@ class TradingBot : KoinComponent {
         incoming: List<StockBar>,
         windowSize: Int
     ): List<StockBar> {
-        if (incoming.isEmpty()) return current
+        if (incoming.isEmpty())
+            return current
 
-        // Für Stabilität: out-of-order eingehende Bars zeitlich sortieren
         val sortedIncoming = incoming.sortedBy { it.timestamp }
-
-        var updated = current
+        log.info("sortedIncoming: $sortedIncoming")
+        var updated = current.sortedBy { it.timestamp }
+        log.info("updated: $updated")
         for (bar in sortedIncoming) {
             updated = when {
                 updated.isEmpty() -> listOf(bar)
@@ -341,18 +371,13 @@ class TradingBot : KoinComponent {
 
 
     private fun requiredBars(): Int {
-        val maxLookback = 200 // z.B. SMA200
+        val maxLookback = 200
         val warmup = 50
         return maxLookback + warmup
     }
 
-    private suspend fun createHandledOrder(side: String): Result<Unit, TradingLogicError> {
-        if (side != "sell" && side != "buy") {
-            return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-        }
-        mOrderRequest.side = side
-        return mTraderService.createOrder(mOrderRequest) // TODO: check mOrderRequest
-
+    private suspend fun createHandledOrder(orderRequest: OrderRequest): Result<Unit, TradingLogicError> {
+        return mTraderService.createOrder(orderRequest)
     }
 
     private fun parseTimeframeToMillis(timeframe: String): Long? {
@@ -374,8 +399,11 @@ class TradingBot : KoinComponent {
 
     private suspend fun getValidatedHistoricalBars(
         stockAggregationRequest: StockAggregationRequest
-    ): Result<List<StockBar>, TradingLogicError> =
-        mTraderService.getHistoricalData(stockAggregationRequest)
+    ): Result<List<StockBar>, TradingLogicError> {
+        parseTimeframeToMillis(stockAggregationRequest.timeframe)
+            ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
+        return mTraderService.getHistoricalData(stockAggregationRequest)
+    }
 
     private suspend fun getAccountBalance(): Result<Double, TradingLogicError> {
         when (val accountDetails = mTraderService.getAccountDetails()) {
@@ -387,12 +415,9 @@ class TradingBot : KoinComponent {
                 return Result.Success(balance)
             }
         }
-
     }
 
     private fun setStrategy(strategySelector: Strategies) {
         mStrategy = StrategyFactory().createStrategy(strategySelector)
     }
-
 }
-
