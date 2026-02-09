@@ -22,73 +22,79 @@ class Indicators {
 
     var mStock = ""
 
-    var mOriginalPrices = mutableListOf<Double>()
-        private set
+    private val _originalPrices = mutableListOf<Double>()
+    val mOriginalPrices: List<Double> get() = _originalPrices
 
-    var mResistances = mutableListOf<Double>()
-        private set
-    var mSupports = mutableListOf<Double>()
-        private set
+    private val _resistances = mutableListOf<Double>()
+    val mResistances: List<Double> get() = _resistances
 
-    var mAverageBollingerBand = mutableListOf<Double>()
-        private set
-    var mLowerBollingerBand = mutableListOf<Double>()
-        private set
-    var mUpperBollingerBand = mutableListOf<Double>()
-        private set
+    private val _supports = mutableListOf<Double>()
+    val mSupports: List<Double> get() = _supports
 
-    var mShortSMA = mutableListOf<Double>()
-        private set
-    var mLongSMA = mutableListOf<Double>()
-        private set
-    var mRsi = mutableListOf<Double>()
-        private set
+    private val _averageBollingerBand = mutableListOf<Double>()
+    val mAverageBollingerBand: List<Double> get() = _averageBollingerBand
+
+    private val _lowerBollingerBand = mutableListOf<Double>()
+    val mLowerBollingerBand: List<Double> get() = _lowerBollingerBand
+
+    private val _upperBollingerBand = mutableListOf<Double>()
+    val mUpperBollingerBand: List<Double> get() = _upperBollingerBand
+
+    private val _shortSMA = mutableListOf<Double>()
+    val mShortSMA: List<Double> get() = _shortSMA
+
+    private val _longSMA = mutableListOf<Double>()
+    val mLongSMA: List<Double> get() = _longSMA
+
+    private val _rsi = mutableListOf<Double>()
+    val mRsi: List<Double> get() = _rsi
 
     fun updateIndicators(historicalBars: List<StockBar>): Result<Any, TradingLogicError> {
         val closingPrices: List<Double> = historicalBars.map { it.close }
 
-        mOriginalPrices = closingPrices.toMutableList()
+        _originalPrices.clear()
+        _originalPrices.addAll(closingPrices)
+
         calculateSupportLevels(closingPrices)
         calculateResistanceLevels(closingPrices)
         calculateBollingerBands(closingPrices)
         calculateRsi(closingPrices)
         calculateShortSMA(closingPrices)
         calculateLongSMA(closingPrices)
-        // trim all to shortest
-        when (val result = trimListsToShortest()) {
-            is Result.Error -> return Result.Error(result.error)
-            is Result.Success -> {}
-        }
 
-        // TODO: Check calculation properly
-        return Result.Success(Unit)
+        // trim all to shortest
+        return when (val result = trimListsToShortest()) {
+            is Result.Error -> Result.Error(result.error)
+            is Result.Success -> Result.Success(Unit)
+        }
     }
 
     private fun calculateSupportLevels(prices: List<Double>) {
-        mSupports.clear()
+        _supports.clear()
         var lastSupport = prices.first()
         for (i in 1 until prices.lastIndex) {
             if (prices[i] < prices[i - 1] && prices[i] < prices[i + 1]) {
                 lastSupport = prices[i]
             }
-            mSupports.add(lastSupport)
+            _supports.add(lastSupport)
         }
     }
 
     private fun calculateResistanceLevels(prices: List<Double>) {
-        mResistances.clear()
+        _resistances.clear()
         var lastResistance = prices.first()
         for (i in 1 until prices.lastIndex) {
             if (prices[i] > prices[i - 1] && prices[i] > prices[i + 1]) {
                 lastResistance = prices[i]
             }
-            mResistances.add(lastResistance) // Local maximum (resistance)
+            _resistances.add(lastResistance)
         }
     }
 
     private fun calculateRsi(prices: List<Double>, period: Int = 14) {
         var tempPeriod = period
-        mRsi.clear()
+        _rsi.clear()
+
         val gains = mutableListOf<Double>()
         val losses = mutableListOf<Double>()
         if (prices.size < tempPeriod) {
@@ -98,11 +104,7 @@ class Indicators {
         // Calculate initial gains and losses
         for (i in 1 until tempPeriod) {
             val delta = prices[i] - prices[i - 1]
-            if (delta > 0) {
-                gains.add(delta)
-            } else {
-                losses.add(-delta)
-            }
+            if (delta > 0) gains.add(delta) else losses.add(-delta)
         }
 
         // Compute first average gain and loss
@@ -115,56 +117,50 @@ class Indicators {
             val gain = if (delta > 0) delta else 0.0
             val loss = if (delta < 0) -delta else 0.0
 
-            // Smoothed averages
             averageGain = ((averageGain * (tempPeriod - 1)) + gain) / tempPeriod
             averageLoss = ((averageLoss * (tempPeriod - 1)) + loss) / tempPeriod
 
             val rs = if (averageLoss == 0.0) Double.POSITIVE_INFINITY else averageGain / averageLoss
             val rsi = 100 - (100 / (1 + rs))
-            val df = DecimalFormat("#.##")
-            df.roundingMode = RoundingMode.CEILING
-            val roundedRsi = df.format(rsi).toDouble()
 
-            mRsi.add(roundedRsi)
+            val df = DecimalFormat("#.##").apply { roundingMode = RoundingMode.CEILING }
+            _rsi.add(df.format(rsi).toDouble())
         }
     }
 
-    // clears the lists, if prices.size < window
     private fun calculateBollingerBands(prices: List<Double>, period: Int = 20, stdDevMultiplier: Double = 2.0) {
-        mAverageBollingerBand.clear()
-        mUpperBollingerBand.clear()
-        mLowerBollingerBand.clear()
+        _averageBollingerBand.clear()
+        _upperBollingerBand.clear()
+        _lowerBollingerBand.clear()
+
+        val df = DecimalFormat("#.##").apply { roundingMode = RoundingMode.CEILING }
+
         for (i in period until prices.size) {
             if (i >= period - 1) {
                 val window = prices.subList(i - period + 1, i + 1)
 
                 val sma = window.average()
-                val df = DecimalFormat("#.##")
-                df.roundingMode = RoundingMode.CEILING
                 val roundedSma = df.format(sma).toDouble()
-                mAverageBollingerBand.add(roundedSma)
+                _averageBollingerBand.add(roundedSma)
 
                 val stdDev = sqrt(window.sumOf { (it - sma).pow(2) } / period)
-
-                val lowerRounded = df.format(roundedSma - stdDevMultiplier * stdDev).toDouble()
-                val upperRounded = df.format(roundedSma + stdDevMultiplier * stdDev).toDouble()
-                mUpperBollingerBand.add(upperRounded)
-                mLowerBollingerBand.add(lowerRounded)
+                _upperBollingerBand.add(df.format(roundedSma + stdDevMultiplier * stdDev).toDouble())
+                _lowerBollingerBand.add(df.format(roundedSma - stdDevMultiplier * stdDev).toDouble())
             }
         }
     }
 
     private fun trimListsToShortest(): Result<Any, TradingLogicError> {
         val allLists = listOf(
-            mLowerBollingerBand,
-            mUpperBollingerBand,
-            mAverageBollingerBand,
-            mOriginalPrices,
-            mRsi,
-            mSupports,
-            mResistances,
-            mShortSMA,
-            mLongSMA
+            _lowerBollingerBand,
+            _upperBollingerBand,
+            _averageBollingerBand,
+            _originalPrices,
+            _rsi,
+            _supports,
+            _resistances,
+            _shortSMA,
+            _longSMA
         )
         val minSize = allLists.minOf { it.size }
         if (minSize == 0) {
@@ -179,31 +175,25 @@ class Indicators {
     }
 
     private fun calculateShortSMA(prices: List<Double>, period: Int = 20) {
-        mShortSMA.clear()
+        _shortSMA.clear()
+        val df = DecimalFormat("#.##").apply { roundingMode = RoundingMode.CEILING }
+
         for (i in period until prices.size) {
             if (i >= period - 1) {
                 val window = prices.subList(i - period + 1, i + 1)
-
-                val sma = window.average()
-                val df = DecimalFormat("#.##")
-                df.roundingMode = RoundingMode.CEILING
-                val roundedSma = df.format(sma).toDouble()
-                mShortSMA.add(roundedSma)
+                _shortSMA.add(df.format(window.average()).toDouble())
             }
         }
     }
 
     private fun calculateLongSMA(prices: List<Double>, period: Int = 50) {
-        mLongSMA.clear()
+        _longSMA.clear()
+        val df = DecimalFormat("#.##").apply { roundingMode = RoundingMode.CEILING }
+
         for (i in period until prices.size) {
             if (i >= period - 1) {
                 val window = prices.subList(i - period + 1, i + 1)
-
-                val sma = window.average()
-                val df = DecimalFormat("#.##")
-                df.roundingMode = RoundingMode.CEILING
-                val roundedSma = df.format(sma).toDouble()
-                mLongSMA.add(roundedSma)
+                _longSMA.add(df.format(window.average()).toDouble())
             }
         }
     }
@@ -227,7 +217,6 @@ class Indicators {
         val longSMAResult = getValueFromList(mLongSMA, index)
         val rsiResult = getValueFromList(mRsi, index)
 
-        // Collect all in a list and return first error if any
         val results = listOf(
             originalPriceResult,
             resistanceResult,
@@ -239,11 +228,8 @@ class Indicators {
             longSMAResult,
             rsiResult
         )
-
         results.forEach { result ->
-            if (result is Result.Error) {
-                return Result.Error(result.error)
-            }
+            if (result is Result.Error) return Result.Error(result.error)
         }
 
         return Result.Success(

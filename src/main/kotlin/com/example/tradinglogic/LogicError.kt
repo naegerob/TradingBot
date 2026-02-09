@@ -23,6 +23,9 @@ sealed interface TradingLogicError : Error {
     enum class RunError : TradingLogicError {
         ALREADY_RUNNING,
         TIME_FRAME_COULD_NOT_PARSED,
+        SYMBOLS_COULD_NOT_PARSED,
+        LIMIT_COULD_NOT_PARSED,
+
 
     }
 }

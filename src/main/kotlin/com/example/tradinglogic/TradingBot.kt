@@ -11,9 +11,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.math.abs
-import kotlin.times
-import kotlin.toString
-
 
 class TradingBot : KoinComponent {
 
@@ -189,7 +186,7 @@ class TradingBot : KoinComponent {
             quantity = null
         )
 
-        mJob = CoroutineScope(Dispatchers.IO).async<Result<Unit, TradingLogicError>> {
+        mJob = CoroutineScope(Dispatchers.IO).async {
 
             // Set notional to 0.1% of account balance
             when (val result = getAccountBalance()) {
@@ -239,6 +236,7 @@ class TradingBot : KoinComponent {
                 }
 
                 log.info("getValidatedHistoricalBars called")
+                // TODO: Trading signal is evaluated only due to last bar
                 val tradingSignal = when (val result = mIndicators.getIndicatorPoints(-1)) {
                     is Result.Error     -> return@async Result.Error(result.error)
                     is Result.Success   -> mStrategy.executeAlgorithm(result.data)
@@ -402,6 +400,10 @@ class TradingBot : KoinComponent {
     ): Result<List<StockBar>, TradingLogicError> {
         parseTimeframeToMillis(stockAggregationRequest.timeframe)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
+        if (stockAggregationRequest.symbols.isEmpty())
+            return Result.Error(TradingLogicError.RunError.SYMBOLS_COULD_NOT_PARSED)
+        if (stockAggregationRequest.limit <= 0)
+            return Result.Error(TradingLogicError.RunError.LIMIT_COULD_NOT_PARSED)
         return mTraderService.getHistoricalData(stockAggregationRequest)
     }
 
