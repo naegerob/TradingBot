@@ -3,9 +3,6 @@ package com.example.tradinglogic.strategies
 import com.example.tradinglogic.IndicatorSnapshot
 
 
-interface TradingStrategy {
-    fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal
-}
 
 /**
  * This table is implemented in TradingBot
@@ -39,12 +36,28 @@ enum class TradingAction {
     DoNothing
 }
 
+fun interface TradingStrategy {
+    fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal
+}
+
+val MovingAverageStrategy = TradingStrategy {
+    if (it.shortSMA > it.longSMA) {
+        return@TradingStrategy TradingSignal.Buy
+    } else if (it.shortSMA < it.longSMA) {
+        return@TradingStrategy TradingSignal.Sell
+    }
+    return@TradingStrategy TradingSignal.Hold
+}
+
+val NoOpStrategy = TradingStrategy {
+    TradingSignal.Hold
+}
 
 class StrategyFactory {
     fun createStrategy(strategy: Strategies): TradingStrategy {
         return when (strategy) {
-            Strategies.MovingAverage -> MovingAverageStrategy()
-            Strategies.None -> NoOpStrategy()
+            Strategies.MovingAverage    -> MovingAverageStrategy
+            Strategies.None             -> NoOpStrategy
         }
     }
 }
