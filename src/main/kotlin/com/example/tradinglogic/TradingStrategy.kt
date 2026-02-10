@@ -1,7 +1,4 @@
-package com.example.tradinglogic.strategies
-
-import com.example.tradinglogic.IndicatorSnapshot
-
+package com.example.tradinglogic
 
 
 /**
@@ -36,28 +33,25 @@ enum class TradingAction {
     DoNothing
 }
 
-fun interface TradingStrategy {
-    fun executeAlgorithm(indicatorSnapshot: IndicatorSnapshot): TradingSignal
-}
+typealias TradingStrategy = (IndicatorSnapshot) -> TradingSignal
 
-val MovingAverageStrategy = TradingStrategy {
-    if (it.shortSMA > it.longSMA) {
-        return@TradingStrategy TradingSignal.Buy
-    } else if (it.shortSMA < it.longSMA) {
-        return@TradingStrategy TradingSignal.Sell
+val MovingAverageStrategy : TradingStrategy = {
+    when {
+        it.shortSMA > it.longSMA    -> TradingSignal.Buy
+        it.shortSMA < it.longSMA    -> TradingSignal.Sell
+        else                        -> TradingSignal.Hold
     }
-    return@TradingStrategy TradingSignal.Hold
 }
 
-val NoOpStrategy = TradingStrategy {
+val NoOpStrategy : TradingStrategy = {
     TradingSignal.Hold
 }
 
 class StrategyFactory {
     fun createStrategy(strategy: Strategies): TradingStrategy {
         return when (strategy) {
-            Strategies.MovingAverage    -> MovingAverageStrategy
-            Strategies.None             -> NoOpStrategy
+            Strategies.MovingAverage -> MovingAverageStrategy
+            Strategies.None -> NoOpStrategy
         }
     }
 }

@@ -4,7 +4,7 @@ import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest
 import com.example.data.token.LoginResponse
 import com.example.tradinglogic.BacktestConfig
-import com.example.tradinglogic.strategies.Strategies
+import com.example.tradinglogic.Strategies
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*

@@ -8,10 +8,10 @@ import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
 import com.example.tradinglogic.*
-import com.example.tradinglogic.strategies.Strategies
-import com.example.tradinglogic.strategies.StrategyFactory
-import com.example.tradinglogic.strategies.TradingSignal
-import com.example.tradinglogic.strategies.TradingStrategy
+import com.example.tradinglogic.Strategies
+import com.example.tradinglogic.StrategyFactory
+import com.example.tradinglogic.TradingSignal
+import com.example.tradinglogic.TradingStrategy
 import io.ktor.client.*
 import io.ktor.client.engine.*
 import io.ktor.client.engine.mock.*
@@ -25,13 +25,12 @@ import io.ktor.serialization.kotlinx.json.*
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import org.junit.After
-import org.koin.core.context.GlobalContext.startKoin
+import org.koin.core.KoinApplication
+import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
 import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.test.KoinTest
-import org.koin.test.inject
 import kotlin.test.*
 
 class Backtest : KoinTest {
@@ -57,6 +56,50 @@ class Backtest : KoinTest {
             single<TraderService> { TraderService() }
             single { TradingBot() }
         }
+
+        private fun createHttpClient(engine: HttpClientEngine): HttpClient =
+            HttpClient(engine) {
+                install(ContentNegotiation) {
+                    json(
+                        Json {
+                            prettyPrint = true
+                            isLenient = false
+                            ignoreUnknownKeys = true
+                            encodeDefaults = true
+                        }
+                    )
+                }
+                install(Logging) {
+                    logger = Logger.DEFAULT
+                    level = LogLevel.ALL
+                }
+                install(DefaultRequest) {
+                    header("content-type", "application/json")
+                    header("accept", "application/json")
+                }
+            }
+
+        private fun createTestKoinApp(engine: HttpClientEngine): KoinApplication =
+            startKoin {
+                modules(
+                    testModule,
+                    module {
+                        single<HttpClientEngine> { engine }
+                        single<HttpClient> { createHttpClient(get()) }
+                    }
+                )
+            }
+    }
+
+    @BeforeTest
+    fun setUpKoin() {
+        // defensiv: falls ein vorheriger Test Koin offen gelassen hat
+        stopKoin()
+    }
+
+    @AfterTest
+    fun tearDownKoin() {
+        stopKoin()
     }
 
     @Test
@@ -73,7 +116,7 @@ class Backtest : KoinTest {
             longSMA = 99.5,
             rsi = 55.0
         )
-        val tradingSignal = strategy.executeAlgorithm(indicatorSnapshot)
+        val tradingSignal = strategy(indicatorSnapshot)
         assertEquals(TradingSignal.Buy, tradingSignal)
 
         val indicatorSnapshot2 = IndicatorSnapshot(
@@ -87,7 +130,7 @@ class Backtest : KoinTest {
             longSMA = 103.5,
             rsi = 55.0
         )
-        val tradingSignal2 = strategy.executeAlgorithm(indicatorSnapshot2)
+        val tradingSignal2 = strategy(indicatorSnapshot2)
         assertEquals(TradingSignal.Sell, tradingSignal2)
 
         val indicatorSnapshot3 = IndicatorSnapshot(
@@ -101,7 +144,7 @@ class Backtest : KoinTest {
             longSMA = 104.5,
             rsi = 55.0
         )
-        val tradingSignal3 = strategy.executeAlgorithm(indicatorSnapshot3)
+        val tradingSignal3 = strategy(indicatorSnapshot3)
         assertEquals(TradingSignal.Hold, tradingSignal3)
 
         val indicatorSnapshot4 = IndicatorSnapshot(
@@ -115,7 +158,7 @@ class Backtest : KoinTest {
             longSMA = 2373.54,
             rsi = 55.0
         )
-        val tradingSignal4 = strategy.executeAlgorithm(indicatorSnapshot4)
+        val tradingSignal4 = strategy(indicatorSnapshot4)
         assertEquals(TradingSignal.Hold, tradingSignal4)
     }
 
@@ -198,43 +241,19 @@ class Backtest : KoinTest {
             )
         }
 
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClientEngine> { mockEngine }
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val customKoin = createTestKoinApp(mockEngine)
 
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = defaultStockAggregationRequest.copy(),
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
         val resultWithLessData = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         when (resultWithLessData) {
-            is Result.Success<*, *> -> fail("resultValue could not be casted $resultWithLessData")
-            is Result.Error<*, *> -> assertEquals(
+            is Result.Success -> fail("resultValue could not be casted $resultWithLessData")
+            is Result.Error -> assertEquals(
                 TradingLogicError.DataError.TOO_LESS_DATA_SAMPLES,
                 resultWithLessData.error
             )
@@ -257,43 +276,19 @@ class Backtest : KoinTest {
             )
         }
 
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClientEngine> { mockEngine }
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val customKoin = createTestKoinApp(mockEngine)
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = defaultStockAggregationRequest.copy(),
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
 
         val resultWithDefault = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         val defaultBackTestResult = BacktestResult()
         when (resultWithDefault) {
-            is Result.Success<*, *> -> {
+            is Result.Success -> {
                 val resultValue = resultWithDefault.data
                 if (resultValue is BacktestResult) {
                     assertEquals(Strategies.MovingAverage, resultValue.strategyName)
@@ -305,7 +300,7 @@ class Backtest : KoinTest {
                     fail("resultValue could not be casted")
                 }
             }
-            is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
+            is Result.Error -> fail("Expected success but got Error: ${resultWithDefault.error}")
         }
         customKoin.close()
     }
@@ -325,31 +320,7 @@ class Backtest : KoinTest {
             )
         }
 
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClientEngine> { mockEngine }
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val customKoin = createTestKoinApp(mockEngine)
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = "TSLA"
@@ -358,27 +329,23 @@ class Backtest : KoinTest {
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
 
         val result = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         val backTestResult = BacktestResult()
         when (result) {
-            is Result.Success<*, *> -> {
+            is Result.Success -> {
                 val resultValue = result.data
-                if (resultValue is BacktestResult) {
-                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(backTestResult.finalEquity, resultValue.finalEquity)
-                    assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
-                    assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
-                    assertNotEquals(backTestResult.positions, resultValue.positions)
-                } else {
-                    fail("resultValue could not be casted")
-                }
+                assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                assertNotEquals(backTestResult.finalEquity, resultValue.finalEquity)
+                assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
+                assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
+                assertNotEquals(backTestResult.positions, resultValue.positions)
             }
 
-            is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
+            is Result.Error -> fail("Expected success but got Error: ${result.error}")
         }
         customKoin.close()
     }
@@ -399,31 +366,7 @@ class Backtest : KoinTest {
             )
         }
 
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClientEngine> { mockEngine }
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val customKoin = createTestKoinApp(mockEngine)
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = "TSLA"
@@ -432,27 +375,24 @@ class Backtest : KoinTest {
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
 
         val result = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         val backTestResult = BacktestResult()
         when (result) {
-            is Result.Success<*, *> -> {
+            is Result.Success -> {
                 val resultValue = result.data
-                if (resultValue is BacktestResult) {
-                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(backTestResult.finalEquity, resultValue.finalEquity)
-                    assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
-                    assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
-                    assertNotEquals(backTestResult.positions, resultValue.positions)
-                } else {
-                    fail("resultValue could not be casted")
-                }
+                assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                assertNotEquals(backTestResult.finalEquity, resultValue.finalEquity)
+                assertNotEquals(backTestResult.roiPercent, resultValue.roiPercent)
+                assertNotEquals(backTestResult.winRatePercent, resultValue.winRatePercent)
+                assertNotEquals(backTestResult.positions, resultValue.positions)
+
             }
 
-            is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
+            is Result.Error -> fail("Expected success but got Error: ${result.error}")
         }
         customKoin.close()
     }
@@ -472,31 +412,7 @@ class Backtest : KoinTest {
             )
         }
 
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClientEngine> { mockEngine }
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val customKoin = createTestKoinApp(mockEngine)
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = "GOOGL",
             timeframe = "30Min",
@@ -509,26 +425,22 @@ class Backtest : KoinTest {
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
 
         val result = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         val defaultBackTestResult = BacktestResult()
         when (result) {
-            is Result.Success<*, *> -> {
+            is Result.Success -> {
                 val resultValue = result.data
-                if (resultValue is BacktestResult) {
-                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
-                    assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
-                    assertNotEquals(defaultBackTestResult.winRatePercent, resultValue.winRatePercent)
-                    assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
-                } else {
-                    fail("resultValue could not be casted")
-                }
+                assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
+                assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
+                assertNotEquals(defaultBackTestResult.winRatePercent, resultValue.winRatePercent)
+                assertNotEquals(defaultBackTestResult.positions, resultValue.positions)
             }
-            is Result.Error<*, *> -> fail("Expected success but got Error: ${result.error}")
+            is Result.Error -> fail("Expected success but got Error: ${result.error}")
         }
         customKoin.close()
     }
@@ -548,95 +460,46 @@ class Backtest : KoinTest {
             )
         }
 
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClientEngine> { mockEngine }
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val customKoin = createTestKoinApp(mockEngine)
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = defaultStockAggregationRequest.copy(),
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
 
         val resultWithDefault = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         val defaultBackTestResult = BacktestResult()
         when (resultWithDefault) {
-            is Result.Success<*, *> -> {
+            is Result.Success -> {
                 val resultValue = resultWithDefault.data
-                if (resultValue is BacktestResult) {
-                    assertEquals(Strategies.MovingAverage, resultValue.strategyName)
-                    assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
-                    assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
-                } else {
-                    fail("resultValue could not be casted")
-                }
+                assertEquals(Strategies.MovingAverage, resultValue.strategyName)
+                assertNotEquals(defaultBackTestResult.finalEquity, resultValue.finalEquity)
+                assertNotEquals(defaultBackTestResult.roiPercent, resultValue.roiPercent)
             }
-            is Result.Error<*, *> -> fail("Expected success but got Error: ${resultWithDefault.error}")
+            is Result.Error -> fail("Expected success but got Error: ${resultWithDefault.error}")
         }
         customKoin.close()
     }
 
     @Test
     fun `Backtesting without valid Indicators`() {
-        val customKoin = koinApplication {
-            modules(testModule, module {
-                single<HttpClient> {
-                    HttpClient(get()) {
-                        install(ContentNegotiation) {
-                            json(Json {
-                                prettyPrint = true
-                                isLenient = false
-                                ignoreUnknownKeys = true
-                                encodeDefaults = true
-                            })
-                        }
-                        install(Logging) {
-                            logger = Logger.DEFAULT
-                            level = LogLevel.ALL
-                        }
-                        install(DefaultRequest) {
-                            header("content-type", "application/json")
-                            header("accept", "application/json")
-                        }
-                    }
-                }
-            })
-        }.koin
+        val dummyEngine = MockEngine { respond(content = "{}", status = OK) }
+        val customKoin = createTestKoinApp(dummyEngine)
+
         val stockAggregationRequest = defaultStockAggregationRequest.copy(symbols = "")
         val backtestConfig = BacktestConfig(
             stockAggregationRequest = stockAggregationRequest,
             strategySelector = Strategies.MovingAverage
         )
-        val tradingBot = customKoin.get<TradingBot>()
+        val tradingBot = customKoin.koin.get<TradingBot>()
         val resultWithEmptySymbol = runBlocking {
             tradingBot.backtest(backtestConfig)
         }
         when (resultWithEmptySymbol) {
-            is Result.Success<*, *> -> fail("Expected Success but got Error: ${resultWithEmptySymbol.data}")
-            is Result.Error<*, *> -> assertEquals(
+            is Result.Success -> fail("Expected Success but got Error: ${resultWithEmptySymbol.data}")
+            is Result.Error -> assertEquals(
                 TradingLogicError.StrategyError.NO_SYMBOLS_PROVIDED,
                 resultWithEmptySymbol.error
             )

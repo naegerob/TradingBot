@@ -2,7 +2,6 @@ package com.example.tradinglogic
 
 import com.example.services.TraderService
 import com.example.data.singleModels.*
-import com.example.tradinglogic.strategies.*
 import kotlinx.coroutines.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -68,7 +67,7 @@ class TradingBot : KoinComponent {
         mBacktestIndicators.mOriginalPrices.forEachIndexed { index, originalPrice ->
             val tradingSignal = when (val indicatorPointsResult = mBacktestIndicators.getIndicatorPoints(index)) {
                 is Result.Error -> return Result.Error(indicatorPointsResult.error)
-                is Result.Success -> mStrategy.executeAlgorithm(indicatorPointsResult.data)
+                is Result.Success -> mStrategy(indicatorPointsResult.data)
             }
             val tradingAction = handleSignal(positionState, tradingSignal)
 
@@ -239,7 +238,7 @@ class TradingBot : KoinComponent {
                 // TODO: Trading signal is evaluated only due to last bar
                 val tradingSignal = when (val result = mIndicators.getIndicatorPoints(-1)) {
                     is Result.Error     -> return@async Result.Error(result.error)
-                    is Result.Success   -> mStrategy.executeAlgorithm(result.data)
+                    is Result.Success   -> mStrategy(result.data)
                 }
                 val tradingAction = handleSignal(positionState, tradingSignal)
 
