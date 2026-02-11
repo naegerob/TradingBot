@@ -63,6 +63,23 @@ class APITests : KoinTest {
         )
     }
 
+    private fun ApplicationTestBuilder.createJsonClient() = createClient {
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                }
+            )
+        }
+        install(DefaultRequest) {
+            header("content-type", "application/json")
+            header("accept", "application/json")
+        }
+    }
+
     private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
@@ -77,20 +94,7 @@ class APITests : KoinTest {
     fun `All Backtest Indicators`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val endpoints = listOf(
             "/BacktestIndicators/Original",
@@ -116,20 +120,7 @@ class APITests : KoinTest {
     fun `All Normal Indicators`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val endpoints = listOf(
             "/Indicators/Original",
@@ -204,20 +195,7 @@ class APITests : KoinTest {
         application { loadKoinModules(overrides) }
 
         val orderRequest = defaultOrderRequest.copy()
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -297,20 +275,7 @@ class APITests : KoinTest {
             extendedHours = false,
             positionIntent = "buy_to_open"
         )
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -394,20 +359,7 @@ class APITests : KoinTest {
             extendedHours = false,
             positionIntent = "sell_to_open"
         )
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -493,20 +445,7 @@ class APITests : KoinTest {
             positionIntent = "buy_to_open",
             orderClass = "bracket"
         )
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -550,20 +489,7 @@ class APITests : KoinTest {
         }
         val overrides = module { single<HttpClientEngine> { mockEngine } }
         application { loadKoinModules(overrides) }
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/clock") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -634,20 +560,7 @@ class APITests : KoinTest {
         val orderRequest = defaultOrderRequest.copy(
             symbol = ""
         )
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -718,20 +631,7 @@ class APITests : KoinTest {
 
         val accountId = "PA3ALX4NGLN0"
         val state = "ACTIVE"
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/AccountDetails") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -822,20 +722,7 @@ class APITests : KoinTest {
         application { loadKoinModules(overrides) }
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
@@ -867,20 +754,7 @@ class APITests : KoinTest {
         val stockAggregationRequest = defaultStockAggregationRequest.copy(
             symbols = ""
         )
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")

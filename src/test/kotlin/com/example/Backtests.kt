@@ -28,7 +28,6 @@ import kotlinx.serialization.json.Json
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.core.context.stopKoin
-import org.koin.dsl.koinApplication
 import org.koin.dsl.module
 import org.koin.test.KoinTest
 import kotlin.test.*
@@ -51,7 +50,7 @@ class Backtest : KoinTest {
             sort = "asc"
         )
 
-        val testModule = module {
+        private val testModule = module {
             single<AlpacaRepository> { AlpacaRepository() }
             single<TraderService> { TraderService() }
             single { TradingBot() }
@@ -93,7 +92,7 @@ class Backtest : KoinTest {
 
     @BeforeTest
     fun setUpKoin() {
-        // defensiv: falls ein vorheriger Test Koin offen gelassen hat
+        // Not really needed, but to be safe
         stopKoin()
     }
 

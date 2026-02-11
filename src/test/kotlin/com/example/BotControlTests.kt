@@ -34,24 +34,28 @@ class BotControlTests {
         return loginResponse.accessToken
     }
 
-    @Test
-    fun `Start Bot endpoint returns OK`() = testApplication {
-        environment { config = ApplicationConfig("application.yaml") }
-
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
+    private fun ApplicationTestBuilder.createJsonClient() = createClient {
+        install(ContentNegotiation) {
+            json(
+                Json {
                     prettyPrint = true
                     isLenient = false
                     ignoreUnknownKeys = true
                     encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
+                }
+            )
         }
+        install(DefaultRequest) {
+            header("content-type", "application/json")
+            header("accept", "application/json")
+        }
+    }
+
+    @Test
+    fun `Start Bot endpoint returns OK`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val client = createJsonClient()
 
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/Bot/Start") {
@@ -64,20 +68,7 @@ class BotControlTests {
     fun `Stop Bot endpoint returns OK`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/Bot/Stop") {
@@ -90,20 +81,7 @@ class BotControlTests {
     fun `Start and Stop Bot endpoint returns OK`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponseStart = client.get("/Bot/Start") {
@@ -121,20 +99,7 @@ class BotControlTests {
     fun `Backtesting endpoint with valid config returns OK`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val backtestConfig = BacktestConfig(
             strategySelector = Strategies.MovingAverage,
@@ -165,20 +130,7 @@ class BotControlTests {
     fun `Historical Bars Get endpoint returns result`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val accessToken = runBlocking { loginAndGetToken(client) }
         val httpResponse = client.get("/HistoricalBars/Get") {

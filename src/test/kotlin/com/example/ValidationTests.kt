@@ -32,24 +32,28 @@ class ValidationTests {
         return loginResponse.accessToken
     }
 
-    @Test
-    fun `Order validation fails with invalid side parameter`() = testApplication {
-        environment { config = ApplicationConfig("application.yaml") }
-
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
+    private fun ApplicationTestBuilder.createJsonClient() = createClient {
+        install(ContentNegotiation) {
+            json(
+                Json {
                     prettyPrint = true
                     isLenient = false
                     ignoreUnknownKeys = true
                     encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
+                }
+            )
         }
+        install(DefaultRequest) {
+            header("content-type", "application/json")
+            header("accept", "application/json")
+        }
+    }
+
+    @Test
+    fun `Order validation fails with invalid side parameter`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val client = createJsonClient()
 
         val invalidOrderRequest = OrderRequest(
             side = "invalid_side", // Invalid side
@@ -82,20 +86,7 @@ class ValidationTests {
     fun `Order validation fails with invalid type parameter`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val invalidOrderRequest = OrderRequest(
             side = "buy",
@@ -128,20 +119,7 @@ class ValidationTests {
     fun `Order validation fails with invalid timeInForce parameter`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val invalidOrderRequest = OrderRequest(
             side = "buy",
@@ -174,20 +152,7 @@ class ValidationTests {
     fun `Stock request validation fails with multiple symbols`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val invalidStockRequest = StockAggregationRequest(
             symbols = "AAPL,MSFT", // Multiple symbols (contains comma)
@@ -215,20 +180,7 @@ class ValidationTests {
     fun `Stock request validation fails with invalid timeframe`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val invalidStockRequest = StockAggregationRequest(
             symbols = "AAPL",
@@ -256,20 +208,7 @@ class ValidationTests {
     fun `Stock request validation fails with invalid feed`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val invalidStockRequest = StockAggregationRequest(
             symbols = "AAPL",
@@ -297,20 +236,7 @@ class ValidationTests {
     fun `Stock request validation fails with invalid sort parameter`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val invalidStockRequest = StockAggregationRequest(
             symbols = "AAPL",
@@ -338,20 +264,7 @@ class ValidationTests {
     fun `Stock request validation passes with valid parameters`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val client = createClient {
-            install(ContentNegotiation) {
-                json(Json {
-                    prettyPrint = true
-                    isLenient = false
-                    ignoreUnknownKeys = true
-                    encodeDefaults = true
-                })
-            }
-            install(DefaultRequest) {
-                header("content-type", "application/json")
-                header("accept", "application/json")
-            }
-        }
+        val client = createJsonClient()
 
         val validStockRequest = StockAggregationRequest(
             symbols = "AAPL",

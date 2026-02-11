@@ -22,13 +22,44 @@ import kotlin.test.assertTrue
 
 class SecurityTests {
 
+    private fun performLogin(client: HttpClient, path: String): LoginResponse = runBlocking {
+        val username = System.getenv("AUTHENTIFICATION_USERNAME")
+        val password = System.getenv("AUTHENTIFICATION_PASSWORD")
+        val loginRequest = LoginRequest(username = username, password = password)
+        val response = client.post(path) { setBody(loginRequest) }
+        assertEquals(OK, response.status)
+        response.body()
+    }
+
+    private fun isJwtFormat(token: String): Boolean {
+        val parts = token.split(".")
+        return parts.size == 3 && parts.all { it.isNotBlank() }
+    }
+
+    private fun ApplicationTestBuilder.createJsonClient() = createClient {
+        install(ContentNegotiation) {
+            json(
+                Json {
+                    prettyPrint = true
+                    isLenient = false
+                    ignoreUnknownKeys = true
+                    encodeDefaults = true
+                }
+            )
+        }
+        install(DefaultRequest) {
+            header("content-type", "application/json")
+            header("accept", "application/json")
+        }
+    }
+
     @Test
     fun `Login should return access and refresh Token`() = testApplication {
         environment {
             config = ApplicationConfig("application.yaml")
         }
 
-        val client = createConfiguredClient(this)
+        val client = createJsonClient()
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(
@@ -54,7 +85,7 @@ class SecurityTests {
         environment {
             config = ApplicationConfig("application.yaml")
         }
-        val client = createConfiguredClient(this)
+        val client = createJsonClient()
         val loginRequest = LoginRequest(
             username = "wrong",
             password = "wrong"
@@ -70,7 +101,7 @@ class SecurityTests {
     @Test
     fun `Access protected endpoint with valid and invalid tokens`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
-        val client = createConfiguredClient(this)
+        val client = createJsonClient()
 
         // Test both login endpoints
         listOf("/login", "/").forEach { loginPath ->
@@ -99,7 +130,7 @@ class SecurityTests {
         environment {
             config = ApplicationConfig("application.yaml")
         }
-        val client = createConfiguredClient(this)
+        val client = createJsonClient()
 
         // Test both login endpoints
         listOf("/login", "/").forEach { loginPath ->
@@ -123,33 +154,4 @@ class SecurityTests {
         }
         assertEquals(HttpStatusCode.Unauthorized, invalidRefreshResponse.status)
     }
-}
-
-private fun createConfiguredClient(app: ApplicationTestBuilder) = app.createClient {
-    install(ContentNegotiation) {
-        json(Json {
-            prettyPrint = true
-            isLenient = false
-            ignoreUnknownKeys = true
-            encodeDefaults = true
-        })
-    }
-    install(DefaultRequest) {
-        header("content-type", "application/json")
-        header("accept", "application/json")
-    }
-}
-
-private fun performLogin(client: HttpClient, path: String): LoginResponse = runBlocking {
-    val username = System.getenv("AUTHENTIFICATION_USERNAME")
-    val password = System.getenv("AUTHENTIFICATION_PASSWORD")
-    val loginRequest = LoginRequest(username = username, password = password)
-    val response = client.post(path) { setBody(loginRequest) }
-    assertEquals(OK, response.status)
-    response.body()
-}
-
-private fun isJwtFormat(token: String): Boolean {
-    val parts = token.split(".")
-    return parts.size == 3 && parts.all { it.isNotBlank() }
 }

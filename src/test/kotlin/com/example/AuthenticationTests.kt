@@ -15,6 +15,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.http.*
+import io.ktor.client.HttpClient
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
@@ -50,7 +51,7 @@ class AuthenticationTests {
         val body: Any? = null
     )
 
-    private suspend fun assertUnauthorizedOrForbidden(client: io.ktor.client.HttpClient, endpoint: ProtectedEndpoint) {
+    private suspend fun assertUnauthorizedOrForbidden(client: HttpClient, endpoint: ProtectedEndpoint) {
         val response = when (endpoint.verb) {
             HttpVerb.GET -> client.get(endpoint.path)
             HttpVerb.POST -> client.post(endpoint.path) {
@@ -64,7 +65,7 @@ class AuthenticationTests {
             assertEquals(
                 HttpStatusCode.Unauthorized,
                 response.status,
-                "${endpoint.verb} ${endpoint.path} sollte ohne Token Unauthorized/Forbidden liefern"
+                "${endpoint.verb} ${endpoint.path} should return Unauthorized/Forbidden without a token"
             )
         }
     }
@@ -139,6 +140,7 @@ class AuthenticationTests {
 
     @Test
     fun `All protected endpoints have no valid token`() = testApplication {
+
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
