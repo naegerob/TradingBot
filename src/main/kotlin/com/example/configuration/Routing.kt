@@ -17,6 +17,8 @@ import io.ktor.server.auth.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
+import io.ktor.server.plugins.ratelimit.RateLimitName
+import io.ktor.server.plugins.ratelimit.rateLimit
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
@@ -34,41 +36,42 @@ fun Application.configureRouting() {
         val loginPaths = listOf("/login", "/")
 
         loginPaths.forEach { path ->
-            post(path) {
+            rateLimit(RateLimitName("login")) {
+                post(path) {
+                    val loginRequest = call.receive<LoginRequest>()
+                    val jwtConfig = environment.config.config("jwt")
+                    val issuer = jwtConfig.property("issuer").getString()
+                    val audience = jwtConfig.property("audience").getString()
 
-                val loginRequest = call.receive<LoginRequest>()
-                val jwtConfig = environment.config.config("jwt")
-                val issuer = jwtConfig.property("issuer").getString()
-                val audience = jwtConfig.property("audience").getString()
+                    val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
+                    val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
 
-                val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
-                val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
+                    val privateKey = loadRSAPrivateKey(privateKeyPath)
+                    val publicKey = loadRSAPublicKey(publicKeyPath)
 
-                val privateKey = loadRSAPrivateKey(privateKeyPath)
-                val publicKey = loadRSAPublicKey(publicKeyPath)
+                    val password = System.getenv("AUTHENTIFICATION_PASSWORD")
+                    val username = System.getenv("AUTHENTIFICATION_USERNAME")
 
-                val password = System.getenv("AUTHENTIFICATION_PASSWORD")
-                val username = System.getenv("AUTHENTIFICATION_USERNAME")
-
-                if (loginRequest.username == username && loginRequest.password == password) {
-                    val accessToken = JWT.create()
-                        .withAudience(audience)
-                        .withIssuer(issuer)
-                        .withSubject(loginRequest.username)
-                        .withClaim("username", loginRequest.username)
-                        .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
-                        .sign(Algorithm.RSA256(publicKey, privateKey))
-                    val refreshToken = JWT.create()
-                        .withAudience(audience)
-                        .withIssuer(issuer)
-                        .withSubject(loginRequest.username)
-                        .withClaim("username", loginRequest.username)
-                        .withClaim("type", "refresh")
-                        .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
-                        .sign(Algorithm.RSA256(publicKey, privateKey))
-                    call.respond(mapOf("accessToken" to accessToken, "refreshToken" to refreshToken))
-                } else {
-                    call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
+                    if (loginRequest.username == username && loginRequest.password == password) {
+                        val accessToken = JWT.create()
+                            .withAudience(audience)
+                            .withIssuer(issuer)
+                            .withSubject(loginRequest.username)
+                            .withClaim("username", loginRequest.username)
+                            .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
+                            .sign(Algorithm.RSA256(publicKey, privateKey))
+                        val refreshToken = JWT.create()
+                            .withAudience(audience)
+                            .withIssuer(issuer)
+                            .withSubject(loginRequest.username)
+                            .withClaim("username", loginRequest.username)
+                            .withClaim("type", "refresh")
+                            .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
+                            .sign(Algorithm.RSA256(publicKey, privateKey))
+                        call.respond(mapOf("accessToken" to accessToken, "refreshToken" to refreshToken))
+                    } else {
+                        call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
+                    }
                 }
             }
         }

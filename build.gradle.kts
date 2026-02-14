@@ -50,6 +50,8 @@ repositories {
 
 dependencies {
     implementation(libs.ktor.server.core)
+    implementation(libs.ktor.server.csrf)
+    implementation(libs.ktor.server.rate.limiting)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.exposed.core)
@@ -61,8 +63,6 @@ dependencies {
     implementation(libs.ktor.server.config.yaml)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.status.pages)
-    implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.netty)
     implementation(libs.ktor.server.content.negotiation)
     implementation(libs.ktor.serialization.kotlinx.json)
     implementation(project.dependencies.platform(libs.koin.bom))

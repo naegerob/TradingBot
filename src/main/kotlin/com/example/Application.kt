@@ -13,6 +13,8 @@ fun Application.module() {
     DatabaseFactory.init()
     configureDependencies() // installs Koin
     configureCORS()
+    configureCSRF()
+    configureRateLimiter()
     configureSerialization() // Configures the contentNegotiation (XML,JSON,...)
     configureAuthentication()
     configureLogging()
