@@ -7,6 +7,7 @@ import com.example.configuration.loadRSAPublicKey
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest
+import com.example.data.token.LoginResponse
 import com.example.data.token.RefreshRequest
 import com.example.tradinglogic.BacktestConfig
 import com.example.tradinglogic.Strategies
@@ -284,12 +285,13 @@ class AuthenticationTests {
         }
         assertEquals(HttpStatusCode.OK, loginResponse.status)
 
-        val loginBody = loginResponse.body<Map<String, String>>()
-        val refreshToken = loginBody["refreshToken"]
+        val loginBody = loginResponse.body<LoginResponse>()
+        val refreshToken = loginBody.refreshToken
         assertNotNull(refreshToken)
 
         val refreshResponse = client.post("/auth/refresh") {
             setBody(RefreshRequest(refreshToken = refreshToken))
+            header("X-CSRF-Token", loginBody.csrfToken)
         }
 
         assertEquals(HttpStatusCode.OK, refreshResponse.status)

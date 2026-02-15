@@ -34,7 +34,6 @@ fun Application.configureRouting() {
     val validator = ValidationService()
     routing {
         val loginPaths = listOf("/login", "/")
-
         loginPaths.forEach { path ->
             rateLimit(RateLimitName("login")) {
                 post(path) {
@@ -42,10 +41,8 @@ fun Application.configureRouting() {
                     val jwtConfig = environment.config.config("jwt")
                     val issuer = jwtConfig.property("issuer").getString()
                     val audience = jwtConfig.property("audience").getString()
-
                     val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
                     val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
-
                     val privateKey = loadRSAPrivateKey(privateKeyPath)
                     val publicKey = loadRSAPublicKey(publicKeyPath)
 
@@ -68,7 +65,8 @@ fun Application.configureRouting() {
                             .withClaim("type", "refresh")
                             .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
                             .sign(Algorithm.RSA256(publicKey, privateKey))
-                        call.respond(mapOf("accessToken" to accessToken, "refreshToken" to refreshToken))
+                        val csrfToken = UUID.randomUUID().toString()
+                        call.respond(mapOf("accessToken" to accessToken, "refreshToken" to refreshToken, "X-CSRF-Token" to csrfToken))
                     } else {
                         call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
                     }
@@ -77,6 +75,7 @@ fun Application.configureRouting() {
         }
 
         post("/auth/refresh") {
+            validateCSRFToken(call)
             val jwtConfig = environment.config.config("jwt")
             val issuer = jwtConfig.property("issuer").getString()
             val audience = jwtConfig.property("audience").getString()
@@ -133,7 +132,7 @@ fun Application.configureRouting() {
                 } else {
                     call.respond(mapOf("accessToken" to newAccessToken, "rotated" to "false"))
                 }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))
             }
         }
@@ -143,7 +142,9 @@ fun Application.configureRouting() {
         }
 
         authenticate("auth-jwt") {
+
             get("/AccountDetails") {
+                validateCSRFToken(call)
                 val accountResponse = tradingController.fetchAccountDetails()
                 respondToClient(accountResponse, call)
             }
@@ -238,6 +239,8 @@ fun Application.configureRouting() {
 
             route("/Order") {
                 post("/Create") {
+                    validateCSRFToken(call)
+
                     val orderRequest = call.receive<OrderRequest>()
                     val isValidRequest = validator.areValidOrderParameter(orderRequest)
                     if (isValidRequest) {
@@ -251,26 +254,25 @@ fun Application.configureRouting() {
 
             route("/HistoricalBars") {
                 get("/Get") {
+                    validateCSRFToken(call)
                     val stockRequest = StockAggregationRequest()
                     log.info("Received bars request in ${call.request.path()}: $stockRequest")
                     val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
                     if (isSuccessfulSet) {
                         val stockResponse = tradingController.getStockData(stockRequest)
                         respondToClient(stockResponse, call)
-                        call.respond(stockResponse)
                         return@get
                     }
                     call.respond(HttpStatusCode.BadRequest)
                 }
                 post("/Request") {
+                    validateCSRFToken(call)
                     val stockRequest = call.receive<StockAggregationRequest>()
                     log.info("Received stock request in ${call.request.path()}: $stockRequest")
-                    log.error("Test")
                     val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
                     if (isSuccessfulSet) {
                         val stockResponse = tradingController.getStockData(stockRequest)
                         respondToClient(stockResponse, call)
-                        call.respond(stockResponse)
                         return@post
                     }
                     call.respond(HttpStatusCode.BadRequest)
@@ -278,6 +280,8 @@ fun Application.configureRouting() {
             }
             route("/Bot") {
                 post("/Backtesting") {
+                    validateCSRFToken(call)
+
                     val backtestConfig = call.receive<BacktestConfig>()
                     log.info("Backtesting: $backtestConfig")
 
@@ -292,10 +296,12 @@ fun Application.configureRouting() {
                 }
 
                 get("/Start") {
+                    validateCSRFToken(call)
                     tradingController.startBot()
                     call.respond(HttpStatusCode.OK)
                 }
                 get("/Stop") {
+                    validateCSRFToken(call)
                     tradingController.stopBot()
                     call.respond(HttpStatusCode.OK)
                 }
@@ -327,7 +333,6 @@ fun loadRSAPublicKey(path: String): RSAPublicKey {
 }
 
 suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
-
     when (httpResponse.status) {
         HttpStatusCode.OK -> {
             val body = httpResponse.bodyAsText()
@@ -337,19 +342,23 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
             HttpStatusCode.BadRequest,
             "Parameter have wrong format. Check Alpaca Doc!"
         )
-
         HttpStatusCode.MovedPermanently -> call.respond(HttpStatusCode.MovedPermanently)
         HttpStatusCode.NotFound -> call.respond(HttpStatusCode.NotFound)
         HttpStatusCode.Forbidden -> call.respond(
             HttpStatusCode.Forbidden,
             "Buying power or shares is not sufficient. Or proxy blocks API call."
         )
-
         HttpStatusCode.UnprocessableEntity -> call.respond(
             HttpStatusCode.UnprocessableEntity,
             "Input parameters are not recognized. Or Alpaca has closed"
         )
-
         else -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
+    }
+}
+
+private suspend fun validateCSRFToken(call: RoutingCall) {
+    val csrfToken = call.request.headers["X-CSRF-Token"]
+    if (csrfToken.isNullOrEmpty()) {
+        call.respond(HttpStatusCode.Forbidden, mapOf("error" to "CSRF token missing"))
     }
 }

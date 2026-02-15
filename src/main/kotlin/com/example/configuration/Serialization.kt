@@ -32,11 +32,9 @@ fun Application.configureSerialization() {
                 is SerializationException -> {
                     call.respondText(text = "Could not serialize: $cause", status = HttpStatusCode.InternalServerError)
                 }
-
                 is ContentConvertException -> {
                     call.respondText(text = "Could not convert: $cause", status = HttpStatusCode.InternalServerError)
                 }
-
                 else -> {
                     call.respondText(
                         text = "Everything else which I had no idea about: $cause",

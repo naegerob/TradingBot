@@ -1,6 +1,7 @@
 package com.example.data.token
 
 import com.example.data.alpaca.ApiResponse
+import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 
@@ -23,5 +24,6 @@ data class LoginRequest(
 @Serializable
 data class LoginResponse(
     val accessToken: String,
-    val refreshToken: String
+    val refreshToken: String,
+    @SerialName("X-CSRF-Token") val csrfToken: String
 ) : ApiResponse()

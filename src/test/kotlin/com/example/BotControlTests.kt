@@ -24,14 +24,14 @@ import kotlin.test.assertEquals
 
 class BotControlTests {
 
-    private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
+    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): Pair<String, String> {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(username = username, password = password)
         val response = client.post(path) { setBody(loginRequest) }
         assertEquals(OK, response.status)
         val loginResponse = response.body<LoginResponse>()
-        return loginResponse.accessToken
+        return Pair(loginResponse.accessToken, loginResponse.csrfToken)
     }
 
     private fun ApplicationTestBuilder.createJsonClient() = createClient {
@@ -51,15 +51,18 @@ class BotControlTests {
         }
     }
 
+
+
     @Test
     fun `Start Bot endpoint returns OK`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.get("/Bot/Start") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
         assertEquals(OK, httpResponse.status)
     }
@@ -70,9 +73,10 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.get("/Bot/Stop") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
         assertEquals(OK, httpResponse.status)
     }
@@ -83,14 +87,16 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponseStart = client.get("/Bot/Start") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
         delay(2)
         assertEquals(OK, httpResponseStart.status)
         val httpResponseStop = client.get("/Bot/Stop") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
         assertEquals(OK, httpResponseStop.status)
     }
@@ -118,9 +124,10 @@ class BotControlTests {
             )
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Bot/Backtesting") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(backtestConfig)
         }
         assertEquals(OK, httpResponse.status)
@@ -132,9 +139,10 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.get("/HistoricalBars/Get") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
         assert(httpResponse.status == OK)
         assert(httpResponse.bodyAsText().isNotEmpty())

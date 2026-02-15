@@ -17,7 +17,6 @@ import io.ktor.http.HttpStatusCode.Companion.UnprocessableEntity
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.context.GlobalContext.loadKoinModules
@@ -80,14 +79,14 @@ class APITests : KoinTest {
         }
     }
 
-    private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
+    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): Pair<String, String> {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(username = username, password = password)
         val response = client.post(path) { setBody(loginRequest) }
         assertEquals(OK, response.status)
         val loginResponse = response.body<LoginResponse>()
-        return loginResponse.accessToken
+        return Pair(loginResponse.accessToken, loginResponse.csrfToken)
     }
 
     @Test
@@ -95,7 +94,7 @@ class APITests : KoinTest {
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val endpoints = listOf(
             "/BacktestIndicators/Original",
             "/BacktestIndicators/Support",
@@ -111,6 +110,7 @@ class APITests : KoinTest {
         endpoints.forEach { endpoint ->
             val httpResponse = client.get(endpoint) {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("X-CSRF-Token", csrfToken)
             }
             assertEquals(OK, httpResponse.status)
         }
@@ -121,7 +121,7 @@ class APITests : KoinTest {
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val endpoints = listOf(
             "/Indicators/Original",
             "/Indicators/Support",
@@ -137,6 +137,7 @@ class APITests : KoinTest {
         endpoints.forEach { endpoint ->
             val httpResponse = client.get(endpoint) {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
+                header("X-CSRF-Token", csrfToken)
             }
             assertEquals(OK, httpResponse.status)
         }
@@ -196,9 +197,10 @@ class APITests : KoinTest {
 
         val orderRequest = defaultOrderRequest.copy()
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(orderRequest)
         }
         val response = httpResponse.body<OrderResponse>()
@@ -206,7 +208,6 @@ class APITests : KoinTest {
         assertEquals("64c48451-34c4-4642-83a8-43f5f75bf6fd", response.id)
         assertEquals("b0b6dd9d-8b9b-48a9-ba46-b9d54906e415", response.assetId)
         assertEquals(orderRequest.quantity, response.qty)
-        assertEquals(orderRequest.symbol, response.symbol)
         assertEquals(orderRequest.symbol, response.symbol)
         assertEquals(orderRequest.quantity, response.qty)
         assertEquals(orderRequest.type, response.type)
@@ -276,9 +277,10 @@ class APITests : KoinTest {
             positionIntent = "buy_to_open"
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(orderRequest)
         }
 
@@ -360,9 +362,10 @@ class APITests : KoinTest {
             positionIntent = "sell_to_open"
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(orderRequest)
         }
 
@@ -381,7 +384,6 @@ class APITests : KoinTest {
 
         unloadKoinModules(overrides)
     }
-
 
     @Test
     fun `Create Good Order with market type, orderClass bracket, tif as fok from Alpaca`() = testApplication {
@@ -446,9 +448,10 @@ class APITests : KoinTest {
             orderClass = "bracket"
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(orderRequest)
         }
 
@@ -490,9 +493,10 @@ class APITests : KoinTest {
         val overrides = module { single<HttpClientEngine> { mockEngine } }
         application { loadKoinModules(overrides) }
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.get("/clock") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
         assertEquals(OK, httpResponse.status)
         val openingHours = httpResponse.body<OpeningHours>()
@@ -561,9 +565,10 @@ class APITests : KoinTest {
             symbol = ""
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(orderRequest)
         }
         assertEquals(BadRequest, httpResponse.status)
@@ -632,9 +637,10 @@ class APITests : KoinTest {
         val accountId = "PA3ALX4NGLN0"
         val state = "ACTIVE"
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.get("/AccountDetails") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
         }
 
         assertEquals(OK, httpResponse.status)
@@ -723,9 +729,10 @@ class APITests : KoinTest {
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(stockAggregationRequest)
         }
 
@@ -755,9 +762,10 @@ class APITests : KoinTest {
             symbols = ""
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(stockAggregationRequest)
         }
         assertEquals(BadRequest, httpResponse.status)

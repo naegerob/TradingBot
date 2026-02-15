@@ -22,14 +22,14 @@ import kotlin.test.assertEquals
 
 class ValidationTests {
 
-    private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
+    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): Pair<String, String> {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(username = username, password = password)
         val response = client.post(path) { setBody(loginRequest) }
         assertEquals(OK, response.status)
         val loginResponse = response.body<LoginResponse>()
-        return loginResponse.accessToken
+        return Pair(loginResponse.accessToken, loginResponse.csrfToken)
     }
 
     private fun ApplicationTestBuilder.createJsonClient() = createClient {
@@ -74,9 +74,10 @@ class ValidationTests {
             positionIntent = null
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidOrderRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -107,9 +108,10 @@ class ValidationTests {
             positionIntent = null
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidOrderRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -140,9 +142,10 @@ class ValidationTests {
             positionIntent = null
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidOrderRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -168,9 +171,10 @@ class ValidationTests {
             sort = "asc"
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidStockRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -196,9 +200,10 @@ class ValidationTests {
             sort = "asc"
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidStockRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -224,9 +229,10 @@ class ValidationTests {
             sort = "asc"
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidStockRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -252,9 +258,10 @@ class ValidationTests {
             sort = "invalid_sort" // Invalid sort
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
+            header("X-CSRF-Token", csrfToken)
             setBody(invalidStockRequest)
         }
         assertEquals(HttpStatusCode.BadRequest, httpResponse.status)
@@ -280,10 +287,11 @@ class ValidationTests {
             sort = "asc"
         )
 
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val (accessToken, csrfToken) = loginAndGetTokenWithCSRF(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(validStockRequest)
+            header("X-CSRF-Token", csrfToken)
         }
         // Should be OK or some other valid response (depends on mock setup)
         assert(httpResponse.status.value in 200..299 || httpResponse.status == HttpStatusCode.BadRequest)
@@ -502,6 +510,4 @@ class ValidationTests {
         val isValid2 = validator.areValidOrderParameter(req2)
         assertEquals(false, isValid2)
     }
-
-
 }
