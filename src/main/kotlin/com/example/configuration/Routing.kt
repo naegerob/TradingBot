@@ -356,6 +356,7 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
 private suspend fun validateCSRFToken(call: RoutingCall) {
     val csrfToken = call.request.headers["X-CSRF-Token"]
     if (csrfToken.isNullOrEmpty()) {
+        // TODO: Implement proper CSRF token validation logic here (e.g., compare with stored token)
         call.respond(HttpStatusCode.Forbidden, mapOf("error" to "CSRF token missing"))
     }
 }
