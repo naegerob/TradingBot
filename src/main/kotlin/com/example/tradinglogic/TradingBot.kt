@@ -1,15 +1,20 @@
 package com.example.tradinglogic
 
-import com.example.services.TraderService
 import com.example.data.singleModels.*
+import com.example.services.TraderService
 import kotlinx.coroutines.*
+import kotlinx.datetime.Clock
+import kotlinx.datetime.DatePeriod
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
+import kotlinx.datetime.toLocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
 import java.time.Duration
-import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.math.abs
+import java.time.Instant
 
 class TradingBot : KoinComponent {
 
@@ -23,7 +28,7 @@ class TradingBot : KoinComponent {
         private set
     var mBacktestIndicators = Indicators()
         private set
-    private var mStrategy = StrategyFactory().createStrategy(Strategies.None)
+    private var mStrategy = StrategyFactory().createStrategy(Strategies.MovingAverage)
 
     suspend fun backtest(
         backtestConfig: BacktestConfig
@@ -166,15 +171,21 @@ class TradingBot : KoinComponent {
         if (mJob?.isActive == true) {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
         }
+        val now = Clock.System.now()
+        val timeZone = TimeZone.UTC
+        val localDateTime = now.toLocalDateTime(timeZone)
+
+        val endDateTime = "${localDateTime.date}T00:00:00Z"
+        val startDateTime = "${localDateTime.date.minus(DatePeriod(days = 2))}T00:00:00Z"
+
         val stockAggregationRequest = StockAggregationRequest(
-            endDateTime = null,
-            startDateTime = null,
+            endDateTime = endDateTime,
+            startDateTime = startDateTime,
             limit = requiredBars(),
             sort = "asc"
         )
         val delayInMs = parseTimeframeToMillis(stockAggregationRequest.timeframe)?.div(2)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
-
 
         val orderRequest = OrderRequest(
             symbol = stockAggregationRequest.symbols,

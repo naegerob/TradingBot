@@ -281,16 +281,13 @@ fun Application.configureRouting() {
             route("/Bot") {
                 post("/Backtesting") {
                     validateCSRFToken(call)
-
                     val backtestConfig = call.receive<BacktestConfig>()
                     log.info("Backtesting: $backtestConfig")
-
                     when (val backtestResult = tradingController.doBacktesting(backtestConfig)) {
                         is Result.Error -> return@post call.respond(
                             HttpStatusCode.BadRequest,
                             "something went wrong in backTesting, check your config"
                         )
-
                         is Result.Success -> return@post call.respond(HttpStatusCode.OK, backtestResult.data)
                     }
                 }
