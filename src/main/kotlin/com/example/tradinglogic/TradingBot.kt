@@ -4,17 +4,11 @@ import com.example.data.singleModels.*
 import com.example.services.TraderService
 import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
-import kotlinx.datetime.DatePeriod
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
-import kotlinx.datetime.toLocalDateTime
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.slf4j.LoggerFactory
-import java.time.Duration
-import java.time.temporal.ChronoUnit
 import kotlin.math.abs
-import java.time.Instant
+import kotlin.time.Duration.Companion.milliseconds
 
 class TradingBot : KoinComponent {
 
@@ -172,9 +166,9 @@ class TradingBot : KoinComponent {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
         }
         val now = Clock.System.now()
-        // Free plan does support only 15m bars, so we need to fetch more data to warm up indicators
         val endDateTime = now.minus(kotlin.time.Duration.parse("15m")).toString().substringBefore('.') + "Z"
-        val startDateTime = now.minus(kotlin.time.Duration.parse("2d")).toString().substringBefore('.') + "Z"
+        // TODO: only for testing, update timeframe and startDateTime for production
+        val startDateTime = now.minus(kotlin.time.Duration.parse("4d")).toString().substringBefore('.') + "Z"
 
         val stockAggregationRequest = StockAggregationRequest(
             endDateTime = endDateTime,
@@ -211,6 +205,7 @@ class TradingBot : KoinComponent {
             stockAggregationRequest.limit = 5
             stockAggregationRequest.sort = "desc"
             log.info("mStockAggregation: $stockAggregationRequest")
+
             while (isActive) {
                 when (val result = mTraderService.getMarketOpeningHours()) {
                     is Result.Error     -> return@async Result.Error(result.error)
@@ -218,7 +213,7 @@ class TradingBot : KoinComponent {
                         if (!result.data) {
                             log.info("Market is closed. Waiting...")
                             delay(delayInMs)
-                            continue
+                            //continue
                         }
                     }
                 }
@@ -339,16 +334,14 @@ class TradingBot : KoinComponent {
 
     private fun configurePollingRequest(stockAggregationRequest: StockAggregationRequest): Result<Unit, TradingLogicError> {
         stockAggregationRequest.let {
-            val endTime = Instant.now().truncatedTo(ChronoUnit.SECONDS)
-
+            val now = Clock.System.now()
+            val endDateTime = now.minus(kotlin.time.Duration.parse("15m"))
             val deltaTime = parseTimeframeToMillis(it.timeframe)?.times(it.limit)
                 ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
+            val startTime = endDateTime.minus(deltaTime.milliseconds)
 
-            val startTime = endTime.minus(Duration.ofMillis(deltaTime))
-
-
-            it.startDateTime = startTime.toString()
-            it.endDateTime = endTime.toString()
+            it.startDateTime = startTime.toString().substringBefore('.') + "Z"
+            it.endDateTime = endDateTime.toString().substringBefore('.') + "Z"
             log.debug("Polling request configured with startDateTime: ${it.startDateTime}, endDateTime: ${it.endDateTime}, timeframe: ${it.timeframe}, limit: ${it.limit}")
         }
         return Result.Success(Unit)
