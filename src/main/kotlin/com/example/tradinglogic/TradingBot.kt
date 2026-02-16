@@ -172,11 +172,9 @@ class TradingBot : KoinComponent {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
         }
         val now = Clock.System.now()
-        val timeZone = TimeZone.UTC
-        val localDateTime = now.toLocalDateTime(timeZone)
-
-        val endDateTime = "${localDateTime.date}T00:00:00Z"
-        val startDateTime = "${localDateTime.date.minus(DatePeriod(days = 2))}T00:00:00Z"
+        // Free plan does support only 15m bars, so we need to fetch more data to warm up indicators
+        val endDateTime = now.minus(kotlin.time.Duration.parse("15m")).toString().substringBefore('.') + "Z"
+        val startDateTime = now.minus(kotlin.time.Duration.parse("2d")).toString().substringBefore('.') + "Z"
 
         val stockAggregationRequest = StockAggregationRequest(
             endDateTime = endDateTime,
@@ -348,8 +346,10 @@ class TradingBot : KoinComponent {
 
             val startTime = endTime.minus(Duration.ofMillis(deltaTime))
 
+
             it.startDateTime = startTime.toString()
             it.endDateTime = endTime.toString()
+            log.debug("Polling request configured with startDateTime: ${it.startDateTime}, endDateTime: ${it.endDateTime}, timeframe: ${it.timeframe}, limit: ${it.limit}")
         }
         return Result.Success(Unit)
     }
