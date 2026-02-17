@@ -2,10 +2,11 @@ docker build -f Docker/local/Dockerfile -t tradingbotdev .
 
 docker run \
   -p 127.0.0.1:8081:8081 \
-  -v C:/Users/41786/Documents/GitHub/TradingBot:/home/gradle/app \
-  -v C:/Users/41786/Documents/GitHub/TradingBot/security/tls:/app/security/tls:ro \
-  -v C:/Users/41786/Documents/GitHub/TradingBot/security/auth:/app/security/auth:ro \
-  --name tradingbotdev \
+  -v ${PWD}:/home/gradle/app \
+  -v ${PWD}/security/tls:/app/security/tls:ro \
+  -v ${PWD}/security/auth:/app/security/auth:ro \
+  -v ${PWD}/logs:/app/logs:rw \
+  --name testcontainer \
   -e APIKEY \
   -e PAPERAPIKEY \
   -e PAPERSECRET \

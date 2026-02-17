@@ -39,8 +39,10 @@ COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
 WORKDIR $WORKDIR
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsSk https://localhost:8081/health || exit 1
 
-# Limit permission at the end, so copy above still works
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+RUN addgroup -S appgroup \
+  && adduser -S appuser -G appgroup \
+  && mkdir -p /app/build /app/logs \
+  && chown -R appuser:appgroup /app
 USER appuser
 
 ENTRYPOINT ["/bin/sh","-c","set -eu; \
