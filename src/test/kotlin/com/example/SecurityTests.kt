@@ -22,14 +22,14 @@ import kotlin.test.assertTrue
 
 class SecurityTests {
 
-    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): Triple<String, String, String> {
+    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): Pair<String, String> {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(username = username, password = password)
         val response = client.post(path) { setBody(loginRequest) }
         assertEquals(OK, response.status)
         val loginResponse = response.body<LoginResponse>()
-        return Triple(loginResponse.accessToken, loginResponse.refreshToken, loginResponse.csrfToken)
+        return Pair(loginResponse.accessToken, loginResponse.refreshToken)
     }
 
     private fun isJwtFormat(token: String): Boolean {
@@ -107,17 +107,15 @@ class SecurityTests {
 
         // Test both login endpoints
         listOf("/login", "/").forEach { loginPath ->
-            val (accessToken, _, csrfToken) = loginAndGetTokenWithCSRF(client, loginPath)
+            val (accessToken, _) = loginAndGetTokenWithCSRF(client, loginPath)
             val protectedResponse = client.get("/AccountDetails") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
-                header("X-CSRF-Token", csrfToken)
             }
             assertEquals(OK, protectedResponse.status)
         }
-        val (_, _, csrfToken) = loginAndGetTokenWithCSRF(client)
+        val (_, _) = loginAndGetTokenWithCSRF(client)
         val invalidTokenResponse = client.get("/AccountDetails") {
             header(HttpHeaders.Authorization, "Bearer invalid.token.value")
-            header("X-CSRF-Token", csrfToken)
         }
         assertEquals(HttpStatusCode.Unauthorized, invalidTokenResponse.status)
 
@@ -135,11 +133,10 @@ class SecurityTests {
 
         // Test both login endpoints
         listOf("/login", "/").forEach { loginPath ->
-            val (_, refreshToken, csrfToken) = loginAndGetTokenWithCSRF(client, loginPath)
+            val (_, refreshToken) = loginAndGetTokenWithCSRF(client, loginPath)
             val refreshResponse = client.post("/auth/refresh") {
                 header(HttpHeaders.Authorization, "Bearer $refreshToken")
                 setBody(mapOf("refreshToken" to refreshToken))
-                header("X-CSRF-Token", csrfToken)
             }
             assertEquals(OK, refreshResponse.status)
             val newAccessToken = refreshResponse.body<RefreshResponse>()

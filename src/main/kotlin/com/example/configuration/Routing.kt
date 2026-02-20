@@ -65,8 +65,9 @@ fun Application.configureRouting() {
                             .withClaim("type", "refresh")
                             .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
                             .sign(Algorithm.RSA256(publicKey, privateKey))
-                        val csrfToken = UUID.randomUUID().toString()
-                        call.respond(mapOf("accessToken" to accessToken, "refreshToken" to refreshToken, "X-CSRF-Token" to csrfToken))
+                       call.respond(mapOf(
+                            "accessToken" to accessToken,
+                            "refreshToken" to refreshToken))
                     } else {
                         call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
                     }
@@ -75,7 +76,6 @@ fun Application.configureRouting() {
         }
 
         post("/auth/refresh") {
-            validateCSRFToken(call)
             val jwtConfig = environment.config.config("jwt")
             val issuer = jwtConfig.property("issuer").getString()
             val audience = jwtConfig.property("audience").getString()
@@ -142,9 +142,7 @@ fun Application.configureRouting() {
         }
 
         authenticate("auth-jwt") {
-
             get("/AccountDetails") {
-                validateCSRFToken(call)
                 val accountResponse = tradingController.fetchAccountDetails()
                 respondToClient(accountResponse, call)
             }
@@ -239,7 +237,6 @@ fun Application.configureRouting() {
 
             route("/Order") {
                 post("/Create") {
-                    validateCSRFToken(call)
 
                     val orderRequest = call.receive<OrderRequest>()
                     val isValidRequest = validator.areValidOrderParameter(orderRequest)
@@ -254,7 +251,6 @@ fun Application.configureRouting() {
 
             route("/HistoricalBars") {
                 get("/Get") {
-                    validateCSRFToken(call)
                     val stockRequest = StockAggregationRequest()
                     log.info("Received bars request in ${call.request.path()}: $stockRequest")
                     val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
@@ -266,7 +262,6 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.BadRequest)
                 }
                 post("/Request") {
-                    validateCSRFToken(call)
                     val stockRequest = call.receive<StockAggregationRequest>()
                     log.info("Received stock request in ${call.request.path()}: $stockRequest")
                     val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
@@ -280,7 +275,6 @@ fun Application.configureRouting() {
             }
             route("/Bot") {
                 post("/Backtesting") {
-                    validateCSRFToken(call)
                     val backtestConfig = call.receive<BacktestConfig>()
                     log.info("Backtesting: $backtestConfig")
                     when (val backtestResult = tradingController.doBacktesting(backtestConfig)) {
@@ -293,12 +287,10 @@ fun Application.configureRouting() {
                 }
 
                 get("/Start") {
-                    validateCSRFToken(call)
                     tradingController.startBot()
                     call.respond(HttpStatusCode.OK)
                 }
                 get("/Stop") {
-                    validateCSRFToken(call)
                     tradingController.stopBot()
                     call.respond(HttpStatusCode.OK)
                 }
@@ -353,10 +345,3 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
     }
 }
 
-private suspend fun validateCSRFToken(call: RoutingCall) {
-    val csrfToken = call.request.headers["X-CSRF-Token"]
-    if (csrfToken.isNullOrEmpty()) {
-        // TODO: Implement proper CSRF token validation logic here (e.g., compare with stored token)
-        call.respond(HttpStatusCode.Forbidden, mapOf("error" to "CSRF token missing"))
-    }
-}

@@ -291,7 +291,6 @@ class AuthenticationTests {
 
         val refreshResponse = client.post("/auth/refresh") {
             setBody(RefreshRequest(refreshToken = refreshToken))
-            header("X-CSRF-Token", loginBody.csrfToken)
         }
 
         assertEquals(HttpStatusCode.OK, refreshResponse.status)

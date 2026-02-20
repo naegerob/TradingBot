@@ -24,6 +24,5 @@ data class LoginRequest(
 @Serializable
 data class LoginResponse(
     val accessToken: String,
-    val refreshToken: String,
-    @SerialName("X-CSRF-Token") val csrfToken: String
+    val refreshToken: String
 ) : ApiResponse()
