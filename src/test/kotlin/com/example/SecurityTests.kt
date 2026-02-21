@@ -13,7 +13,6 @@ import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -22,7 +21,7 @@ import kotlin.test.assertTrue
 
 class SecurityTests {
 
-    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): Pair<String, String> {
+    private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): Pair<String, String> {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(username = username, password = password)
@@ -68,7 +67,7 @@ class SecurityTests {
             password = password
         )
 
-        listOf("/login", "/").forEach { path ->
+        listOf("/login").forEach { path ->
             val httpResponse = client.post(path) {
                 setBody(loginRequest)
             }
@@ -91,7 +90,7 @@ class SecurityTests {
             username = "wrong",
             password = "wrong"
         )
-        listOf("/login", "/").forEach { path ->
+        listOf("/login").forEach { path ->
             val httpResponse = client.post(path) {
                 setBody(loginRequest)
             }
@@ -106,14 +105,14 @@ class SecurityTests {
 
 
         // Test both login endpoints
-        listOf("/login", "/").forEach { loginPath ->
-            val (accessToken, _) = loginAndGetTokenWithCSRF(client, loginPath)
+        listOf("/login").forEach { loginPath ->
+            val (accessToken, _) = loginAndGetToken(client, loginPath)
             val protectedResponse = client.get("/AccountDetails") {
                 header(HttpHeaders.Authorization, "Bearer $accessToken")
             }
             assertEquals(OK, protectedResponse.status)
         }
-        val (_, _) = loginAndGetTokenWithCSRF(client)
+        val (_, _) = loginAndGetToken(client)
         val invalidTokenResponse = client.get("/AccountDetails") {
             header(HttpHeaders.Authorization, "Bearer invalid.token.value")
         }
@@ -132,8 +131,8 @@ class SecurityTests {
         val client = createJsonClient()
 
         // Test both login endpoints
-        listOf("/login", "/").forEach { loginPath ->
-            val (_, refreshToken) = loginAndGetTokenWithCSRF(client, loginPath)
+        listOf("/login").forEach { loginPath ->
+            val (_, refreshToken) = loginAndGetToken(client, loginPath)
             val refreshResponse = client.post("/auth/refresh") {
                 header(HttpHeaders.Authorization, "Bearer $refreshToken")
                 setBody(mapOf("refreshToken" to refreshToken))

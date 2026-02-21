@@ -27,113 +27,132 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 
 
 fun Application.configureRouting() {
     val tradingController = TradingController()
     val validator = ValidationService()
+
+    // --- JWT config/material einmal laden (statt pro Request File-I/O) ---
+    val jwtConfig = environment.config.config("jwt")
+    val issuer = jwtConfig.property("issuer").getString()
+    val audience = jwtConfig.property("audience").getString()
+    val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
+    val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
+    val privateKey by lazy { loadRSAPrivateKey(privateKeyPath) }
+    val publicKey by lazy { loadRSAPublicKey(publicKeyPath) }
+    val algorithm by lazy { Algorithm.RSA256(publicKey, privateKey) }
+    val verifier by lazy {
+        JWT.require(algorithm)
+            .withIssuer(issuer)
+            .withAudience(audience)
+            .build()
+    }
+
+    // In-memory Refresh-Token Revocation (pro Prozess).
+    // Speichert "verwendete" refresh jti, damit Rotation alte Tokens invalidiert.
+    val usedRefreshJtis = ConcurrentHashMap.newKeySet<String>()
+
+    fun issueAccessToken(username: String, nowMs: Long): String =
+        JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withSubject(username)
+            .withClaim("username", username)
+            .withClaim("type", "access")
+            .withIssuedAt(Date(nowMs))
+            .withExpiresAt(Date(nowMs + 15 * 60 * 1000L))
+            .withJWTId(UUID.randomUUID().toString())
+            .sign(algorithm)
+
+    fun issueRefreshToken(username: String, nowMs: Long): Pair<String, String> {
+        val tokenIdentifier = UUID.randomUUID().toString()
+        val token = JWT.create()
+            .withAudience(audience)
+            .withIssuer(issuer)
+            .withSubject(username)
+            .withClaim("username", username)
+            .withClaim("type", "refresh")
+            .withIssuedAt(Date(nowMs))
+            .withExpiresAt(Date(nowMs + 7L * 24 * 60 * 60 * 1000)) // 7 Tage
+            .withJWTId(tokenIdentifier)
+            .sign(algorithm)
+        return token to tokenIdentifier
+    }
+
     routing {
-        val loginPaths = listOf("/login", "/")
-        loginPaths.forEach { path ->
-            rateLimit(RateLimitName("login")) {
-                post(path) {
-                    val loginRequest = call.receive<LoginRequest>()
-                    val jwtConfig = environment.config.config("jwt")
-                    val issuer = jwtConfig.property("issuer").getString()
-                    val audience = jwtConfig.property("audience").getString()
-                    val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
-                    val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
-                    val privateKey = loadRSAPrivateKey(privateKeyPath)
-                    val publicKey = loadRSAPublicKey(publicKeyPath)
+        rateLimit(RateLimitName("login")) {
+            post("/login") {
+                val loginRequest = call.receive<LoginRequest>()
 
-                    val password = System.getenv("AUTHENTIFICATION_PASSWORD")
-                    val username = System.getenv("AUTHENTIFICATION_USERNAME")
+                val password = System.getenv("AUTHENTIFICATION_PASSWORD")
+                val username = System.getenv("AUTHENTIFICATION_USERNAME")
 
-                    if (loginRequest.username == username && loginRequest.password == password) {
-                        val accessToken = JWT.create()
-                            .withAudience(audience)
-                            .withIssuer(issuer)
-                            .withSubject(loginRequest.username)
-                            .withClaim("username", loginRequest.username)
-                            .withExpiresAt(Date(System.currentTimeMillis() + 15 * 60 * 1000)) // 15 min expiry
-                            .sign(Algorithm.RSA256(publicKey, privateKey))
-                        val refreshToken = JWT.create()
-                            .withAudience(audience)
-                            .withIssuer(issuer)
-                            .withSubject(loginRequest.username)
-                            .withClaim("username", loginRequest.username)
-                            .withClaim("type", "refresh")
-                            .withExpiresAt(Date(System.currentTimeMillis() + 7 * 24 * 60 * 60 * 1000)) // 7 days
-                            .sign(Algorithm.RSA256(publicKey, privateKey))
-                       call.respond(mapOf(
+                if (loginRequest.username == username && loginRequest.password == password) {
+                    val now = System.currentTimeMillis()
+                    val (refreshToken, _) = issueRefreshToken(loginRequest.username, now)
+                    val accessToken = issueAccessToken(loginRequest.username, now)
+                    // TODO: store refreshToken in DB
+                    call.respond(
+                        mapOf(
                             "accessToken" to accessToken,
-                            "refreshToken" to refreshToken))
-                    } else {
-                        call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
-                    }
+                            "refreshToken" to refreshToken
+                        )
+                    )
+                } else {
+                    call.respond(HttpStatusCode.Unauthorized, "Invalid credentials")
                 }
             }
         }
 
-        post("/auth/refresh") {
-            val jwtConfig = environment.config.config("jwt")
-            val issuer = jwtConfig.property("issuer").getString()
-            val audience = jwtConfig.property("audience").getString()
-            val privateKeyPath = jwtConfig.property("privateKeyPath").getString()
-            val publicKeyPath = jwtConfig.property("publicKeyPath").getString()
-            val privateKey = loadRSAPrivateKey(privateKeyPath)
-            val publicKey = loadRSAPublicKey(publicKeyPath)
+        // Refresh ebenfalls rate-limiten
+        rateLimit(RateLimitName("login")) {
+            post("/auth/refresh") {
+                val refreshTokenRequest = call.receive<RefreshRequest>()
+                try {
+                    val decodedJWT = verifier.verify(refreshTokenRequest.refreshToken)
+                    val type = decodedJWT.getClaim("type")?.asString()
+                    if (type != "refresh") {
+                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_TOKEN_TYPE"))
+                        return@post
+                    }
+                    val refreshTokenId = decodedJWT.id
+                    if (refreshTokenId.isNullOrBlank()) {
+                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_TOKEN_ID"))
+                        return@post
+                    }
+                    if (!usedRefreshJtis.add(refreshTokenId)) {
+                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "REFRESH_TOKEN_REUSED"))
+                        return@post
+                    }
+                    val username = decodedJWT.subject
+                    val now = System.currentTimeMillis()
+                    val newAccessToken = issueAccessToken(username, now)
 
-            val refreshTokenRequest = call.receive<RefreshRequest>()
-            val verifier = JWT
-                .require(Algorithm.RSA256(publicKey, privateKey))
-                .withIssuer(issuer)
-                .withAudience(audience)
-                .build()
-            try {
-                val decoded = verifier.verify(refreshTokenRequest.refreshToken)
-                val type = decoded.getClaim("type")?.asString()
-                if (type != "refresh") {
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_TOKEN_TYPE"))
-                    return@post
-                }
-                val username = decoded.subject
-                val now = System.currentTimeMillis()
-                val newAccessToken = JWT.create()
-                    .withAudience(audience)
-                    .withIssuer(issuer)
-                    .withSubject(username)
-                    .withClaim("username", username)
-                    .withClaim("type", "access")
-                    .withIssuedAt(Date(now))
-                    .withExpiresAt(Date(now + 15 * 60 * 1000)) // 15 min expiry
-                    .withJWTId(UUID.randomUUID().toString())
-                    .sign(Algorithm.RSA256(publicKey, privateKey))
+                    val remainingMs = (decodedJWT.expiresAt?.time ?: 0L) - now
+                    val rotateThresholdMs = 24L * 60 * 60 * 1000 // rotiere wenn < 24h Restlaufzeit
 
-                val remaining = (decoded.expiresAt?.time ?: 0L) - now
-                val rotateThresholdMs = 24 * 60 * 60 * 1000L
-                if (remaining < rotateThresholdMs) {
-                    val newRefreshToken = JWT.create()
-                        .withIssuer(issuer)
-                        .withAudience(audience)
-                        .withSubject(username)
-                        .withClaim("type", "refresh")
-                        .withIssuedAt(Date(now))
-                        .withExpiresAt(Date(now + 7L * 24 * 60 * 60 * 1000)) // 1 Week
-                        .withJWTId(UUID.randomUUID().toString())
-                        .sign(Algorithm.RSA256(publicKey, privateKey))
-                    call.respond(
-                        mapOf(
-                            "accessToken" to newAccessToken,
-                            "refreshToken" to newRefreshToken,
-                            "rotated" to "true"
+                    if (remainingMs < rotateThresholdMs) {
+                        val (newRefreshToken, _) = issueRefreshToken(username, now)
+                        call.respond(
+                            mapOf(
+                                "accessToken" to newAccessToken,
+                                "refreshToken" to newRefreshToken,
+                                "rotated" to "true"
+                            )
                         )
-                    )
-                } else {
-                    call.respond(mapOf("accessToken" to newAccessToken, "rotated" to "false"))
+                    } else {
+                        call.respond(
+                            mapOf(
+                                "accessToken" to newAccessToken,
+                                "rotated" to "false"
+                            )
+                        )
+                    }
+                } catch (_: Exception) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))
                 }
-            } catch (_: Exception) {
-                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))
             }
         }
 
