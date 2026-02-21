@@ -21,6 +21,13 @@ class DataBaseImpl : DataBaseFacade {
             notional = row[TransactionsTable.notional].toPlainString()
         )
 
+    private fun toToken(row: ResultRow): Token =
+        Token(
+            tokenId = row[TokenTable.tokenId],
+            createdAt = Instant.ofEpochMilli(row[TokenTable.createdAt]),
+            token = row[TokenTable.token].toString()
+        )
+
     override suspend fun allTransactions(): List<Transaction> = DatabaseFactory.dbQuery {
         TransactionsTable
             .selectAll()
@@ -37,9 +44,7 @@ class DataBaseImpl : DataBaseFacade {
     }
 
     override suspend fun addTransaction(symbol: String, side: String, quantity: String, notional: String): Transaction = DatabaseFactory.dbQuery {
-
         val now = Instant.now()
-
         val newId = TransactionsTable.insert {
             it[createdAt] = now.toEpochMilli()
             it[TransactionsTable.symbol] = symbol
@@ -47,7 +52,6 @@ class DataBaseImpl : DataBaseFacade {
             it[TransactionsTable.quantity] = quantity.toBigDecimalOrNullIfBlank()
             it[TransactionsTable.notional] = notional.toBigDecimalOrNullIfBlank()
         }[TransactionsTable.id]
-
         Transaction(
             id = newId,
             createdAt = now,
@@ -74,9 +78,43 @@ class DataBaseImpl : DataBaseFacade {
             .empty().not()
     }
 
+    override suspend fun getToken(tokenId: String): Token? = DatabaseFactory.dbQuery {
+        TokenTable.selectAll()
+            .where { TokenTable.tokenId eq tokenId }
+            .map(::toToken)
+            .singleOrNull()
+    }
+
+    override suspend fun addToken(tokenId: String, token: String): Token = DatabaseFactory.dbQuery {
+        val now = Instant.now()
+        TokenTable.insert {
+            it[createdAt] = now.toEpochMilli()
+            it[TokenTable.tokenId] = tokenId
+            it[TokenTable.token] = token
+        }[TokenTable.tokenId]
+        Token(
+            tokenId = tokenId,
+            createdAt = now,
+            token = token.toString()
+        )
+    }
+
+    override suspend fun deleteToken(tokenId: String): Boolean = DatabaseFactory.dbQuery {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun deleteAllTokens(): Boolean = DatabaseFactory.dbQuery {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun doesTokenExist(tokenId: String): Boolean = DatabaseFactory.dbQuery {
+        TODO("Not yet implemented")
+    }
+
     private fun String.toBigDecimalOrNullIfBlank(): BigDecimal {
         val s = trim()
         if (s.isEmpty()) return "0".toBigDecimal()
         return s.replace(',', '.').toBigDecimal()
     }
+
 }

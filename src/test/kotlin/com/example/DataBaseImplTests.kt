@@ -1,5 +1,6 @@
 package com.example
 
+import com.example.data.database.DataBaseFacade
 import com.example.data.database.DataBaseImpl
 import com.example.data.database.DatabaseFactory
 import kotlinx.coroutines.runBlocking
@@ -15,7 +16,7 @@ class DataBaseImplTests {
     @Test
     fun `CRUD works`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         assertEquals(0, db.allTransactions().size)
@@ -45,7 +46,7 @@ class DataBaseImplTests {
     @Test
     fun `addTransaction accepts blank quantity and notional and persists as zero`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         val created = db.addTransaction(symbol = "AAPL", side = "SELL", quantity = "", notional = "")
@@ -61,7 +62,7 @@ class DataBaseImplTests {
     @Test
     fun `addTransaction accepts null quantity`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         val created = db.addTransaction(symbol = "AAPL", side = "SELL", quantity = "", notional = "")
@@ -72,7 +73,7 @@ class DataBaseImplTests {
     @Test
     fun `addTransaction trims whitespace`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         val created = db.addTransaction(
@@ -100,7 +101,7 @@ class DataBaseImplTests {
     @Test
     fun `deleteTransaction returns false for missing id`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         assertFalse(db.deleteTransaction(999_999))
@@ -109,7 +110,7 @@ class DataBaseImplTests {
     @Test
     fun `addTransaction accepts comma decimal and persists normalized`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         val created = db.addTransaction(
@@ -128,7 +129,7 @@ class DataBaseImplTests {
     @Test
     fun `allTransactions returns rows ordered by id`() = runBlocking {
         DatabaseFactory.init()
-        val db = DataBaseImpl()
+        val db: DataBaseFacade = DataBaseImpl()
 
         db.deleteAllTransactions()
         val a = db.addTransaction(symbol = "AAPL", side = "BUY", quantity = "1", notional = "10")

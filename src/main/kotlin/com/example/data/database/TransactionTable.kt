@@ -1,6 +1,5 @@
 package com.example.data.database
 
-import org.h2.expression.function.SubstringFunction
 import org.jetbrains.exposed.sql.Table
 import java.time.Instant
 

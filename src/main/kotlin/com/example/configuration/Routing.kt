@@ -2,6 +2,10 @@ package com.example.configuration
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
+import com.example.data.database.DataBaseFacade
+import com.example.data.database.DataBaseImpl
+import com.example.data.database.Token
+import com.example.data.database.TokenTable
 import com.example.services.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
@@ -49,25 +53,25 @@ fun Application.configureRouting() {
             .withAudience(audience)
             .build()
     }
+    val db: DataBaseFacade = DataBaseImpl()
 
-    // In-memory Refresh-Token Revocation (pro Prozess).
-    // Speichert "verwendete" refresh jti, damit Rotation alte Tokens invalidiert.
-    val usedRefreshJtis = ConcurrentHashMap.newKeySet<String>()
-
-    fun issueAccessToken(username: String, nowMs: Long): String =
-        JWT.create()
+    fun issueAccessToken(username: String, nowMs: Long): String {
+        val numberOfMinutes = 15L
+        return JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
             .withSubject(username)
             .withClaim("username", username)
             .withClaim("type", "access")
             .withIssuedAt(Date(nowMs))
-            .withExpiresAt(Date(nowMs + 15 * 60 * 1000L))
+            .withExpiresAt(Date(nowMs + numberOfMinutes * 60 * 1000L))
             .withJWTId(UUID.randomUUID().toString())
             .sign(algorithm)
+    }
 
     fun issueRefreshToken(username: String, nowMs: Long): Pair<String, String> {
         val tokenIdentifier = UUID.randomUUID().toString()
+        val numberOfDays = 7L
         val token = JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
@@ -75,13 +79,16 @@ fun Application.configureRouting() {
             .withClaim("username", username)
             .withClaim("type", "refresh")
             .withIssuedAt(Date(nowMs))
-            .withExpiresAt(Date(nowMs + 7L * 24 * 60 * 60 * 1000)) // 7 Tage
+            .withExpiresAt(Date(nowMs + numberOfDays * 24 * 60 * 60 * 1000))
             .withJWTId(tokenIdentifier)
             .sign(algorithm)
         return token to tokenIdentifier
     }
 
     routing {
+        post("/") {
+            call.respondRedirect("/login")
+        }
         rateLimit(RateLimitName("login")) {
             post("/login") {
                 val loginRequest = call.receive<LoginRequest>()
@@ -91,9 +98,9 @@ fun Application.configureRouting() {
 
                 if (loginRequest.username == username && loginRequest.password == password) {
                     val now = System.currentTimeMillis()
-                    val (refreshToken, _) = issueRefreshToken(loginRequest.username, now)
+                    val (refreshToken, refreshTokenId) = issueRefreshToken(loginRequest.username, now)
                     val accessToken = issueAccessToken(loginRequest.username, now)
-                    // TODO: store refreshToken in DB
+                    db.addToken(refreshToken, refreshTokenId)
                     call.respond(
                         mapOf(
                             "accessToken" to accessToken,
@@ -105,8 +112,6 @@ fun Application.configureRouting() {
                 }
             }
         }
-
-        // Refresh ebenfalls rate-limiten
         rateLimit(RateLimitName("login")) {
             post("/auth/refresh") {
                 val refreshTokenRequest = call.receive<RefreshRequest>()
@@ -122,10 +127,8 @@ fun Application.configureRouting() {
                         call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_TOKEN_ID"))
                         return@post
                     }
-                    if (!usedRefreshJtis.add(refreshTokenId)) {
-                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "REFRESH_TOKEN_REUSED"))
-                        return@post
-                    }
+
+                    // TODO: check proper refresh Token
                     val username = decodedJWT.subject
                     val now = System.currentTimeMillis()
                     val newAccessToken = issueAccessToken(username, now)
