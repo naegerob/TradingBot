@@ -14,6 +14,10 @@ object DatabaseFactory {
 
         transaction(database) {
             SchemaUtils.create(TransactionsTable, TokenTable)
+
+            SchemaUtils.createMissingTablesAndColumns(TokenTable)
+            exec("ALTER TABLE TOKENS ALTER COLUMN TOKEN CLOB")
+            exec("ALTER TABLE TOKENS ALTER COLUMN TOKEN_ID VARCHAR(260)")
         }
     }
 

@@ -25,7 +25,7 @@ class DataBaseImpl : DataBaseFacade {
         Token(
             tokenId = row[TokenTable.tokenId],
             createdAt = Instant.ofEpochMilli(row[TokenTable.createdAt]),
-            token = row[TokenTable.token].toString()
+            token = row[TokenTable.token]
         )
 
     override suspend fun allTransactions(): List<Transaction> = DatabaseFactory.dbQuery {
@@ -91,24 +91,27 @@ class DataBaseImpl : DataBaseFacade {
             it[createdAt] = now.toEpochMilli()
             it[TokenTable.tokenId] = tokenId
             it[TokenTable.token] = token
-        }[TokenTable.tokenId]
+        }
         Token(
             tokenId = tokenId,
             createdAt = now,
-            token = token.toString()
+            token = token
         )
     }
 
     override suspend fun deleteToken(tokenId: String): Boolean = DatabaseFactory.dbQuery {
-        TODO("Not yet implemented")
+        TokenTable.deleteWhere { TokenTable.tokenId eq tokenId } > 0
     }
 
     override suspend fun deleteAllTokens(): Boolean = DatabaseFactory.dbQuery {
-        TODO("Not yet implemented")
+        TokenTable.deleteAll()
+        true
     }
 
     override suspend fun doesTokenExist(tokenId: String): Boolean = DatabaseFactory.dbQuery {
-        TODO("Not yet implemented")
+        TokenTable.selectAll()
+            .where { TokenTable.tokenId eq tokenId }
+            .empty().not()
     }
 
     private fun String.toBigDecimalOrNullIfBlank(): BigDecimal {

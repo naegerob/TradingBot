@@ -17,7 +17,6 @@ import io.ktor.http.HttpStatusCode.Companion.UnprocessableEntity
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import org.koin.core.context.GlobalContext.loadKoinModules
@@ -95,7 +94,7 @@ class APITests : KoinTest {
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val endpoints = listOf(
             "/BacktestIndicators/Original",
             "/BacktestIndicators/Support",
@@ -121,7 +120,7 @@ class APITests : KoinTest {
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val endpoints = listOf(
             "/Indicators/Original",
             "/Indicators/Support",
@@ -196,7 +195,7 @@ class APITests : KoinTest {
 
         val orderRequest = defaultOrderRequest.copy()
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
@@ -276,7 +275,7 @@ class APITests : KoinTest {
             positionIntent = "buy_to_open"
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
@@ -360,7 +359,7 @@ class APITests : KoinTest {
             positionIntent = "sell_to_open"
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
@@ -446,7 +445,7 @@ class APITests : KoinTest {
             orderClass = "bracket"
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
@@ -490,7 +489,7 @@ class APITests : KoinTest {
         val overrides = module { single<HttpClientEngine> { mockEngine } }
         application { loadKoinModules(overrides) }
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.get("/clock") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
@@ -561,7 +560,7 @@ class APITests : KoinTest {
             symbol = ""
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/Order/Create") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(orderRequest)
@@ -632,7 +631,7 @@ class APITests : KoinTest {
         val accountId = "PA3ALX4NGLN0"
         val state = "ACTIVE"
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.get("/AccountDetails") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
@@ -723,7 +722,7 @@ class APITests : KoinTest {
 
         val stockAggregationRequest = defaultStockAggregationRequest.copy()
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(stockAggregationRequest)
@@ -755,7 +754,7 @@ class APITests : KoinTest {
             symbols = ""
         )
         val client = createJsonClient()
-        val accessToken = runBlocking { loginAndGetToken(client) }
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/HistoricalBars/Request") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(stockAggregationRequest)

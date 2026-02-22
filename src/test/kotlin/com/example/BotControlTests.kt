@@ -17,14 +17,13 @@ import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
 import io.ktor.server.testing.*
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class BotControlTests {
 
-    private suspend fun loginAndGetTokenWithCSRF(client: HttpClient, path: String = "/login"): String {
+    private suspend fun loginAndGetToken(client: HttpClient, path: String = "/login"): String {
         val username = System.getenv("AUTHENTIFICATION_USERNAME")
         val password = System.getenv("AUTHENTIFICATION_PASSWORD")
         val loginRequest = LoginRequest(username = username, password = password)
@@ -59,7 +58,7 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = loginAndGetTokenWithCSRF(client)
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.get("/Bot/Start") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
@@ -72,7 +71,7 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = loginAndGetTokenWithCSRF(client)
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.get("/Bot/Stop") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
@@ -85,7 +84,7 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = loginAndGetTokenWithCSRF(client)
+        val accessToken = loginAndGetToken(client)
         val httpResponseStart = client.get("/Bot/Start") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
@@ -120,7 +119,7 @@ class BotControlTests {
             )
         )
 
-        val accessToken = loginAndGetTokenWithCSRF(client)
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.post("/Bot/Backtesting") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
             setBody(backtestConfig)
@@ -134,7 +133,7 @@ class BotControlTests {
 
         val client = createJsonClient()
 
-        val accessToken = loginAndGetTokenWithCSRF(client)
+        val accessToken = loginAndGetToken(client)
         val httpResponse = client.get("/HistoricalBars/Get") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }

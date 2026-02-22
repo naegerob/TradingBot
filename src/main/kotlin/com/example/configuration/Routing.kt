@@ -56,6 +56,7 @@ fun Application.configureRouting() {
     val db: DataBaseFacade = DataBaseImpl()
 
     fun issueAccessToken(username: String, nowMs: Long): String {
+        val tokenIdentifier = UUID.randomUUID().toString()
         val numberOfMinutes = 15L
         return JWT.create()
             .withAudience(audience)
@@ -65,7 +66,7 @@ fun Application.configureRouting() {
             .withClaim("type", "access")
             .withIssuedAt(Date(nowMs))
             .withExpiresAt(Date(nowMs + numberOfMinutes * 60 * 1000L))
-            .withJWTId(UUID.randomUUID().toString())
+            .withJWTId(tokenIdentifier)
             .sign(algorithm)
     }
 
@@ -100,7 +101,7 @@ fun Application.configureRouting() {
                     val now = System.currentTimeMillis()
                     val (refreshToken, refreshTokenId) = issueRefreshToken(loginRequest.username, now)
                     val accessToken = issueAccessToken(loginRequest.username, now)
-                    db.addToken(refreshToken, refreshTokenId)
+                    db.addToken(refreshTokenId, refreshToken)
                     call.respond(
                         mapOf(
                             "accessToken" to accessToken,
@@ -115,6 +116,10 @@ fun Application.configureRouting() {
         rateLimit(RateLimitName("login")) {
             post("/auth/refresh") {
                 val refreshTokenRequest = call.receive<RefreshRequest>()
+                if (refreshTokenRequest.refreshToken.isBlank()) {
+                    call.respond(HttpStatusCode.BadRequest, mapOf("error" to "MISSING_REFRESH_TOKEN"))
+                    return@post
+                }
                 try {
                     val decodedJWT = verifier.verify(refreshTokenRequest.refreshToken)
                     val type = decodedJWT.getClaim("type")?.asString()
@@ -127,17 +132,26 @@ fun Application.configureRouting() {
                         call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_TOKEN_ID"))
                         return@post
                     }
-
-                    // TODO: check proper refresh Token
                     val username = decodedJWT.subject
+                    if (username.isNullOrBlank()) {
+                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_SUBJECT"))
+                        return@post
+                    }
+                    val doesTokenAlreadyExist = db.doesTokenExist(refreshTokenId)
+                    if (!doesTokenAlreadyExist) {
+                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "REFRESH_TOKEN_NOT_FOUND"))
+                        return@post
+                    }
+
                     val now = System.currentTimeMillis()
                     val newAccessToken = issueAccessToken(username, now)
 
                     val remainingMs = (decodedJWT.expiresAt?.time ?: 0L) - now
-                    val rotateThresholdMs = 24L * 60 * 60 * 1000 // rotiere wenn < 24h Restlaufzeit
+                    val rotateThresholdMs = 24L * 60 * 60 * 1000
 
                     if (remainingMs < rotateThresholdMs) {
-                        val (newRefreshToken, _) = issueRefreshToken(username, now)
+                        val (newRefreshToken, newRefreshTokenId) = issueRefreshToken(username, now)
+                        db.addToken(newRefreshTokenId, newRefreshToken)
                         call.respond(
                             mapOf(
                                 "accessToken" to newAccessToken,
@@ -149,6 +163,7 @@ fun Application.configureRouting() {
                         call.respond(
                             mapOf(
                                 "accessToken" to newAccessToken,
+                                "refreshToken" to refreshTokenRequest.refreshToken,
                                 "rotated" to "false"
                             )
                         )
@@ -366,4 +381,3 @@ suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
         else -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
     }
 }
-

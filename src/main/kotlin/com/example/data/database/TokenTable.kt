@@ -4,14 +4,9 @@ import java.time.Instant
 import org.jetbrains.exposed.sql.Table
 
 object TokenTable : Table("tokens") {
-    val tokenId = varchar("token_id",
-        length = 255
-    )
+    val tokenId = varchar("token_id", length = 260)
     val createdAt = long("created_at") // epoch millis
-    val token = varchar(
-        "token",
-        length = 255
-    )
+    val token = text("token")
 
     override val primaryKey = PrimaryKey(tokenId)
 }
