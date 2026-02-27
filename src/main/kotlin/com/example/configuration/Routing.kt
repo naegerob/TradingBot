@@ -1,6 +1,7 @@
 package com.example.configuration
 
 import com.auth0.jwt.JWT
+import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.database.DataBaseFacade
 import com.example.data.database.DataBaseImpl
@@ -86,6 +87,35 @@ fun Application.configureRouting() {
         return token to tokenIdentifier
     }
 
+    suspend fun validateRefreshTokenOrRespond(
+        call: ApplicationCall,
+        verifier: JWTVerifier,
+        refreshToken: String
+    ): Pair<String, String>? {
+        return try {
+            val decodedJWT = verifier.verify(refreshToken)
+            val type = decodedJWT.getClaim("type")?.asString()
+            if (type != "refresh") {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_TOKEN_TYPE"))
+                return null
+            }
+            val refreshTokenId = decodedJWT.id
+            if (refreshTokenId.isNullOrBlank()) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_TOKEN_ID"))
+                return null
+            }
+            val username = decodedJWT.subject
+            if (username.isNullOrBlank()) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_SUBJECT"))
+                return null
+            }
+            username to refreshTokenId
+        } catch (_: Exception) {
+            call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))
+            null
+        }
+    }
+
     routing {
         post("/") {
             call.respondRedirect("/login")
@@ -100,8 +130,8 @@ fun Application.configureRouting() {
                 if (loginRequest.username == username && loginRequest.password == password) {
                     val now = System.currentTimeMillis()
                     val (refreshToken, refreshTokenId) = issueRefreshToken(loginRequest.username, now)
-                    val accessToken = issueAccessToken(loginRequest.username, now)
                     db.addToken(refreshTokenId, refreshToken)
+                    val accessToken = issueAccessToken(loginRequest.username, now)
                     call.respond(
                         mapOf(
                             "accessToken" to accessToken,
@@ -120,62 +150,61 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.BadRequest, mapOf("error" to "MISSING_REFRESH_TOKEN"))
                     return@post
                 }
-                try {
-                    val decodedJWT = verifier.verify(refreshTokenRequest.refreshToken)
-                    val type = decodedJWT.getClaim("type")?.asString()
-                    if (type != "refresh") {
-                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_TOKEN_TYPE"))
-                        return@post
-                    }
-                    val refreshTokenId = decodedJWT.id
-                    if (refreshTokenId.isNullOrBlank()) {
-                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_TOKEN_ID"))
-                        return@post
-                    }
-                    val username = decodedJWT.subject
-                    if (username.isNullOrBlank()) {
-                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "MISSING_SUBJECT"))
-                        return@post
-                    }
-                    val doesTokenAlreadyExist = db.doesTokenExist(refreshTokenId)
-                    if (!doesTokenAlreadyExist) {
-                        call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "REFRESH_TOKEN_NOT_FOUND"))
-                        return@post
-                    }
 
-                    val now = System.currentTimeMillis()
-                    val newAccessToken = issueAccessToken(username, now)
+                val (username, refreshTokenId) = validateRefreshTokenOrRespond(call, verifier, refreshTokenRequest.refreshToken) ?: return@post
+                val doesTokenAlreadyExist = db.doesTokenExist(refreshTokenId)
+                if (!doesTokenAlreadyExist) {
+                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "REFRESH_TOKEN_NOT_FOUND"))
+                    return@post
+                }
 
-                    val remainingMs = (decodedJWT.expiresAt?.time ?: 0L) - now
-                    val rotateThresholdMs = 24L * 60 * 60 * 1000
+                val now = System.currentTimeMillis()
+                val newAccessToken = issueAccessToken(username, now)
 
-                    if (remainingMs < rotateThresholdMs) {
-                        val (newRefreshToken, newRefreshTokenId) = issueRefreshToken(username, now)
-                        db.addToken(newRefreshTokenId, newRefreshToken)
-                        call.respond(
-                            mapOf(
-                                "accessToken" to newAccessToken,
-                                "refreshToken" to newRefreshToken,
-                                "rotated" to "true"
-                            )
+                val remainingMs = (verifier.verify(refreshTokenRequest.refreshToken).expiresAt?.time ?: 0L) - now
+                val rotateThresholdMs = 24L * 60 * 60 * 1000
+
+                if (remainingMs < rotateThresholdMs) {
+                    val (newRefreshToken, newRefreshTokenId) = issueRefreshToken(username, now)
+                    db.deleteToken(refreshTokenId)
+                    db.addToken(newRefreshTokenId, newRefreshToken)
+                    call.respond(
+                        mapOf(
+                            "accessToken" to newAccessToken,
+                            "refreshToken" to newRefreshToken,
+                            "rotated" to "true"
                         )
-                    } else {
-                        call.respond(
-                            mapOf(
-                                "accessToken" to newAccessToken,
-                                "refreshToken" to refreshTokenRequest.refreshToken,
-                                "rotated" to "false"
-                            )
+                    )
+                } else {
+                    call.respond(
+                        mapOf(
+                            "accessToken" to newAccessToken,
+                            "refreshToken" to refreshTokenRequest.refreshToken,
+                            "rotated" to "false"
                         )
-                    }
-                } catch (_: Exception) {
-                    call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "INVALID_REFRESH_TOKEN"))
+                    )
                 }
             }
         }
 
         get("/health") {
             call.respond(HttpStatusCode.OK, "Server is healthy")
+        }
+        post("/logout") {
+            val refreshTokenRequest = call.receive<RefreshRequest>()
+            if (refreshTokenRequest.refreshToken.isBlank()) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "MISSING_REFRESH_TOKEN"))
+                return@post
+            }
+            val (_, refreshTokenId) = validateRefreshTokenOrRespond(call, verifier, refreshTokenRequest.refreshToken)
+                ?: return@post
+
+            if (db.doesTokenExist(refreshTokenId)) {
+                db.deleteToken(refreshTokenId)
+                call.respond(HttpStatusCode.OK, "Logged out successfully")
+            } else {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("error" to "REFRESH_TOKEN_NOT_FOUND"))
+            }
         }
 
         authenticate("auth-jwt") {
