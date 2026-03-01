@@ -173,6 +173,7 @@ class TradingBot : KoinComponent {
         val stockAggregationRequest = StockAggregationRequest(
             endDateTime = endDateTime,
             startDateTime = startDateTime,
+            timeframe = "1Min", // for debugging purposes we stay for 1 minute
             limit = requiredBars(),
             sort = "asc"
         )
@@ -212,7 +213,7 @@ class TradingBot : KoinComponent {
                     is Result.Success   -> {
                         if (!result.data) {
                             log.info("Market is closed. Waiting...")
-                            delay(delayInMs)
+                            //delay(delayInMs)
                             //continue
                         }
                     }
@@ -222,7 +223,10 @@ class TradingBot : KoinComponent {
                     is Result.Success   -> Unit
                 }
                 when (val result = getValidatedHistoricalBars(stockAggregationRequest)) {
-                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Error     -> {
+                        log.error("Error fetching historical bars: ${result.error}. Retrying...")
+                        continue
+                    } // we just repeat the requests
                     is Result.Success   -> {
                         log.info("result: ${result.data}")
                         stocks = upsertRollingWindow(
@@ -241,7 +245,10 @@ class TradingBot : KoinComponent {
                 log.info("getValidatedHistoricalBars called")
                 // TODO: Trading signal is evaluated only due to last bar
                 val tradingSignal = when (val result = mIndicators.getIndicatorPoints(-1)) {
-                    is Result.Error     -> return@async Result.Error(result.error)
+                    is Result.Error     -> {
+                        log.error("Error getting newest indicator points: ${result.error}. Retrying...")
+                        continue
+                    }
                     is Result.Success   -> mStrategy(result.data)
                 }
                 val tradingAction = handleSignal(positionState, tradingSignal)
@@ -252,7 +259,10 @@ class TradingBot : KoinComponent {
                         if (positionState == TradingPosition.Flat) {
                             orderRequest.side = "buy"
                             when (val order = createHandledOrder(orderRequest)) {
-                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Error     -> {
+                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    continue
+                                }
                                 is Result.Success   -> {
                                     positionState = TradingPosition.Long
                                     log.info("Open Long: order sent")
@@ -264,7 +274,10 @@ class TradingBot : KoinComponent {
                         if (positionState == TradingPosition.Flat) {
                             orderRequest.side = "sell"
                             when (val order = createHandledOrder(orderRequest)) {
-                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Error     -> {
+                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    continue
+                                }
                                 is Result.Success   -> {
                                     positionState = TradingPosition.Short
                                     log.info("Open Short: order sent")
@@ -276,7 +289,10 @@ class TradingBot : KoinComponent {
                         if (positionState == TradingPosition.Long) {
                             orderRequest.side = "sell"
                             when (val order = createHandledOrder(orderRequest)) {
-                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Error     -> {
+                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    continue
+                                }
                                 is Result.Success   -> {
                                     positionState = TradingPosition.Flat
                                     log.info("Close Long: order sent")
@@ -288,7 +304,10 @@ class TradingBot : KoinComponent {
                         if (positionState == TradingPosition.Short) {
                             orderRequest.side = "buy"
                             when (val order = createHandledOrder(orderRequest)) {
-                                is Result.Error     -> return@async Result.Error(order.error)
+                                is Result.Error     -> {
+                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    continue
+                                }
                                 is Result.Success   -> {
                                     positionState = TradingPosition.Flat
                                     log.info("Close Short: order sent")
@@ -342,6 +361,7 @@ class TradingBot : KoinComponent {
 
             it.startDateTime = startTime.toString().substringBefore('.') + "Z"
             it.endDateTime = endDateTime.toString().substringBefore('.') + "Z"
+            it.endDateTime = ""
             log.debug("Polling request configured with startDateTime: ${it.startDateTime}, endDateTime: ${it.endDateTime}, timeframe: ${it.timeframe}, limit: ${it.limit}")
         }
         return Result.Success(Unit)
