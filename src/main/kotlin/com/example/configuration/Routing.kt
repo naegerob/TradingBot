@@ -24,6 +24,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.ratelimit.rateLimit
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.security.KeyFactory
@@ -39,7 +41,6 @@ fun Application.configureRouting() {
     val tradingController = TradingController()
     val validator = ValidationService()
 
-    // --- JWT config/material einmal laden (statt pro Request File-I/O) ---
     val jwtConfig = environment.config.config("jwt")
     val issuer = jwtConfig.property("issuer").getString()
     val audience = jwtConfig.property("audience").getString()
@@ -353,7 +354,7 @@ fun Application.configureRouting() {
                 }
 
                 get("/Start") {
-                    tradingController.startBot()
+                    launch{ tradingController.startBot() }
                     call.respond(HttpStatusCode.OK)
                 }
                 get("/Stop") {

@@ -213,7 +213,7 @@ class TradingBot : KoinComponent {
                     is Result.Success   -> {
                         if (!result.data) {
                             log.info("Market is closed. Waiting...")
-                            //delay(delayInMs)
+                            delay(delayInMs)
                             //continue
                         }
                     }
