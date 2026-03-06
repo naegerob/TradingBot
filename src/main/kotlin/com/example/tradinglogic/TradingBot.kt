@@ -16,6 +16,8 @@ class TradingBot : KoinComponent {
         private val log = LoggerFactory.getLogger(TradingBot::class.java)
     }
 
+    private var mTradingBotConfig = BotConfig()
+
     private val mTraderService by inject<TraderService>()
     private var mJob: Deferred<Result<Unit, TradingLogicError>>? = null
     var mIndicators = Indicators()
@@ -191,11 +193,10 @@ class TradingBot : KoinComponent {
 
         mJob = CoroutineScope(Dispatchers.IO).async {
 
-            // Set notional to 0.1% of account balance
             when (val result = getAccountBalance()) {
                 is Result.Error -> return@async Result.Error(result.error)
                 is Result.Success -> {
-                    orderRequest.notional = 1000.toString()
+                    orderRequest.quantity = 2.toString()
                 }
             }
             var positionState = TradingPosition.Flat
@@ -329,6 +330,11 @@ class TradingBot : KoinComponent {
     fun stop() {
         mJob?.cancel()
         mJob = null
+    }
+
+    fun updateConfig(config: BotConfig) {
+        mTradingBotConfig = config
+        setStrategy(mTradingBotConfig.strategySelection)
     }
 
     private fun handleSignal(tradingPosition: TradingPosition, tradingSignal: TradingSignal) : TradingAction {

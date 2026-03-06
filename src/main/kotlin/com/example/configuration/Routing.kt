@@ -13,6 +13,7 @@ import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.token.LoginRequest
 import com.example.data.token.RefreshRequest
 import com.example.tradinglogic.BacktestConfig
+import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Result
 import com.example.tradinglogic.TradingController
 import io.ktor.client.statement.*
@@ -349,6 +350,17 @@ fun Application.configureRouting() {
                             "something went wrong in backTesting, check your config"
                         )
                         is Result.Success -> return@post call.respond(HttpStatusCode.OK, backtestResult.data)
+                    }
+                }
+                post("/Config") {
+                    val botConfig = call.receive<BotConfig>()
+                    log.info("Received bot config: $botConfig")
+                    val isValidConfig = validator.isValidBotConfig(botConfig)
+                    if (isValidConfig) {
+                        tradingController.setBotConfig(botConfig)
+                        call.respond(HttpStatusCode.OK)
+                    } else {
+                        call.respond(HttpStatusCode.BadRequest, "Invalid bot configuration parameters.")
                     }
                 }
 

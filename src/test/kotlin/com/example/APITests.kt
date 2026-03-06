@@ -3,6 +3,8 @@ package com.example
 import com.example.data.singleModels.*
 import com.example.data.token.LoginRequest
 import com.example.data.token.LoginResponse
+import com.example.tradinglogic.BotConfig
+import com.example.tradinglogic.Strategies
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.engine.*
@@ -764,4 +766,131 @@ class APITests : KoinTest {
         unloadKoinModules(overrides)
     }
 
+    @Test
+    fun `Bot Config with valid payload returns OK`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
+
+        val client = createJsonClient()
+        val accessToken = loginAndGetToken(client)
+
+        val botConfig = BotConfig(
+            symbols = "AAPL",
+            positionSize = 1.0,
+            timeFrame = "1Hour",
+            limit = 100,
+            startDate = "2024-01-01",
+            strategySelection = Strategies.MovingAverage
+        )
+
+        val response = client.post("/Bot/Config") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(botConfig)
+        }
+
+        assertEquals(OK, response.status)
+    }
+
+    @Test
+    fun `Bot Config with invalid strategy returns BadRequest`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
+
+        val client = createJsonClient()
+        val accessToken = loginAndGetToken(client)
+
+        val botConfig = BotConfig(
+            symbols = "AAPL",
+            positionSize = 1.0,
+            timeFrame = "1Hour",
+            limit = 100,
+            startDate = "2024-01-01",
+            strategySelection = Strategies.None
+        )
+
+        val response = client.post("/Bot/Config") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(botConfig)
+        }
+
+        assertEquals(BadRequest, response.status)
+    }
+
+    @Test
+    fun `Bot Config with invalid limit returns BadRequest`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
+
+        val client = createJsonClient()
+        val accessToken = loginAndGetToken(client)
+
+        val botConfig = BotConfig(
+            symbols = "AAPL",
+            positionSize = 1.0,
+            timeFrame = "1Hour",
+            limit = 0,
+            startDate = "2024-01-01",
+            strategySelection = Strategies.MovingAverage
+        )
+
+        val response = client.post("/Bot/Config") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(botConfig)
+        }
+
+        assertEquals(BadRequest, response.status)
+    }
+
+    @Test
+    fun `Bot Config with invalid positionSize returns BadRequest`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
+
+        val client = createJsonClient()
+        val accessToken = loginAndGetToken(client)
+
+        val botConfig = BotConfig(
+            symbols = "AAPL",
+            positionSize = -1.0,
+            timeFrame = "1Hour",
+            limit = 100,
+            startDate = "2024-01-01",
+            strategySelection = Strategies.MovingAverage
+        )
+
+        val response = client.post("/Bot/Config") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(botConfig)
+        }
+
+        assertEquals(BadRequest, response.status)
+    }
+
+    @Test
+    fun `Bot Config without auth returns Unauthorized`() = testApplication {
+        environment {
+            config = ApplicationConfig("application.yaml")
+        }
+
+        val client = createJsonClient()
+
+        val botConfig = BotConfig(
+            symbols = "AAPL",
+            positionSize = 1.0,
+            timeFrame = "1Hour",
+            limit = 100,
+            startDate = "2024-01-01",
+            strategySelection = Strategies.MovingAverage
+        )
+
+        val response = client.post("/Bot/Config") {
+            setBody(botConfig)
+        }
+
+        assertEquals(HttpStatusCode.Unauthorized, response.status)
+    }
 }

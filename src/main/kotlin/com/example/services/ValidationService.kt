@@ -9,6 +9,9 @@ import com.example.data.singleModels.sorts
 import com.example.data.singleModels.timeInForces
 import com.example.data.singleModels.timeframes
 import com.example.data.singleModels.types
+import com.example.tradinglogic.BotConfig
+import com.example.tradinglogic.Strategies
+import kotlin.text.contains
 
 class ValidationService {
 
@@ -57,5 +60,22 @@ class ValidationService {
                 isTrailPriceValid &&
                 isTrailPercentValid &&
                 areLegsValid
+    }
+
+
+    fun isValidBotConfig(botConfig: BotConfig) : Boolean {
+        val isStrategyValid = botConfig.strategySelection != Strategies.None
+        val isSymbolValid = isSymbolValid(botConfig.symbols)
+        val isLimitValid = botConfig.limit > 0
+        val isPositionSizeValid = botConfig.positionSize > 0
+        val isTimeFrameValid = botConfig.timeFrame.contains(
+            Regex("\\d+(Min|T|Hour|H|Day|D|Week|W|Month|M)")
+        )
+
+        return isStrategyValid &&
+                isSymbolValid &&
+                isLimitValid &&
+                isPositionSizeValid &&
+                isTimeFrameValid
     }
 }

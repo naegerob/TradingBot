@@ -41,4 +41,8 @@ class TradingController : KoinComponent {
     fun stopBot() {
         mTradingBot.stop()
     }
+
+    fun setBotConfig(botConfig: BotConfig) {
+        mTradingBot.updateConfig(botConfig)
+    }
 }
