@@ -6,9 +6,9 @@ import com.example.configuration.loadRSAPrivateKey
 import com.example.configuration.loadRSAPublicKey
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.token.LoginRequest
-import com.example.data.token.LoginResponse
-import com.example.data.token.RefreshRequest
+import com.example.data.singleModels.LoginRequest
+import com.example.data.singleModels.LoginResponse
+import com.example.data.singleModels.RefreshRequest
 import com.example.tradinglogic.BacktestConfig
 import com.example.tradinglogic.Strategies
 import io.ktor.client.call.*

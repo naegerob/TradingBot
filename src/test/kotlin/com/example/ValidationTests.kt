@@ -3,8 +3,8 @@ package com.example
 import com.example.services.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.token.LoginRequest
-import com.example.data.token.LoginResponse
+import com.example.data.singleModels.LoginRequest
+import com.example.data.singleModels.LoginResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*

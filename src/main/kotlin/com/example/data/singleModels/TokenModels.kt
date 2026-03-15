@@ -1,7 +1,6 @@
-package com.example.data.token
+package com.example.data.singleModels
 
 import com.example.data.alpaca.ApiResponse
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 

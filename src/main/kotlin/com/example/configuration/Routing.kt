@@ -5,13 +5,11 @@ import com.auth0.jwt.JWTVerifier
 import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.database.DataBaseFacade
 import com.example.data.database.DataBaseImpl
-import com.example.data.database.Token
-import com.example.data.database.TokenTable
 import com.example.services.ValidationService
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.token.LoginRequest
-import com.example.data.token.RefreshRequest
+import com.example.data.singleModels.LoginRequest
+import com.example.data.singleModels.RefreshRequest
 import com.example.tradinglogic.BacktestConfig
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Result
@@ -25,7 +23,6 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.plugins.ratelimit.RateLimitName
 import io.ktor.server.plugins.ratelimit.rateLimit
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -35,7 +32,6 @@ import java.security.interfaces.RSAPublicKey
 import java.security.spec.PKCS8EncodedKeySpec
 import java.security.spec.X509EncodedKeySpec
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 
 
 fun Application.configureRouting() {

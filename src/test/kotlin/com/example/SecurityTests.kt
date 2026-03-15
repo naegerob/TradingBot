@@ -1,8 +1,8 @@
 package com.example
 
-import com.example.data.token.LoginRequest
-import com.example.data.token.LoginResponse
-import com.example.data.token.RefreshResponse
+import com.example.data.singleModels.LoginRequest
+import com.example.data.singleModels.LoginResponse
+import com.example.data.singleModels.RefreshResponse
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
