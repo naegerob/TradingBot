@@ -34,15 +34,16 @@ class TradingController : KoinComponent {
         return mTradingBot.backtest(backtestConfig)
     }
 
-    suspend fun startBot() {
-        mTradingBot.run()
+    fun isBotRunning(): Boolean {
+        return mTradingBot.isRunning()
     }
+
+    suspend fun startBot() = mTradingBot.run()
+
 
     fun stopBot() {
         mTradingBot.stop()
     }
 
-    fun setBotConfig(botConfig: BotConfig) {
-        mTradingBot.updateConfig(botConfig)
-    }
+    fun setBotConfig(botConfig: BotConfig) : Boolean = mTradingBot.updateConfig(botConfig)
 }

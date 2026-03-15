@@ -35,7 +35,8 @@ sealed interface TradingLogicError : Error {
         TIME_FRAME_COULD_NOT_PARSED,
         SYMBOLS_COULD_NOT_PARSED,
         LIMIT_COULD_NOT_PARSED,
-
+        CONFIG_NOT_PROVIDED,
+        CONFIG_INVALID,
 
     }
 }

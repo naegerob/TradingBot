@@ -5,6 +5,10 @@ import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
+import com.example.tradinglogic.BotConfig
+import com.example.tradinglogic.StopLoss
+import com.example.tradinglogic.TakeProfit
+import com.example.tradinglogic.Strategies
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -500,5 +504,206 @@ class ValidationTests {
         )
         val isValid2 = validator.areValidOrderParameter(req2)
         assertEquals(false, isValid2)
+    }
+
+    @Test
+    fun `BotConfig validation fails with no strategy selected`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.None // Invalid
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with invalid timeframe`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "invalid",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with bracket order missing takeProfit`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            orderClass = "bracket",
+            strategySelection = Strategies.MovingAverage,
+            takeProfit = null,
+            stopLoss = StopLoss(stopPrice = "100")
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation passes with valid bracket order`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            orderClass = "bracket",
+            strategySelection = Strategies.MovingAverage,
+            takeProfit = TakeProfit(limitPrice = "150"),
+            stopLoss = StopLoss(stopPrice = "90")
+        )
+        assertEquals(true, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with empty symbol`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with zero positionSize`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 0.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with negative positionSize`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = -5.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with zero limit`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 0,
+            strategySelection = Strategies.MovingAverage
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with bracket order missing stopLoss`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            orderClass = "bracket",
+            strategySelection = Strategies.MovingAverage,
+            takeProfit = TakeProfit(limitPrice = "150"),
+            stopLoss = null
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with invalid stopLoss price`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage,
+            stopLoss = StopLoss(stopPrice = "-50")
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with invalid takeProfit price`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage,
+            takeProfit = TakeProfit(limitPrice = "-100")
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation passes with all valid timeframe formats`() {
+        val validator = ValidationService()
+        val validTimeframes = listOf("1Min", "5T", "1Hour", "2H", "1Day", "1D", "1Week", "1W", "1Month", "1M")
+
+        validTimeframes.forEach { timeframe ->
+            val config = BotConfig(
+                symbols = "AAPL",
+                positionSize = 10.0,
+                timeFrame = timeframe,
+                limit = 100,
+                strategySelection = Strategies.MovingAverage
+            )
+            assertEquals(true, validator.isValidBotConfig(config), "Timeframe $timeframe should be valid")
+        }
+    }
+
+    @Test
+    fun `BotConfig validation passes without optional fields`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage,
+            orderClass = "",
+            takeProfit = null,
+            stopLoss = null,
+            startDate = ""
+        )
+        assertEquals(true, validator.isValidBotConfig(config))
+    }
+
+    @Test
+    fun `BotConfig validation fails with SQL injection in symbol`() {
+        val validator = ValidationService()
+        val config = BotConfig(
+            symbols = "AAPL; DROP TABLE orders;--",
+            positionSize = 10.0,
+            timeFrame = "1Min",
+            limit = 100,
+            strategySelection = Strategies.MovingAverage
+        )
+        assertEquals(false, validator.isValidBotConfig(config))
     }
 }

@@ -11,6 +11,7 @@ import com.example.data.singleModels.timeframes
 import com.example.data.singleModels.types
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Strategies
+import kotlin.compareTo
 import kotlin.text.contains
 
 class ValidationService {
@@ -62,8 +63,7 @@ class ValidationService {
                 areLegsValid
     }
 
-
-    fun isValidBotConfig(botConfig: BotConfig) : Boolean {
+    fun isValidBotConfig(botConfig: BotConfig): Boolean {
         val isStrategyValid = botConfig.strategySelection != Strategies.None
         val isSymbolValid = isSymbolValid(botConfig.symbols)
         val isLimitValid = botConfig.limit > 0
@@ -72,10 +72,38 @@ class ValidationService {
             Regex("\\d+(Min|T|Hour|H|Day|D|Week|W|Month|M)")
         )
 
+        val isStartDateValid = botConfig.startDate.isEmpty() ||
+                botConfig.startDate.matches(Regex("\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}:\\d{2}Z)?"))
+
+        val isOrderClassValid = botConfig.orderClass.isEmpty() ||
+                orderClass.any { it.equals(botConfig.orderClass, ignoreCase = true) }
+
+        val isTakeProfitValid = botConfig.takeProfit?.let {
+            it.limitPrice.toDoubleOrNull()?.let { price -> price > 0 } ?: true
+        } ?: true
+
+        val isStopLossValid = botConfig.stopLoss?.let {
+            val isStopPriceValid = it.stopPrice.toDoubleOrNull()?.let { price -> price > 0 } ?: true
+            val isLimitPriceValid = it.limitPrice.toDoubleOrNull()?.let { price -> price > 0 } ?: true
+            isStopPriceValid && isLimitPriceValid
+        } ?: true
+
+        val isBracketValid = if (botConfig.orderClass.equals("bracket", ignoreCase = true)) {
+            botConfig.takeProfit != null && botConfig.stopLoss != null
+        } else {
+            true
+        }
+
         return isStrategyValid &&
                 isSymbolValid &&
                 isLimitValid &&
                 isPositionSizeValid &&
-                isTimeFrameValid
+                isTimeFrameValid &&
+                isStartDateValid &&
+                isOrderClassValid &&
+                isTakeProfitValid &&
+                isStopLossValid &&
+                isBracketValid
     }
+
 }

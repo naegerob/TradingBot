@@ -312,7 +312,6 @@ fun Application.configureRouting() {
                     call.respond(HttpStatusCode.BadRequest)
                 }
             }
-
             route("/HistoricalBars") {
                 get("/Get") {
                     val stockRequest = StockAggregationRequest()
@@ -350,6 +349,10 @@ fun Application.configureRouting() {
                     }
                 }
                 post("/Config") {
+                    if(tradingController.isBotRunning()) {
+                        call.respond(HttpStatusCode.BadRequest, "Cannot update config while bot is running. Please stop the bot first.")
+                        return@post
+                    }
                     val botConfig = call.receive<BotConfig>()
                     log.info("Received bot config: $botConfig")
                     val isValidConfig = validator.isValidBotConfig(botConfig)
@@ -360,8 +363,11 @@ fun Application.configureRouting() {
                         call.respond(HttpStatusCode.BadRequest, "Invalid bot configuration parameters.")
                     }
                 }
-
                 get("/Start") {
+                    if(tradingController.isBotRunning()) {
+                        call.respond(HttpStatusCode.BadRequest, "Bot is already running.")
+                        return@get
+                    }
                     launch{ tradingController.startBot() }
                     call.respond(HttpStatusCode.OK)
                 }

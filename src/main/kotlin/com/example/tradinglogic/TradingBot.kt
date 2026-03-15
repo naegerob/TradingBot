@@ -17,6 +17,7 @@ class TradingBot : KoinComponent {
     }
 
     private var mTradingBotConfig = BotConfig()
+    private var mHasConfigSet = false
 
     private val mTraderService by inject<TraderService>()
     private var mJob: Deferred<Result<Unit, TradingLogicError>>? = null
@@ -164,8 +165,11 @@ class TradingBot : KoinComponent {
 
     suspend fun run(): Result<Unit, TradingLogicError> {
         log.info("Bot started with strategy")
-        if (mJob?.isActive == true) {
+        if(isRunning()) {
             return Result.Error(TradingLogicError.RunError.ALREADY_RUNNING)
+        }
+        if(!mHasConfigSet) {
+            return Result.Error(TradingLogicError.RunError.CONFIG_NOT_PROVIDED)
         }
         val now = Clock.System.now()
         val endDateTime = now.minus(kotlin.time.Duration.parse("15m")).toString().substringBefore('.') + "Z"
@@ -215,7 +219,7 @@ class TradingBot : KoinComponent {
                         if (!result.data) {
                             log.info("Market is closed. Waiting...")
                             delay(delayInMs)
-                            //continue
+                            continue
                         }
                     }
                 }
@@ -327,14 +331,21 @@ class TradingBot : KoinComponent {
         return mJob!!.await()
     }
 
+    fun isRunning(): Boolean = (mJob?.isActive == true)
+
     fun stop() {
         mJob?.cancel()
         mJob = null
     }
 
-    fun updateConfig(config: BotConfig) {
+    fun updateConfig(config: BotConfig) : Boolean {
+        if(isRunning()) {
+            return false
+        }
         mTradingBotConfig = config
         setStrategy(mTradingBotConfig.strategySelection)
+        mHasConfigSet = true
+        return true
     }
 
     private fun handleSignal(tradingPosition: TradingPosition, tradingSignal: TradingSignal) : TradingAction {
