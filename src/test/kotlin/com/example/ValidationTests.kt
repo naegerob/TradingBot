@@ -512,7 +512,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.None // Invalid
         )
@@ -525,7 +525,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "invalid",
+            timeframe = "invalid",
             limit = 100,
             strategySelection = Strategies.MovingAverage
         )
@@ -538,7 +538,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             orderClass = "bracket",
             strategySelection = Strategies.MovingAverage,
@@ -554,7 +554,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             orderClass = "bracket",
             strategySelection = Strategies.MovingAverage,
@@ -570,7 +570,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage
         )
@@ -583,7 +583,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 0.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage
         )
@@ -596,7 +596,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = -5.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage
         )
@@ -609,7 +609,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 0,
             strategySelection = Strategies.MovingAverage
         )
@@ -622,7 +622,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             orderClass = "bracket",
             strategySelection = Strategies.MovingAverage,
@@ -638,7 +638,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage,
             stopLoss = StopLoss(stopPrice = "-50")
@@ -652,7 +652,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage,
             takeProfit = TakeProfit(limitPrice = "-100")
@@ -669,7 +669,7 @@ class ValidationTests {
             val config = BotConfig(
                 symbols = "AAPL",
                 positionSize = 10.0,
-                timeFrame = timeframe,
+                timeframe = timeframe,
                 limit = 100,
                 strategySelection = Strategies.MovingAverage
             )
@@ -683,7 +683,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage,
             orderClass = "",
@@ -700,7 +700,7 @@ class ValidationTests {
         val config = BotConfig(
             symbols = "AAPL; DROP TABLE orders;--",
             positionSize = 10.0,
-            timeFrame = "1Min",
+            timeframe = "1Min",
             limit = 100,
             strategySelection = Strategies.MovingAverage
         )

@@ -778,7 +778,7 @@ class APITests : KoinTest {
         val botConfig = BotConfig(
             symbols = "AAPL",
             positionSize = 1.0,
-            timeFrame = "1Hour",
+            timeframe = "1Hour",
             limit = 100,
             startDate = "2024-01-01",
             strategySelection = Strategies.MovingAverage
@@ -804,7 +804,7 @@ class APITests : KoinTest {
         val botConfig = BotConfig(
             symbols = "AAPL",
             positionSize = 1.0,
-            timeFrame = "1Hour",
+            timeframe = "1Hour",
             limit = 100,
             startDate = "2024-01-01",
             strategySelection = Strategies.None
@@ -830,7 +830,7 @@ class APITests : KoinTest {
         val botConfig = BotConfig(
             symbols = "AAPL",
             positionSize = 1.0,
-            timeFrame = "1Hour",
+            timeframe = "1Hour",
             limit = 0,
             startDate = "2024-01-01",
             strategySelection = Strategies.MovingAverage
@@ -856,7 +856,7 @@ class APITests : KoinTest {
         val botConfig = BotConfig(
             symbols = "AAPL",
             positionSize = -1.0,
-            timeFrame = "1Hour",
+            timeframe = "1Hour",
             limit = 100,
             startDate = "2024-01-01",
             strategySelection = Strategies.MovingAverage
@@ -881,7 +881,7 @@ class APITests : KoinTest {
         val botConfig = BotConfig(
             symbols = "AAPL",
             positionSize = 1.0,
-            timeFrame = "1Hour",
+            timeframe = "1Hour",
             limit = 100,
             startDate = "2024-01-01",
             strategySelection = Strategies.MovingAverage

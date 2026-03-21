@@ -56,7 +56,7 @@ fun Application.configureRouting() {
 
     fun issueAccessToken(username: String, nowMs: Long): String {
         val tokenIdentifier = UUID.randomUUID().toString()
-        val numberOfMinutes = 15L
+        val numberOfMinutes = 120L //15L
         return JWT.create()
             .withAudience(audience)
             .withIssuer(issuer)
@@ -368,10 +368,18 @@ fun Application.configureRouting() {
                         call.respond(HttpStatusCode.BadRequest, "Bot is already running.")
                         return@get
                     }
+                    if(!tradingController.isBotConfigured()) {
+                        call.respond(HttpStatusCode.BadRequest, "Bot is not configured yet.")
+                        return@get
+                    }
                     launch{ tradingController.startBot() }
                     call.respond(HttpStatusCode.OK)
                 }
                 get("/Stop") {
+                    if(!tradingController.isBotRunning()) {
+                        call.respond(HttpStatusCode.BadRequest, "Bot was already stoppped.")
+                        return@get
+                    }
                     tradingController.stopBot()
                     call.respond(HttpStatusCode.OK)
                 }

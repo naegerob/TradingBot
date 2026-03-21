@@ -46,4 +46,6 @@ class TradingController : KoinComponent {
     }
 
     fun setBotConfig(botConfig: BotConfig) : Boolean = mTradingBot.updateConfig(botConfig)
+
+    fun isBotConfigured() : Boolean = mTradingBot.isConfigured()
 }

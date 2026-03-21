@@ -20,10 +20,10 @@ data class StopLoss(
 data class BotConfig(
     @SerialName("symbols") val symbols: String = "",
     @SerialName("position_size") val positionSize: Double = 0.0,
-    @SerialName("time_frame") val timeFrame: String = "",
-    @SerialName("limit") val limit: Int = 0,
-    @SerialName("start_date") val startDate: String = "",
+    @SerialName("time_frame") val timeframe: String = "",
+    @SerialName("number_samples") val numberSamples: Int = 0,
     @SerialName("order_class") val orderClass: String = "",
+    @SerialName("order_type") val orderType: String = "",
     @SerialName("strategy_selection") val strategySelection: Strategies = Strategies.None,
     @SerialName("take_profit") val takeProfit: TakeProfit? = null,
     @SerialName("stop_loss") val stopLoss: StopLoss? = null

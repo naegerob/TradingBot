@@ -66,14 +66,12 @@ class ValidationService {
     fun isValidBotConfig(botConfig: BotConfig): Boolean {
         val isStrategyValid = botConfig.strategySelection != Strategies.None
         val isSymbolValid = isSymbolValid(botConfig.symbols)
-        val isLimitValid = botConfig.limit > 0
+        val isLimitValid = botConfig.numberSamples > 0
         val isPositionSizeValid = botConfig.positionSize > 0
-        val isTimeFrameValid = botConfig.timeFrame.contains(
+        val isTimeFrameValid = botConfig.timeframe.contains(
             Regex("\\d+(Min|T|Hour|H|Day|D|Week|W|Month|M)")
         )
 
-        val isStartDateValid = botConfig.startDate.isEmpty() ||
-                botConfig.startDate.matches(Regex("\\d{4}-\\d{2}-\\d{2}(T\\d{2}:\\d{2}:\\d{2}Z)?"))
 
         val isOrderClassValid = botConfig.orderClass.isEmpty() ||
                 orderClass.any { it.equals(botConfig.orderClass, ignoreCase = true) }
@@ -99,7 +97,6 @@ class ValidationService {
                 isLimitValid &&
                 isPositionSizeValid &&
                 isTimeFrameValid &&
-                isStartDateValid &&
                 isOrderClassValid &&
                 isTakeProfitValid &&
                 isStopLossValid &&

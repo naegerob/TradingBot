@@ -9,6 +9,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.example.tradinglogic.Result
 import io.ktor.client.call.*
+import org.jetbrains.exposed.sql.appendTo
 
 class TraderService : KoinComponent {
 
@@ -48,21 +49,30 @@ class TraderService : KoinComponent {
         }
     }
 
-    suspend fun getHistoricalData(historicalRequest: StockAggregationRequest): Result<List<StockBar>, TradingLogicError> {
-        val httpResponse = mRepository.getHistoricalData(historicalRequest)
-        return when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                val stockResponse = httpResponse.body<StockAggregationResponse>()
-                if (stockResponse.bars[historicalRequest.symbols] == null) {
-                    return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+    suspend fun getHistoricalData(historicRequest: StockAggregationRequest): Result<List<StockBar>, TradingLogicError> {
+        lateinit var stockResponse: StockAggregationResponse
+        val stockBars = mutableListOf<StockBar>()
+        var stockAggregationRequest = historicRequest
+         do {
+            val httpResponse = mRepository.getHistoricalData(stockAggregationRequest)
+            when (httpResponse.status) {
+                HttpStatusCode.OK -> {
+                    stockResponse = httpResponse.body<StockAggregationResponse>()
+                    if (stockResponse.bars[stockAggregationRequest.symbols] == null) {
+                        return Result.Error(TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE)
+                    }
+                    stockBars += (stockResponse.bars[stockAggregationRequest.symbols]!!)
+                    stockAggregationRequest = if (stockResponse.nextPageToken != null) {
+                        stockAggregationRequest.copy(pageToken = stockResponse.nextPageToken)
+                    } else stockAggregationRequest
                 }
-                Result.Success(stockResponse.bars[historicalRequest.symbols]!!)
+                HttpStatusCode.TooManyRequests -> return Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
+                HttpStatusCode.BadRequest -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+                HttpStatusCode.Unauthorized -> return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
+                else -> return Result.Error(TradingLogicError.DataError.MISC_ERROR)
             }
-            HttpStatusCode.TooManyRequests -> Result.Error(TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS)
-            HttpStatusCode.BadRequest -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            HttpStatusCode.Unauthorized -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
-            else -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
-        }
+        } while (stockResponse.nextPageToken != null)
+        return Result.Success(stockBars)
     }
 
     suspend fun getMarketOpeningHours(): Result<Boolean, TradingLogicError> {
