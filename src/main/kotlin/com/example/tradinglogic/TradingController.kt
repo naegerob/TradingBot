@@ -41,7 +41,7 @@ class TradingController : KoinComponent {
     suspend fun startBot() = mTradingBot.run()
 
 
-    fun stopBot() {
+    suspend fun stopBot() {
         mTradingBot.stop()
     }
 

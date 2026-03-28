@@ -178,7 +178,6 @@ class TradingBot : KoinComponent {
             return Result.Error(TradingLogicError.RunError.CONFIG_NOT_PROVIDED)
         }
 
-        var (stocks, stockAggregationRequest) = fetchEnoughStocks()
 
         val delayInMs = parseTimeframeToMillis(mTradingBotConfig.timeframe)?.div(2)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
@@ -201,6 +200,9 @@ class TradingBot : KoinComponent {
             }
             var positionState = TradingPosition.Flat
 
+            var (stocks, stockAggregationRequest) = fetchEnoughStocks()
+
+            log.info("mStockAggregation: $stockAggregationRequest")
             stockAggregationRequest.limit = 5
             stockAggregationRequest.sort = "desc"
             log.info("mStockAggregation: $stockAggregationRequest")
@@ -328,8 +330,8 @@ class TradingBot : KoinComponent {
 
     fun isRunning(): Boolean = (mJob?.isActive == true)
 
-    fun stop() {
-        mJob?.cancel()
+    suspend fun stop() {
+        mJob?.cancelAndJoin()
         mJob = null
     }
 
@@ -365,7 +367,7 @@ class TradingBot : KoinComponent {
                 is Result.Error -> continue
                 is Result.Success -> result.data.sortedBy { it.timestamp }
             }
-
+            mJob?.ensureActive()
             scaleFactor += 0.1
 
         } while (stocks.size < mTradingBotConfig.numberSamples)
