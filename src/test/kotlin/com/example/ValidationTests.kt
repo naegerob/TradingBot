@@ -513,7 +513,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.None // Invalid
         )
         assertEquals(false, validator.isValidBotConfig(config))
@@ -526,7 +526,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "invalid",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
         assertEquals(false, validator.isValidBotConfig(config))
@@ -539,7 +539,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             orderClass = "bracket",
             strategySelection = Strategies.MovingAverage,
             takeProfit = null,
@@ -555,7 +555,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             orderClass = "bracket",
             strategySelection = Strategies.MovingAverage,
             takeProfit = TakeProfit(limitPrice = "150"),
@@ -571,7 +571,7 @@ class ValidationTests {
             symbols = "",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
         assertEquals(false, validator.isValidBotConfig(config))
@@ -584,7 +584,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 0.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
         assertEquals(false, validator.isValidBotConfig(config))
@@ -597,7 +597,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = -5.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
         assertEquals(false, validator.isValidBotConfig(config))
@@ -610,7 +610,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 0,
+            numberSamples = 0,
             strategySelection = Strategies.MovingAverage
         )
         assertEquals(false, validator.isValidBotConfig(config))
@@ -623,7 +623,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             orderClass = "bracket",
             strategySelection = Strategies.MovingAverage,
             takeProfit = TakeProfit(limitPrice = "150"),
@@ -639,7 +639,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage,
             stopLoss = StopLoss(stopPrice = "-50")
         )
@@ -653,7 +653,7 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage,
             takeProfit = TakeProfit(limitPrice = "-100")
         )
@@ -670,7 +670,7 @@ class ValidationTests {
                 symbols = "AAPL",
                 positionSize = 10.0,
                 timeframe = timeframe,
-                limit = 100,
+                numberSamples = 100,
                 strategySelection = Strategies.MovingAverage
             )
             assertEquals(true, validator.isValidBotConfig(config), "Timeframe $timeframe should be valid")
@@ -684,12 +684,11 @@ class ValidationTests {
             symbols = "AAPL",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage,
             orderClass = "",
             takeProfit = null,
             stopLoss = null,
-            startDate = ""
         )
         assertEquals(true, validator.isValidBotConfig(config))
     }
@@ -701,7 +700,7 @@ class ValidationTests {
             symbols = "AAPL; DROP TABLE orders;--",
             positionSize = 10.0,
             timeframe = "1Min",
-            limit = 100,
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
         assertEquals(false, validator.isValidBotConfig(config))

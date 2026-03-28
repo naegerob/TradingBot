@@ -779,8 +779,7 @@ class APITests : KoinTest {
             symbols = "AAPL",
             positionSize = 1.0,
             timeframe = "1Hour",
-            limit = 100,
-            startDate = "2024-01-01",
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
 
@@ -805,8 +804,7 @@ class APITests : KoinTest {
             symbols = "AAPL",
             positionSize = 1.0,
             timeframe = "1Hour",
-            limit = 100,
-            startDate = "2024-01-01",
+            numberSamples = 100,
             strategySelection = Strategies.None
         )
 
@@ -819,7 +817,7 @@ class APITests : KoinTest {
     }
 
     @Test
-    fun `Bot Config with invalid limit returns BadRequest`() = testApplication {
+    fun `Bot Config with invalid numberSamples returns BadRequest`() = testApplication {
         environment {
             config = ApplicationConfig("application.yaml")
         }
@@ -831,8 +829,7 @@ class APITests : KoinTest {
             symbols = "AAPL",
             positionSize = 1.0,
             timeframe = "1Hour",
-            limit = 0,
-            startDate = "2024-01-01",
+            numberSamples = 0,
             strategySelection = Strategies.MovingAverage
         )
 
@@ -857,8 +854,7 @@ class APITests : KoinTest {
             symbols = "AAPL",
             positionSize = -1.0,
             timeframe = "1Hour",
-            limit = 100,
-            startDate = "2024-01-01",
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
 
@@ -882,8 +878,7 @@ class APITests : KoinTest {
             symbols = "AAPL",
             positionSize = 1.0,
             timeframe = "1Hour",
-            limit = 100,
-            startDate = "2024-01-01",
+            numberSamples = 100,
             strategySelection = Strategies.MovingAverage
         )
 

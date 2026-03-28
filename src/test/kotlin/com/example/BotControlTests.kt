@@ -4,7 +4,10 @@ import com.example.data.singleModels.StockAggregationRequest
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
 import com.example.tradinglogic.BacktestConfig
+import com.example.tradinglogic.BotConfig
+import com.example.tradinglogic.StopLoss
 import com.example.tradinglogic.Strategies
+import com.example.tradinglogic.TakeProfit
 import io.ktor.client.*
 import io.ktor.client.call.*
 import io.ktor.client.plugins.*
@@ -12,6 +15,7 @@ import io.ktor.client.plugins.contentnegotiation.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.bodyAsText
 import io.ktor.http.*
+import io.ktor.http.HttpStatusCode.Companion.BadRequest
 import io.ktor.http.HttpStatusCode.Companion.OK
 import io.ktor.serialization.kotlinx.json.*
 import io.ktor.server.config.*
@@ -50,6 +54,36 @@ class BotControlTests {
         }
     }
 
+    @Test
+    fun `Start Bot with Configured and returns OK`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val client = createJsonClient()
+
+        val botConfig = BotConfig(
+            symbols = "AAPL",
+            positionSize = 100.0,
+            timeframe = "1H",
+            numberSamples = 10,
+            orderClass = "simple",
+            orderType = "market",
+            strategySelection = Strategies.MovingAverage,
+            takeProfit = TakeProfit(limitPrice = "150.0"),
+            stopLoss = StopLoss(stopPrice = "140.0", limitPrice = "139.0")
+        )
+
+        val accessToken = loginAndGetToken(client)
+        val httpResponseConfig = client.post("/Bot/Config") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+            setBody(botConfig)
+        }
+        assertEquals(OK, httpResponseConfig.status)
+
+        val httpResponseStart = client.get("/Bot/Start") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+        assertEquals(OK, httpResponseStart.status)
+    }
 
 
     @Test
@@ -62,11 +96,11 @@ class BotControlTests {
         val httpResponse = client.get("/Bot/Start") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
-        assertEquals(OK, httpResponse.status)
+        assertEquals(BadRequest, httpResponse.status)
     }
 
     @Test
-    fun `Stop Bot endpoint returns OK`() = testApplication {
+    fun `Stop Bot endpoint returns Bad Request because it is not started`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
         val client = createJsonClient()
@@ -75,25 +109,7 @@ class BotControlTests {
         val httpResponse = client.get("/Bot/Stop") {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
-        assertEquals(OK, httpResponse.status)
-    }
-
-    @Test
-    fun `Start and Stop Bot endpoint returns OK`() = testApplication {
-        environment { config = ApplicationConfig("application.yaml") }
-
-        val client = createJsonClient()
-
-        val accessToken = loginAndGetToken(client)
-        val httpResponseStart = client.get("/Bot/Start") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        delay(2)
-        assertEquals(OK, httpResponseStart.status)
-        val httpResponseStop = client.get("/Bot/Stop") {
-            header(HttpHeaders.Authorization, "Bearer $accessToken")
-        }
-        assertEquals(OK, httpResponseStop.status)
+        assertEquals(BadRequest, httpResponse.status)
     }
 
     @Test
