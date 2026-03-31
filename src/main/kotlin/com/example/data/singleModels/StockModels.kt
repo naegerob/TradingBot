@@ -3,7 +3,7 @@ package com.example.data.singleModels
 import com.example.data.alpaca.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
+// TradingController, TradingService
 @Serializable
 data class StockAggregationRequest(
     @SerialName("symbols") val symbols: String = "AAPL", // Comma-separated list of stock symbols (e.g., "TSLA,AMZN")

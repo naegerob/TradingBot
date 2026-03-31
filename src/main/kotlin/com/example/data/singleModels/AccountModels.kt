@@ -3,7 +3,7 @@ package com.example.data.singleModels
 import com.example.data.alpaca.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
+// TraderService
 @Serializable
 data class Account(
     @SerialName("id") val id: String,
@@ -47,12 +47,4 @@ data class Account(
     @SerialName("crypto_tier") val cryptoTier: Int = 0,
     @SerialName("intraday_adjustments") val intradayAdjustments: String,
     @SerialName("pending_reg_taf_fees") val pendingRegTafFees: String
-) : ApiResponse()
-
-@Serializable
-data class OpeningHours(
-    @SerialName("is_open") val isOpen: Boolean = false,
-    @SerialName("next_open") val nextOpen: String = "",
-    @SerialName("next_close") val nextClose: String = "",
-    @SerialName("timestamp") val timestamp: String = ""
 ) : ApiResponse()

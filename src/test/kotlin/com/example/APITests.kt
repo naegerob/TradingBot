@@ -1,7 +1,6 @@
 package com.example
 
 import com.example.data.singleModels.Account
-import com.example.data.singleModels.OpeningHours
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.OrderResponse
 import com.example.data.singleModels.StockAggregationRequest
@@ -9,6 +8,7 @@ import com.example.data.singleModels.StockAggregationResponse
 import com.example.data.singleModels.StockBar
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
+import com.example.data.singleModels.MarketHours
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Strategies
 import io.ktor.client.*
@@ -480,7 +480,7 @@ class APITests : KoinTest {
     fun `Get opening hours`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
-        val mockClockResponse = OpeningHours(
+        val mockClockResponse = MarketHours(
             isOpen = false,
             nextClose = "2025-11-04T16:00:00-05:00",
             nextOpen = "2025-11-04T09:30:00-05:00",
@@ -502,7 +502,7 @@ class APITests : KoinTest {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
         assertEquals(OK, httpResponse.status)
-        val openingHours = httpResponse.body<OpeningHours>()
+        val openingHours = httpResponse.body<MarketHours>()
         assertEquals(false, openingHours.isOpen)
         assertEquals("2025-11-04T16:00:00-05:00", openingHours.nextClose)
         assertEquals("2025-11-04T09:30:00-05:00", openingHours.nextOpen)

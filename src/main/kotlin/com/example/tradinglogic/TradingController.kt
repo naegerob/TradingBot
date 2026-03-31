@@ -3,18 +3,31 @@ package com.example.tradinglogic
 import com.example.data.alpaca.AlpacaRepository
 import com.example.data.singleModels.OrderRequest
 import com.example.data.singleModels.StockAggregationRequest
+import com.example.services.TraderService
+import com.example.tradinglogic.Result
 import io.ktor.client.statement.*
+import io.ktor.http.HttpStatusCode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class TradingController : KoinComponent {
 
     private val mAlpacaRepo by inject<AlpacaRepository>()
-
+    private val mTraderService by inject<TraderService>()
     val mTradingBot by inject<TradingBot>()
 
-    suspend fun createOrder(orderRequest: OrderRequest): HttpResponse {
-        return mAlpacaRepo.createOrder(orderRequest)
+    suspend fun createOrder(orderRequest: OrderRequest):  {
+
+        return when (val orderResponse = mTraderService.createOrder(orderRequest)) {
+            is Result.Error -> HttpStatusCode(
+                HttpStatusCode.BadRequest,
+                description = "Invalid Parameter order request"
+            )
+            is Result.Success -> HttpStatusCode(
+                HttpStatusCode.OK,
+                description = TODO()
+            )
+        }
     }
 
     suspend fun getStockData(stockAggregationRequest: StockAggregationRequest): HttpResponse {

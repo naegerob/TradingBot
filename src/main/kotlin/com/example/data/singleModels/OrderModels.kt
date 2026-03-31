@@ -3,7 +3,7 @@ package com.example.data.singleModels
 import com.example.data.alpaca.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-
+// Routing, ValidationService
 @Serializable
 data class OrderRequest(
     @SerialName("symbol") val symbol: String = "AAPL",
