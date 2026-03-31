@@ -1,15 +1,20 @@
 package com.example.services
 
 import com.example.data.alpaca.AlpacaRepository
+import com.example.data.singleModels.Account
+import com.example.data.singleModels.MarketHours
+import com.example.data.singleModels.OrderRequest
+import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.singleModels.StockAggregationResponse
+import com.example.data.singleModels.StockBar
+import com.example.data.singleModels.sides
 import com.example.data.database.DataBaseFacade
-import com.example.data.singleModels.*
 import com.example.tradinglogic.TradingLogicError
 import io.ktor.http.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import com.example.tradinglogic.Result
 import io.ktor.client.call.*
-import org.jetbrains.exposed.sql.appendTo
 
 class TraderService : KoinComponent {
 

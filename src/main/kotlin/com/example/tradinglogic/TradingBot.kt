@@ -1,6 +1,8 @@
 package com.example.tradinglogic
 
-import com.example.data.singleModels.*
+import com.example.data.singleModels.OrderRequest
+import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.singleModels.StockBar
 import com.example.services.TraderService
 import java.time.Instant
 import kotlinx.coroutines.*

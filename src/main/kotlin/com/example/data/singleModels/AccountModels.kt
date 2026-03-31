@@ -49,7 +49,6 @@ data class Account(
     @SerialName("pending_reg_taf_fees") val pendingRegTafFees: String
 ) : ApiResponse()
 
-
 @Serializable
 data class OpeningHours(
     @SerialName("is_open") val isOpen: Boolean = false,

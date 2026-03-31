@@ -1,6 +1,12 @@
 package com.example
 
-import com.example.data.singleModels.*
+import com.example.data.singleModels.Account
+import com.example.data.singleModels.OpeningHours
+import com.example.data.singleModels.OrderRequest
+import com.example.data.singleModels.OrderResponse
+import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.singleModels.StockAggregationResponse
+import com.example.data.singleModels.StockBar
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
 import com.example.tradinglogic.BotConfig

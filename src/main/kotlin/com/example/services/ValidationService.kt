@@ -11,7 +11,6 @@ import com.example.data.singleModels.timeframes
 import com.example.data.singleModels.types
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Strategies
-import kotlin.compareTo
 import kotlin.text.contains
 
 class ValidationService {
