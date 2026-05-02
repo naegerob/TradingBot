@@ -4,9 +4,9 @@ package com.example
 import com.example.backtestdata.JsonToDataClassConverter
 import com.example.services.TraderService
 import com.example.data.alpaca.AlpacaRepository
-import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.singleModels.StockAggregationResponse
-import com.example.data.singleModels.StockBar
+import com.example.data.alpaca.StockAggregationRequest
+import com.example.data.alpaca.StockAggregationResponse
+import com.example.data.alpaca.StockBar
 import com.example.tradinglogic.*
 import com.example.tradinglogic.Strategies
 import com.example.tradinglogic.StrategyFactory

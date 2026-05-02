@@ -1,6 +1,5 @@
-package com.example.data.singleModels
+package com.example.data.alpaca
 
-import com.example.data.alpaca.ApiResponse
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 // TraderService

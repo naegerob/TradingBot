@@ -1,13 +1,14 @@
 package com.example.services
 
 import com.example.data.alpaca.AlpacaRepository
-import com.example.data.singleModels.Account
-import com.example.data.singleModels.MarketHours
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.singleModels.StockAggregationResponse
-import com.example.data.singleModels.StockBar
-import com.example.data.singleModels.sides
+import com.example.data.alpaca.Account
+import com.example.data.alpaca.MarketHours
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.OrderResponse
+import com.example.data.alpaca.StockAggregationRequest
+import com.example.data.alpaca.StockAggregationResponse
+import com.example.data.alpaca.StockBar
+import com.example.data.alpaca.sides
 import com.example.data.database.DataBaseFacade
 import com.example.tradinglogic.TradingLogicError
 import io.ktor.http.*
@@ -29,7 +30,7 @@ class TraderService : KoinComponent {
         }
     }
 
-    suspend fun createOrder(orderRequest: OrderRequest): Result<Unit, TradingLogicError> {
+    suspend fun createOrder(orderRequest: OrderRequest): Result<OrderResponse, TradingLogicError> {
         val isOrderCommandRight = sides.contains(orderRequest.side)
         if (!isOrderCommandRight) {
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
@@ -46,7 +47,7 @@ class TraderService : KoinComponent {
         )
         val httpResponse = mRepository.createOrder(orderRequest)
         return when (httpResponse.status) {
-            HttpStatusCode.OK, HttpStatusCode.Created -> Result.Success(Unit)
+            HttpStatusCode.OK, HttpStatusCode.Created -> Result.Success(httpResponse.body<OrderResponse>())
             HttpStatusCode.Forbidden -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)
             HttpStatusCode.UnprocessableEntity, HttpStatusCode.BadRequest ->
                 Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
@@ -83,10 +84,7 @@ class TraderService : KoinComponent {
     suspend fun getMarketOpeningHours(): Result<Boolean, TradingLogicError> {
         val httpResponse = mRepository.getMarketOpeningHours()
         return when (httpResponse.status) {
-            HttpStatusCode.OK -> {
-                val clockResponse = httpResponse.body<MarketHours>()
-                Result.Success(clockResponse.isOpen)
-            };
+            HttpStatusCode.OK -> Result.Success(httpResponse.body<MarketHours>().isOpen)
             HttpStatusCode.BadRequest -> Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
             else -> Result.Error(TradingLogicError.DataError.MISC_ERROR)
         }

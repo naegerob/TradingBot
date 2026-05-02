@@ -1,4 +1,4 @@
-package com.example.data.singleModels
+package com.example.data.alpaca
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable

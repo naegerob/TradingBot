@@ -1,14 +1,14 @@
 package com.example.services
 
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.singleModels.feeds
-import com.example.data.singleModels.orderClass
-import com.example.data.singleModels.sides
-import com.example.data.singleModels.sorts
-import com.example.data.singleModels.timeInForces
-import com.example.data.singleModels.timeframes
-import com.example.data.singleModels.types
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.StockAggregationRequest
+import com.example.data.alpaca.feeds
+import com.example.data.alpaca.orderClass
+import com.example.data.alpaca.sides
+import com.example.data.alpaca.sorts
+import com.example.data.alpaca.timeInForces
+import com.example.data.alpaca.timeframes
+import com.example.data.alpaca.types
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Strategies
 import kotlin.text.contains

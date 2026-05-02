@@ -6,15 +6,15 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.example.data.database.DataBaseFacade
 import com.example.data.database.DataBaseImpl
 import com.example.services.ValidationService
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.StockAggregationRequest
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.RefreshRequest
 import com.example.tradinglogic.BacktestConfig
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Result
 import com.example.tradinglogic.TradingController
-import io.ktor.client.statement.*
+import com.example.tradinglogic.TradingLogicError
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.auth.*
@@ -207,12 +207,10 @@ fun Application.configureRouting() {
 
         authenticate("auth-jwt") {
             get("/AccountDetails") {
-                val accountResponse = tradingController.fetchAccountDetails()
-                respondToClient(accountResponse, call)
+                call.respondResult(tradingController.fetchAccountDetails())
             }
             get("/clock") {
-                val openingHoursResponse = tradingController.getOpeningHours()
-                respondToClient(openingHoursResponse, call)
+                call.respondResult(tradingController.getMarketOpeningHours())
             }
             route("/Indicators") {
                 get("/Original") {
@@ -301,39 +299,32 @@ fun Application.configureRouting() {
 
             route("/Order") {
                 post("/Create") {
-
                     val orderRequest = call.receive<OrderRequest>()
-                    val isValidRequest = validator.areValidOrderParameter(orderRequest)
-                    if (isValidRequest) {
-                        val orderResponse = tradingController.createOrder(orderRequest)
-                        respondToClient(orderResponse, call)
+                    if (!validator.areValidOrderParameter(orderRequest)) {
+                        call.respond(HttpStatusCode.BadRequest)
                         return@post
                     }
-                    call.respond(HttpStatusCode.BadRequest)
+                    call.respondResult(tradingController.createOrder(orderRequest))
                 }
             }
             route("/HistoricalBars") {
                 get("/Get") {
                     val stockRequest = StockAggregationRequest()
                     log.info("Received bars request in ${call.request.path()}: $stockRequest")
-                    val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
-                    if (isSuccessfulSet) {
-                        val stockResponse = tradingController.getStockData(stockRequest)
-                        respondToClient(stockResponse, call)
+                    if (!validator.areValidStockRequestParameter(stockRequest)) {
+                        call.respond(HttpStatusCode.BadRequest)
                         return@get
                     }
-                    call.respond(HttpStatusCode.BadRequest)
+                    call.respondResult(tradingController.getStockData(stockRequest))
                 }
                 post("/Request") {
                     val stockRequest = call.receive<StockAggregationRequest>()
                     log.info("Received stock request in ${call.request.path()}: $stockRequest")
-                    val isSuccessfulSet = validator.areValidStockRequestParameter(stockRequest)
-                    if (isSuccessfulSet) {
-                        val stockResponse = tradingController.getStockData(stockRequest)
-                        respondToClient(stockResponse, call)
+                    if (!validator.areValidStockRequestParameter(stockRequest)) {
+                        call.respond(HttpStatusCode.BadRequest)
                         return@post
                     }
-                    call.respond(HttpStatusCode.BadRequest)
+                    call.respondResult(tradingController.getStockData(stockRequest))
                 }
             }
             route("/Bot") {
@@ -410,26 +401,22 @@ fun loadRSAPublicKey(path: String): RSAPublicKey {
     return KeyFactory.getInstance("RSA").generatePublic(spec) as RSAPublicKey
 }
 
-suspend fun respondToClient(httpResponse: HttpResponse, call: RoutingCall) {
-    when (httpResponse.status) {
-        HttpStatusCode.OK -> {
-            val body = httpResponse.bodyAsText()
-            call.respondText(body, ContentType.Application.Json, HttpStatusCode.OK)
+suspend inline fun <reified T : Any> ApplicationCall.respondResult(result: Result<T, TradingLogicError>) {
+    when (result) {
+        is Result.Success -> respond(HttpStatusCode.OK, result.data)
+        is Result.Error -> when (result.error) {
+            TradingLogicError.DataError.INVALID_PARAMETER_FORMAT ->
+                respond(HttpStatusCode.BadRequest, "Parameter have wrong format. Check API docs!")
+            TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE ->
+                respond(HttpStatusCode.Forbidden, "Buying power or shares is not sufficient.")
+            TradingLogicError.DataError.NO_HISTORICAL_DATA_AVAILABLE ->
+                respond(HttpStatusCode.NotFound, "No historical data available.")
+            TradingLogicError.DataError.HISTORICAL_DATA_TOO_MANY_REQUESTS ->
+                respond(HttpStatusCode.TooManyRequests, "Too many requests to data provider.")
+            TradingLogicError.DataError.UNAUTHORIZED ->
+                respond(HttpStatusCode.Unauthorized, "Unauthorized.")
+            else ->
+                respond(HttpStatusCode.InternalServerError, "Unexpected error: ${result.error}")
         }
-        HttpStatusCode.BadRequest -> call.respond(
-            HttpStatusCode.BadRequest,
-            "Parameter have wrong format. Check Alpaca Doc!"
-        )
-        HttpStatusCode.MovedPermanently -> call.respond(HttpStatusCode.MovedPermanently)
-        HttpStatusCode.NotFound -> call.respond(HttpStatusCode.NotFound)
-        HttpStatusCode.Forbidden -> call.respond(
-            HttpStatusCode.Forbidden,
-            "Buying power or shares is not sufficient. Or proxy blocks API call."
-        )
-        HttpStatusCode.UnprocessableEntity -> call.respond(
-            HttpStatusCode.UnprocessableEntity,
-            "Input parameters are not recognized. Or Alpaca has closed"
-        )
-        else -> call.respond(HttpStatusCode.InternalServerError, "Error is not handled.")
     }
 }

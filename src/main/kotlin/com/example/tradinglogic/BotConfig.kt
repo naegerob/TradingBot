@@ -1,7 +1,7 @@
 package com.example.tradinglogic
 
 import com.example.data.alpaca.ApiResponse
-import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.alpaca.StockAggregationRequest
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 

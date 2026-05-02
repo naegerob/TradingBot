@@ -4,8 +4,8 @@ import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
 import com.example.configuration.loadRSAPrivateKey
 import com.example.configuration.loadRSAPublicKey
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.StockAggregationRequest
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
 import com.example.data.singleModels.RefreshRequest

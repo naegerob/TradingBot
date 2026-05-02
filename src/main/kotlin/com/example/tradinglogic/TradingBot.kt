@@ -1,8 +1,9 @@
 package com.example.tradinglogic
 
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.singleModels.StockBar
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.OrderResponse
+import com.example.data.alpaca.StockAggregationRequest
+import com.example.data.alpaca.StockBar
 import com.example.services.TraderService
 import java.time.Instant
 import kotlinx.coroutines.*
@@ -179,7 +180,6 @@ class TradingBot : KoinComponent {
         if (!mHasConfigSet) {
             return Result.Error(TradingLogicError.RunError.CONFIG_NOT_PROVIDED)
         }
-
 
         val delayInMs = parseTimeframeToMillis(mTradingBotConfig.timeframe)?.div(2)
             ?: return Result.Error(TradingLogicError.RunError.TIME_FRAME_COULD_NOT_PARSED)
@@ -441,7 +441,7 @@ class TradingBot : KoinComponent {
         return if (updated.size > windowSize) updated.takeLast(windowSize) else updated
     }
 
-    private suspend fun createHandledOrder(orderRequest: OrderRequest): Result<Unit, TradingLogicError> {
+    private suspend fun createHandledOrder(orderRequest: OrderRequest): Result<OrderResponse, TradingLogicError> {
         return mTraderService.createOrder(orderRequest)
     }
 

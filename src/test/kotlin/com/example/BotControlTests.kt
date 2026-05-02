@@ -1,6 +1,6 @@
 package com.example
 
-import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.alpaca.StockAggregationRequest
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
 import com.example.tradinglogic.BacktestConfig

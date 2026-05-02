@@ -1,7 +1,5 @@
 package com.example.data.alpaca
 
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
 import io.ktor.client.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*

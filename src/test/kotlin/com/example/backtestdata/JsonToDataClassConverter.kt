@@ -1,7 +1,7 @@
 package com.example.backtestdata
 
-import com.example.data.singleModels.StockAggregationResponse
-import com.example.data.singleModels.StockBar
+import com.example.data.alpaca.StockAggregationResponse
+import com.example.data.alpaca.StockBar
 import kotlinx.serialization.json.*
 import java.io.File
 

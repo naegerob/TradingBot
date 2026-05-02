@@ -1,14 +1,14 @@
 package com.example
 
-import com.example.data.singleModels.Account
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.OrderResponse
-import com.example.data.singleModels.StockAggregationRequest
-import com.example.data.singleModels.StockAggregationResponse
-import com.example.data.singleModels.StockBar
+import com.example.data.alpaca.Account
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.OrderResponse
+import com.example.data.alpaca.StockAggregationRequest
+import com.example.data.alpaca.StockAggregationResponse
+import com.example.data.alpaca.StockBar
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
-import com.example.data.singleModels.MarketHours
+import com.example.data.alpaca.MarketHours
 import com.example.tradinglogic.BotConfig
 import com.example.tradinglogic.Strategies
 import io.ktor.client.*
@@ -477,7 +477,7 @@ class APITests : KoinTest {
     }
 
     @Test
-    fun `Get opening hours`() = testApplication {
+    fun `Is market closed`() = testApplication {
         environment { config = ApplicationConfig("application.yaml") }
 
         val mockClockResponse = MarketHours(
@@ -502,11 +502,39 @@ class APITests : KoinTest {
             header(HttpHeaders.Authorization, "Bearer $accessToken")
         }
         assertEquals(OK, httpResponse.status)
-        val openingHours = httpResponse.body<MarketHours>()
-        assertEquals(false, openingHours.isOpen)
-        assertEquals("2025-11-04T16:00:00-05:00", openingHours.nextClose)
-        assertEquals("2025-11-04T09:30:00-05:00", openingHours.nextOpen)
-        assertEquals("2025-11-03T16:48:13.091852201-05:00", openingHours.timestamp)
+        val openingHours = httpResponse.body<Boolean>()
+        assertEquals(false, openingHours)
+        unloadKoinModules(overrides)
+    }
+
+    @Test
+    fun `Is market open`() = testApplication {
+        environment { config = ApplicationConfig("application.yaml") }
+
+        val mockClockResponse = MarketHours(
+            isOpen = true,
+            nextClose = "2024-10-04T16:00:00-05:00",
+            nextOpen = "2024-10-04T09:30:00-05:00",
+            timestamp = "2024-10-03T16:48:13.091852201-05:00"
+        )
+
+        val mockEngine = MockEngine { _ ->
+            respond(
+                content = Json.encodeToString(mockClockResponse),
+                status = OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
+        }
+        val overrides = module { single<HttpClientEngine> { mockEngine } }
+        application { loadKoinModules(overrides) }
+        val client = createJsonClient()
+        val accessToken = loginAndGetToken(client)
+        val httpResponse = client.get("/clock") {
+            header(HttpHeaders.Authorization, "Bearer $accessToken")
+        }
+        assertEquals(OK, httpResponse.status)
+        val openingHours = httpResponse.body<Boolean>()
+        assertEquals(true, openingHours)
         unloadKoinModules(overrides)
     }
 
@@ -736,9 +764,9 @@ class APITests : KoinTest {
             setBody(stockAggregationRequest)
         }
 
-        val response = httpResponse.body<StockAggregationResponse>()
+        val response = httpResponse.body<List<StockBar>>()
         assertEquals(OK, httpResponse.status)
-        assertNotEquals(emptyMap(), response.bars)
+        assertNotEquals(emptyList(), response)
 
         unloadKoinModules(overrides)
     }

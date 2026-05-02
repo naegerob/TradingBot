@@ -1,6 +1,6 @@
 package com.example.tradinglogic
 
-import com.example.data.singleModels.StockBar
+import com.example.data.alpaca.StockBar
 import java.math.RoundingMode
 import java.text.DecimalFormat
 import kotlin.math.pow

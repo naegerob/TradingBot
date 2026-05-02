@@ -1,8 +1,8 @@
 package com.example
 
 import com.example.services.ValidationService
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.StockAggregationRequest
 import com.example.data.singleModels.LoginRequest
 import com.example.data.singleModels.LoginResponse
 import com.example.tradinglogic.BotConfig

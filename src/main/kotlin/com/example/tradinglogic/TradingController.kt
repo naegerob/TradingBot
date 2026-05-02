@@ -1,46 +1,27 @@
 package com.example.tradinglogic
 
-import com.example.data.alpaca.AlpacaRepository
-import com.example.data.singleModels.OrderRequest
-import com.example.data.singleModels.StockAggregationRequest
+import com.example.data.alpaca.OrderRequest
+import com.example.data.alpaca.OrderResponse
+import com.example.data.alpaca.StockAggregationRequest
 import com.example.services.TraderService
-import com.example.tradinglogic.Result
-import io.ktor.client.statement.*
-import io.ktor.http.HttpStatusCode
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 class TradingController : KoinComponent {
 
-    private val mAlpacaRepo by inject<AlpacaRepository>()
     private val mTraderService by inject<TraderService>()
     val mTradingBot by inject<TradingBot>()
 
-    suspend fun createOrder(orderRequest: OrderRequest):  {
+    suspend fun createOrder(orderRequest: OrderRequest): Result<OrderResponse, TradingLogicError> =
+        mTraderService.createOrder(orderRequest)
 
-        return when (val orderResponse = mTraderService.createOrder(orderRequest)) {
-            is Result.Error -> HttpStatusCode(
-                HttpStatusCode.BadRequest,
-                description = "Invalid Parameter order request"
-            )
-            is Result.Success -> HttpStatusCode(
-                HttpStatusCode.OK,
-                description = TODO()
-            )
-        }
-    }
+    suspend fun getStockData(stockAggregationRequest: StockAggregationRequest) =
+        mTraderService.getHistoricalData(stockAggregationRequest)
 
-    suspend fun getStockData(stockAggregationRequest: StockAggregationRequest): HttpResponse {
-        return mAlpacaRepo.getHistoricalData(stockAggregationRequest)
-    }
+    suspend fun fetchAccountDetails() =
+        mTraderService.getAccountDetails()
 
-    suspend fun fetchAccountDetails(): HttpResponse {
-        return mAlpacaRepo.getAccountDetails()
-    }
-
-    suspend fun getOpeningHours(): HttpResponse {
-        return mAlpacaRepo.getMarketOpeningHours()
-    }
+    suspend fun getMarketOpeningHours() = mTraderService.getMarketOpeningHours()
 
     suspend fun doBacktesting(
         backtestConfig: BacktestConfig
@@ -48,18 +29,13 @@ class TradingController : KoinComponent {
         return mTradingBot.backtest(backtestConfig)
     }
 
-    fun isBotRunning(): Boolean {
-        return mTradingBot.isRunning()
-    }
+    fun isBotRunning(): Boolean = mTradingBot.isRunning()
 
     suspend fun startBot() = mTradingBot.run()
 
+    suspend fun stopBot() = mTradingBot.stop()
 
-    suspend fun stopBot() {
-        mTradingBot.stop()
-    }
+    fun setBotConfig(botConfig: BotConfig): Boolean = mTradingBot.updateConfig(botConfig)
 
-    fun setBotConfig(botConfig: BotConfig) : Boolean = mTradingBot.updateConfig(botConfig)
-
-    fun isBotConfigured() : Boolean = mTradingBot.isConfigured()
+    fun isBotConfigured(): Boolean = mTradingBot.isConfigured()
 }
