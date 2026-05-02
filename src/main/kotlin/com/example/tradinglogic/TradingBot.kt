@@ -220,6 +220,7 @@ class TradingBot : KoinComponent {
                         }
                     }
                 }
+                yield()
                 when (val result = configurePollingRequest(stockAggregationRequest)) {
                     is Result.Error -> return@async Result.Error(result.error)
                     is Result.Success -> Unit
