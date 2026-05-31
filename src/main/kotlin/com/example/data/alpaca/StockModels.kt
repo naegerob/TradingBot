@@ -12,7 +12,7 @@ data class StockAggregationRequest(
     @SerialName("limit") var limit: Int = 500, // Maximum number of data points to return (default: 1000)
     @SerialName("adjustment") val adjustment: String = "raw", // Corporate action adjustment (default: "raw")
     @SerialName("asof") val asOfDate: String? = null, // As-of date to identify the underlying entity (format: "YYYY-MM-DD")
-    @SerialName("feed") val feed: String = "sip", // Data feed source (default: "sip")
+    @SerialName("feed") val feed: String = "iex", // Data feed source (default: "sip")
     @SerialName("currency") val currency: String = "USD", // Currency of prices (default: "USD")
     @SerialName("page_token") val pageToken: String? = null, // Pagination token for continuing a request
     @SerialName("sort") var sort: String = "asc" // Sort order: asc:Newest at end / desc: newest up front
