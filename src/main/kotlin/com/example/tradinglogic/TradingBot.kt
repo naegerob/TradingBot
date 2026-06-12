@@ -204,7 +204,6 @@ class TradingBot : KoinComponent {
 
             var (stocks, stockAggregationRequest) = fetchEnoughStocks()
 
-            log.info("mStockAggregation: $stockAggregationRequest")
             stockAggregationRequest.limit = 5
             stockAggregationRequest.sort = "desc"
             log.info("mStockAggregation: $stockAggregationRequest")
@@ -222,7 +221,10 @@ class TradingBot : KoinComponent {
                 }
                 yield()
                 when (val result = configurePollingRequest(stockAggregationRequest)) {
-                    is Result.Error -> return@async Result.Error(result.error)
+                    is Result.Error -> {
+                        log.error("Failed to configure polling")
+                        continue
+                    }
                     is Result.Success -> Unit
                 }
                 when (val result = getValidatedHistoricalBars(stockAggregationRequest)) {
@@ -239,7 +241,10 @@ class TradingBot : KoinComponent {
                         )
                         log.info("mStock: $stocks")
                         when (val update = mIndicators.updateIndicators(stocks)) {
-                            is Result.Error -> return@async Result.Error(update.error)
+                            is Result.Error -> {
+                                log.error("indicator failed ${update.error}")
+                                return@async Result.Error(update.error)
+                            }
                             is Result.Success -> Unit
                         }
                     }
@@ -262,7 +267,7 @@ class TradingBot : KoinComponent {
                             orderRequest.side = "buy"
                             when (val order = createHandledOrder(orderRequest)) {
                                 is Result.Error -> {
-                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    log.error("Error creating order OpenLong (positionState: $positionState: ${order.error}. Retrying...")
                                     continue
                                 }
 
@@ -278,7 +283,7 @@ class TradingBot : KoinComponent {
                             orderRequest.side = "sell"
                             when (val order = createHandledOrder(orderRequest)) {
                                 is Result.Error -> {
-                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    log.error("Error creating order OpenShort (positionState: $positionState: ${order.error}. Retrying...")
                                     continue
                                 }
 
@@ -294,7 +299,7 @@ class TradingBot : KoinComponent {
                             orderRequest.side = "sell"
                             when (val order = createHandledOrder(orderRequest)) {
                                 is Result.Error -> {
-                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    log.error("Error creating order CloseLong (positionState: $positionState: ${order.error}. Retrying...")
                                     continue
                                 }
 
@@ -310,7 +315,7 @@ class TradingBot : KoinComponent {
                             orderRequest.side = "buy"
                             when (val order = createHandledOrder(orderRequest)) {
                                 is Result.Error -> {
-                                    log.error("Error creating order (positionState: $positionState: ${order.error}. Retrying...")
+                                    log.error("Error creating order CloseShort (positionState: $positionState: ${order.error}. Retrying...")
                                     continue
                                 }
                                 is Result.Success -> {
@@ -328,6 +333,7 @@ class TradingBot : KoinComponent {
             }
             return@async Result.Success(Unit)
         }
+        log.info("Failed: $mJob")
         return mJob!!.await()
     }
 
@@ -362,7 +368,7 @@ class TradingBot : KoinComponent {
                 endDateTime = endDateTime,
                 startDateTime = startDateTime,
                 timeframe = mTradingBotConfig.timeframe,
-                limit = 1000,
+                limit = 200,
                 sort = "asc"
             )
 
@@ -372,9 +378,8 @@ class TradingBot : KoinComponent {
             }
             mJob?.ensureActive()
             scaleFactor += 0.1
-
+            log.info("fetching Stocks: scaleFactor: $scaleFactor, stocks: $stocks")
         } while (stocks.size < mTradingBotConfig.numberSamples)
-
         return Pair(stocks, stockAggregationRequest)
     }
 
@@ -413,7 +418,7 @@ class TradingBot : KoinComponent {
             it.startDateTime = startTime.toString().substringBefore('.') + "Z"
             it.endDateTime = endDateTime.toString().substringBefore('.') + "Z"
             it.endDateTime = ""
-            log.debug("Polling request configured with startDateTime: ${it.startDateTime}, endDateTime: ${it.endDateTime}, timeframe: ${it.timeframe}, limit: ${it.limit}")
+            log.info("Polling request configured with startDateTime: ${it.startDateTime}, endDateTime: ${it.endDateTime}, timeframe: ${it.timeframe}, limit: ${it.limit}")
         }
         return Result.Success(Unit)
     }
@@ -427,7 +432,6 @@ class TradingBot : KoinComponent {
             return current
 
         val sortedIncoming = incoming.sortedBy { it.timestamp }
-        log.info("sortedIncoming: $sortedIncoming")
         var updated = current.sortedBy { it.timestamp }
         log.info("updated: $updated")
         for (bar in sortedIncoming) {
@@ -498,6 +502,7 @@ class TradingBot : KoinComponent {
         val startDateTime = endDateTime.minusSeconds((mTradingBotConfig.numberSamples * intervalSecondsScaled)).truncatedTo(ChronoUnit.SECONDS)
         val startDateTimeFormatted = startDateTime.toString()
         val endDateTimeFormatted = endDateTime.truncatedTo(ChronoUnit.SECONDS).toString()
+        log.info("Calculated start date: $startDateTimeFormatted and endDate: $endDateTimeFormatted")
         return startDateTimeFormatted to endDateTimeFormatted
     }
 }

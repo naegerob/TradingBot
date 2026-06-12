@@ -37,7 +37,7 @@ RUN apk add --no-cache curl ca-certificates
 COPY --from=build /home/gradle/app/build/libs/*.jar $WORKDIR/app.jar
 
 WORKDIR $WORKDIR
-HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD curl -fsSk https://localhost:8081/health || exit 1
+HEALTHCHECK --interval=5m --timeout=5s --retries=3 CMD curl -fsSk https://localhost:8081/health || exit 1
 
 RUN addgroup -S appgroup \
   && adduser -S appuser -G appgroup \
