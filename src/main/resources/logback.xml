@@ -25,7 +25,7 @@
         </encoder>
     </appender>
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>
     </root>
@@ -36,12 +36,13 @@
         <appender-ref ref="FILE"/>
     </logger>
 
-    <logger name="com.example" level="INFO"/>
 
-    <logger name="org.eclipse.jetty" level="WARN"/>
-    <logger name="io.netty" level="WARN"/>
-    <logger name="io.ktor" level="WARN"/>
-    <logger name="org.apache.http" level="WARN"/>
-    <logger name="okhttp3" level="WARN"/>
+    <logger name="org.eclipse.jetty" level="INFO"/>
+    <logger name="io.netty" level="INFO"/>
+    <logger name="io.ktor" level=""/>
+    <logger name="org.apache.http" level="INFO"/>
+    <logger name="okhttp3" level="INFO"/>
+    <logger name="io.ktor.server.plugins.calllogging" level="INFO" />
+
 
 </configuration>
