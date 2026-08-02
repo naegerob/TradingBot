@@ -20,6 +20,38 @@ class ValidationService {
         !symbol.contains(",") &&
         symbol.matches(Regex("^[A-Z.]+$"))
 
+    fun normalizeOrderRequest(orderRequest: OrderRequest): OrderRequest {
+        val normalizedSymbol = orderRequest.symbol.trim().uppercase()
+        val normalizedSide = orderRequest.side.trim().lowercase()
+        val normalizedType = orderRequest.type.trim().lowercase().takeIf { it.isNotEmpty() } ?: "market"
+        val normalizedTimeInForce = orderRequest.timeInForce.trim().lowercase().takeIf { it.isNotEmpty() } ?: "day"
+
+        val quantity = orderRequest.quantity?.trim()?.takeIf { it.isNotEmpty() }
+        val notional = orderRequest.notional?.trim()?.takeIf { it.isNotEmpty() }
+
+        val parsedQuantity = quantity?.toDoubleOrNull()
+        val parsedNotional = notional?.toDoubleOrNull()
+
+        val effectiveQuantity = when {
+            parsedQuantity != null && parsedQuantity > 0 -> quantity
+            else -> null
+        }
+        val effectiveNotional = when {
+            effectiveQuantity != null -> null
+            parsedNotional != null && parsedNotional > 0 -> notional
+            else -> null
+        }
+
+        return orderRequest.copy(
+            symbol = normalizedSymbol,
+            quantity = effectiveQuantity,
+            notional = effectiveNotional,
+            side = normalizedSide,
+            type = normalizedType,
+            timeInForce = normalizedTimeInForce
+        )
+    }
+
     fun areValidStockRequestParameter(stockAggregationRequest: StockAggregationRequest): Boolean {
         val isSymbolValid = isSymbolValid(stockAggregationRequest.symbols)
         val isTimeframeValid = timeframes.any { stockAggregationRequest.timeframe.contains(it) }
@@ -42,8 +74,15 @@ class ValidationService {
         val hasValidAmount = hasQuantity || hasNotional
 
         val isOrderClassValid = orderRequest.orderClass == null || orderClass.any { it.equals(orderRequest.orderClass, ignoreCase = true) }
-        val isLimitPriceValid = orderRequest.limitPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
-        val isStopPriceValid = orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
+        val isLimitPriceValid = when (orderRequest.type.lowercase()) {
+            "limit" -> orderRequest.limitPrice?.toDoubleOrNull()?.let { it > 0 } ?: false
+            else -> orderRequest.limitPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
+        }
+        val isStopPriceValid = when (orderRequest.type.lowercase()) {
+            "stop" -> orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: false
+            "stop_limit" -> orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: false
+            else -> orderRequest.stopPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
+        }
         val isTrailPriceValid = orderRequest.trailPrice?.toDoubleOrNull()?.let { it > 0 } ?: true
         val isTrailPercentValid = orderRequest.trailPercent?.toDoubleOrNull()?.let { it > 0 && it <= 100 } ?: true
 

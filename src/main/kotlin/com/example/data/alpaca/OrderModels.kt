@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class OrderRequest(
     @SerialName("symbol") val symbol: String = "AAPL",
     @SerialName("qty") var quantity: String? = null,
-    @SerialName("notional") var notional: String? = "10",
+    @SerialName("notional") var notional: String? = null,
     @SerialName("side") var side: String = "buy",
     @SerialName("type") val type: String = "market",
     @SerialName("time_in_force") val timeInForce: String = "day",

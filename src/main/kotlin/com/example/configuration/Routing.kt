@@ -300,10 +300,6 @@ fun Application.configureRouting() {
             route("/Order") {
                 post("/Create") {
                     val orderRequest = call.receive<OrderRequest>()
-                    if (!validator.areValidOrderParameter(orderRequest)) {
-                        call.respond(HttpStatusCode.BadRequest)
-                        return@post
-                    }
                     call.respondResult(tradingController.createOrder(orderRequest))
                 }
             }

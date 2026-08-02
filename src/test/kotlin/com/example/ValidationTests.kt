@@ -22,6 +22,8 @@ import io.ktor.server.testing.*
 import kotlinx.serialization.json.Json
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ValidationTests {
 
@@ -293,6 +295,94 @@ class ValidationTests {
     }
 
     @Test
+    fun `normalizeOrderRequest trims and normalizes casing and amount fields`() {
+        val validator = ValidationService()
+        val req = OrderRequest(
+            symbol = "  aapl  ",
+            type = " MARKET ",
+            side = " BUY ",
+            timeInForce = " GTC ",
+            quantity = " 3 ",
+            notional = " 10 ",
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+        val normalized = validator.normalizeOrderRequest(req)
+
+        assertEquals("AAPL", normalized.symbol)
+        assertEquals("market", normalized.type)
+        assertEquals("buy", normalized.side)
+        assertEquals("gtc", normalized.timeInForce)
+        assertEquals("3", normalized.quantity)
+        assertEquals(null, normalized.notional)
+    }
+
+    @Test
+    fun `normalizeOrderRequest removes invalid amount values`() {
+        val validator = ValidationService()
+        val req = OrderRequest(
+            symbol = "TSLA",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "0",
+            notional = "-5",
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+        val normalized = validator.normalizeOrderRequest(req)
+
+        assertEquals(null, normalized.quantity)
+        assertEquals(null, normalized.notional)
+    }
+
+    @Test
+    fun `areValidOrderParameter accepts market order with quantity`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "market",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "1",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+        assertTrue(validator.areValidOrderParameter(req))
+    }
+
+    @Test
+    fun `areValidOrderParameter rejects limit order without a limit price`() {
+        val validator = ValidationService()
+
+        val req = OrderRequest(
+            symbol = "AAPL",
+            type = "limit",
+            side = "buy",
+            timeInForce = "day",
+            quantity = "1",
+            notional = null,
+            limitPrice = null,
+            stopPrice = null,
+            trailPrice = null,
+            trailPercent = null,
+            legs = null
+        )
+        assertFalse(validator.areValidOrderParameter(req))
+    }
+
+    @Test
     fun `areValidOrderParameter rejects SQL injection in symbol`() {
         val validator = ValidationService()
 
@@ -309,7 +399,6 @@ class ValidationTests {
             trailPercent = null,
             legs = null
         )
-
         val isValid = validator.areValidOrderParameter(req)
         assertEquals(false, isValid)
     }
@@ -331,7 +420,6 @@ class ValidationTests {
             trailPercent = null,
             legs = null
         )
-
         val isValid = validator.areValidOrderParameter(req)
         assertEquals(false, isValid)
     }
