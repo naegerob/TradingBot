@@ -103,7 +103,6 @@ class SecurityTests {
         environment { config = ApplicationConfig("application.yaml") }
         val client = createJsonClient()
 
-
         // Test both login endpoints
         listOf("/login").forEach { loginPath ->
             val (accessToken, _) = loginAndGetToken(client, loginPath)

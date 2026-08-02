@@ -17,10 +17,12 @@ import org.koin.core.component.inject
 import com.example.tradinglogic.Result
 import io.ktor.client.call.*
 
+
 class TraderService : KoinComponent {
 
     private val mRepository by inject<AlpacaRepository>()
     private val mTransactionStorage by inject<DataBaseFacade>()
+    private val mValidationService = ValidationService()
 
     suspend fun getAccountDetails(): Result<Account, TradingLogicError> {
         val httpResponse = mRepository.getAccountDetails()
@@ -31,21 +33,18 @@ class TraderService : KoinComponent {
     }
 
     suspend fun createOrder(orderRequest: OrderRequest): Result<OrderResponse, TradingLogicError> {
-        val isOrderCommandRight = sides.contains(orderRequest.side)
-        if (!isOrderCommandRight) {
+        val normalizedOrderRequest = mValidationService.normalizeOrderRequest(orderRequest)
+        if (!mValidationService.areValidOrderParameter(normalizedOrderRequest)) {
             return Result.Error(TradingLogicError.DataError.INVALID_PARAMETER_FORMAT)
         }
 
-        val quantity: String = orderRequest.quantity?.trim().orEmpty()
-        val notional: String = orderRequest.notional?.trim().orEmpty()
-
         mTransactionStorage.addTransaction(
-            symbol = orderRequest.symbol,
-            side = orderRequest.side,
-            quantity = quantity,
-            notional = notional
+            symbol = normalizedOrderRequest.symbol,
+            side = normalizedOrderRequest.side,
+            quantity = normalizedOrderRequest.quantity ?: "",
+            notional = normalizedOrderRequest.notional ?: ""
         )
-        val httpResponse = mRepository.createOrder(orderRequest)
+        val httpResponse = mRepository.createOrder(normalizedOrderRequest)
         return when (httpResponse.status) {
             HttpStatusCode.OK, HttpStatusCode.Created -> Result.Success(httpResponse.body<OrderResponse>())
             HttpStatusCode.Forbidden -> Result.Error(TradingLogicError.DataError.NO_SUFFICIENT_ACCOUNT_BALANCE)

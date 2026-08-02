@@ -186,11 +186,7 @@ class TradingBot : KoinComponent {
 
         val orderRequest = OrderRequest(
             symbol = mTradingBotConfig.symbols,
-            side = "buy",
-            type = "market",
-            timeInForce = "gtc",
-            notional = null,
-            quantity = null
+            type = mTradingBotConfig.orderType,
         )
 
         mJob = CoroutineScope(Dispatchers.IO).async {
