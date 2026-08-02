@@ -1,62 +1,30 @@
-import json
-from datetime import datetime, timedelta
 from pathlib import Path
 
-LOG_FILE = Path(__file__).resolve().parent / "../logs/bot.log"
+LOG_FILE = Path("C:/Users/41786/bot_logs.txt")
 
-HEALTH_KEYWORDS = ["health", "healthcheck", "ping", "alive"]
+HEALTH_KEYWORDS = [
+    "health",
+    "healthcheck",
+    "ping",
+    "alive"
+]
 
-GAP_THRESHOLD = timedelta(minutes=10)  # adjust if needed
+last_real_entry = None
 
-def parse_time(ts):
-    return datetime.fromisoformat(ts.replace("Z", "+00:00"))
-
-events = []
-
-# --- Load + filter health checks ---
-with open(LOG_FILE, "r") as f:
+with open(LOG_FILE, "r", encoding="utf-8") as f:
     for line in f:
-        try:
-            entry = json.loads(line)
+        lower = line.lower()
 
-            msg = entry.get("log", "").lower()
-            if any(k in msg for k in HEALTH_KEYWORDS):
-                continue
-
-            ts = parse_time(entry["time"])
-            events.append((ts, msg.strip()))
-
-        except Exception:
+        # ignore health check lines
+        if any(keyword in lower for keyword in HEALTH_KEYWORDS):
             continue
 
-# --- Sort by time ---
-events.sort(key=lambda x: x[0])
+        # keep the latest non-health entry
+        last_real_entry = line.rstrip()
 
-if not events:
-    print("No valid events found.")
-    exit()
 
-# --- Find last real event before silence ---
-last_good = events[0]
-last_time = events[0][0]
-
-for ts, msg in events[1:]:
-    gap = ts - last_time
-
-    # if we suddenly have a big gap -> system likely died AFTER last_good
-    if gap > GAP_THRESHOLD:
-        print("\n🚨 SYSTEM STOP DETECTED")
-        print("Last valid event BEFORE failure:")
-        print("Timestamp:", last_good[0])
-        print("Message:", last_good[1])
-        print("\nFirst event AFTER gap:")
-        print("Timestamp:", ts)
-        print("Message:", msg)
-        break
-
-    last_good = (ts, msg)
-    last_time = ts
-
+if last_real_entry:
+    print("Last non-health log entry:")
+    print(last_real_entry)
 else:
-    print("No failure detected (log is continuous).")
-    print("Last event:", events[-1])
+    print("No non-health entries found.")
